@@ -1,0 +1,775 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0
+rootdir: /work
+plugins: anyio-4.13.0
+collected 282 items / 14 errors
+
+==================================== ERRORS ====================================
+________ ERROR collecting diagnostics/5.3-answer-generation/test_5_3.py ________
+ImportError while importing test module '/work/diagnostics/5.3-answer-generation/test_5_3.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diagnostics/5.3-answer-generation/test_5_3.py:7: in <module>
+    from app.infrastructure.database import get_db
+E   ImportError: cannot import name 'get_db' from 'app.infrastructure.database' (/work/app/infrastructure/database.py)
+____ ERROR collecting diagnostics/5.3-answer-generation/test_domperidone.py ____
+diagnostics/5.3-answer-generation/test_domperidone.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+_ ERROR collecting diagnostics/5.3-answer-generation/test_domperidone_lateral.py _
+diagnostics/5.3-answer-generation/test_domperidone_lateral.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+___ ERROR collecting diagnostics/5.3-answer-generation/test_gist_lateral.py ____
+diagnostics/5.3-answer-generation/test_gist_lateral.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+__ ERROR collecting diagnostics/5.3-answer-generation/test_gist_lateral_2.py ___
+diagnostics/5.3-answer-generation/test_gist_lateral_2.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+____ ERROR collecting diagnostics/5.3-answer-generation/test_gist_query.py _____
+diagnostics/5.3-answer-generation/test_gist_query.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+______ ERROR collecting diagnostics/5.3-answer-generation/test_hybrid.py _______
+diagnostics/5.3-answer-generation/test_hybrid.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+____ ERROR collecting diagnostics/5.3-answer-generation/test_without_gin.py ____
+diagnostics/5.3-answer-generation/test_without_gin.py:3: in <module>
+    conn = psycopg2.connect(DATABASE_URL)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+__________ ERROR collecting diagnostics/5.5-investigation/h1_test.py ___________
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+diagnostics/5.5-investigation/h1_test.py:19: in <module>
+    res = resolve_drug_entity(db, q)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/domain/drug_resolver.py:164: in resolve_drug_entity
+    row = db.execute(sku_check, {"token": token_clean}).fetchone()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2308: in execute
+    return self._execute_internal(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2180: in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2047: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in _connection_for_bind
+    ???
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1143: in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3269: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:147: in __init__
+    Connection._handle_dbapi_exception_noconnection(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2431: in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+------------------------------- Captured stdout --------------------------------
+--- HYPOTHESIS 1 TESTS ---
+
+[QUERY]: pantoprazole side effects
+__________ ERROR collecting diagnostics/5.5-investigation/h2_test.py ___________
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+diagnostics/5.5-investigation/h2_test.py:5: in <module>
+    med = db.query(ClinicalKnowledgeBase).filter_by(sku_id="GENERIC_REF_PARACETAMOL").first()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/query.py:2748: in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/query.py:2847: in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2308: in execute
+    return self._execute_internal(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2180: in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2047: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in _connection_for_bind
+    ???
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1143: in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3269: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:147: in __init__
+    Connection._handle_dbapi_exception_noconnection(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2431: in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+__________ ERROR collecting diagnostics/5.5-investigation/test_h2.py ___________
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+diagnostics/5.5-investigation/test_h2.py:6: in <module>
+    res = db.execute(text("SELECT content FROM clinical_knowledge_base WHERE sku_id = 'GENERIC_REF_PARACETAMOL'")).scalar()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2308: in execute
+    return self._execute_internal(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2180: in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2047: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in _connection_for_bind
+    ???
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1143: in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3269: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:147: in __init__
+    Connection._handle_dbapi_exception_noconnection(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2431: in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+___________________ ERROR collecting scripts/keyword_test.py ___________________
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+scripts/keyword_test.py:12: in <module>
+    result = execute_clinical_search(db=db, query=q, top_k=5)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/services/semantic_search.py:130: in execute_clinical_search
+    keyword_raw_rows = db.execute(keyword_search_sql, keyword_params).fetchall()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2308: in execute
+    return self._execute_internal(
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2180: in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2047: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in _connection_for_bind
+    ???
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1143: in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3269: in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:147: in __init__
+    Connection._handle_dbapi_exception_noconnection(
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2431: in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:145: in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:3293: in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:452: in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:1269: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:716: in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:169: in _do_get
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/impl.py:167: in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:393: in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:678: in __init__
+    self.__connect()
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:902: in __connect
+    with util.safe_reraise():
+.venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.11/site-packages/sqlalchemy/pool/base.py:898: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/create.py:645: in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py:616: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/psycopg2/__init__.py:122: in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+E   
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+------------------------------- Captured stdout --------------------------------
+{"timestamp": "2026-10-19T23:32:11.283466+00:00", "level": "INFO", "logger": "app.workers.embedding_tasks", "message": "Loading PubMedBERT model into memory. This may take a moment..."}
+{"timestamp": "2026-10-19T23:32:11.283782+00:00", "level": "INFO", "logger": "sentence_transformers.SentenceTransformer", "message": "Load pretrained SentenceTransformer: NeuML/pubmedbert-base-embeddings"}
+{"timestamp": "2026-10-19T23:32:45.701027+00:00", "level": "WARNING", "logger": "app.services.semantic_search", "message": "Vector model unavailable. Falling back to pure keyword search."}
+------------------------------- Captured stderr --------------------------------
+
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]
+Batches: 100%|██████████| 1/1 [00:00<00:00,  1.41it/s]
+Batches: 100%|██████████| 1/1 [00:00<00:00,  1.40it/s]
+__________________ ERROR collecting scripts/live_api_test.py ___________________
+/usr/local/lib/python3.11/urllib/request.py:1361: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+/usr/local/lib/python3.11/http/client.py:1351: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+/usr/local/lib/python3.11/http/client.py:1397: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.11/http/client.py:1346: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.11/http/client.py:1106: in _send_output
+    self.send(msg)
+/usr/local/lib/python3.11/http/client.py:1044: in send
+    self.connect()
+/usr/local/lib/python3.11/http/client.py:1010: in connect
+    self.sock = self._create_connection(
+/usr/local/lib/python3.11/socket.py:863: in create_connection
+    raise exceptions[0]
+/usr/local/lib/python3.11/socket.py:848: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+scripts/live_api_test.py:14: in <module>
+    resp = urllib.request.urlopen(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/urllib/request.py:216: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/urllib/request.py:519: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/urllib/request.py:536: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+/usr/local/lib/python3.11/urllib/request.py:496: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/local/lib/python3.11/urllib/request.py:1390: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/urllib/request.py:1364: in do_open
+    raise URLError(err)
+E   urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+___________________ ERROR collecting scripts/test_payload.py ___________________
+.venv/lib/python3.11/site-packages/urllib3/connection.py:204: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.11/site-packages/urllib3/util/connection.py:85: in create_connection
+    raise err
+.venv/lib/python3.11/site-packages/urllib3/util/connection.py:73: in create_connection
+    sock.connect(sa)
+E   ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:788: in urlopen
+    response = self._make_request(
+.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:493: in _make_request
+    conn.request(
+.venv/lib/python3.11/site-packages/urllib3/connection.py:500: in request
+    self.endheaders()
+/usr/local/lib/python3.11/http/client.py:1346: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+/usr/local/lib/python3.11/http/client.py:1106: in _send_output
+    self.send(msg)
+/usr/local/lib/python3.11/http/client.py:1044: in send
+    self.connect()
+.venv/lib/python3.11/site-packages/urllib3/connection.py:331: in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/urllib3/connection.py:219: in _new_conn
+    raise NewConnectionError(
+E   urllib3.exceptions.NewConnectionError: HTTPConnection(host='localhost', port=8080): Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+.venv/lib/python3.11/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:842: in urlopen
+    retries = retries.increment(
+.venv/lib/python3.11/site-packages/urllib3/util/retry.py:543: in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /api/v1/predict (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8080): Failed to establish a new connection: [Errno 111] Connection refused"))
+
+During handling of the above exception, another exception occurred:
+scripts/test_payload.py:5: in <module>
+    resp = requests.post(
+.venv/lib/python3.11/site-packages/requests/api.py:134: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/requests/adapters.py:729: in send
+    raise ConnectionError(e, request=request)
+E   requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /api/v1/predict (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8080): Failed to establish a new connection: [Errno 111] Connection refused"))
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/pydantic/_internal/_fields.py:151
+  /work/.venv/lib/python3.11/site-packages/pydantic/_internal/_fields.py:151: UserWarning: Field "model_version" has conflict with protected namespace "model_".
+  
+  You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+    warnings.warn(
+
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:272
+  /work/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:272: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:322
+  /work/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:322: UserWarning: Valid config keys have changed in V2:
+  * 'orm_mode' has been renamed to 'from_attributes'
+    warnings.warn(message, UserWarning)
+
+.venv/lib/python3.11/site-packages/httpx/_client.py:690
+.venv/lib/python3.11/site-packages/httpx/_client.py:690
+  /work/.venv/lib/python3.11/site-packages/httpx/_client.py:690: DeprecationWarning: The 'app' shortcut is now deprecated. Use the explicit style 'transport=WSGITransport(app=...)' instead.
+    warnings.warn(message, DeprecationWarning)
+
+.venv/lib/python3.11/site-packages/huggingface_hub/file_download.py:1727
+  /work/.venv/lib/python3.11/site-packages/huggingface_hub/file_download.py:1727: DeprecationWarning: hf_xet.download_files() is deprecated. Use XetSession().new_file_download_group().start_download_file() instead.
+    xet_get(
+
+tests/integration/test_health_risk_job_resilience.py:163
+  /work/tests/integration/test_health_risk_job_resilience.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+tests/integration/test_health_risk_pipeline.py:107
+  /work/tests/integration/test_health_risk_pipeline.py:107: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+tests/test_h3_context_dedup.py:18
+  /work/tests/test_h3_context_dedup.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_h3_context_dedup.py:38
+  /work/tests/test_h3_context_dedup.py:38: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_h3_context_dedup.py:59
+  /work/tests/test_h3_context_dedup.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_h3_rag_guard.py:19
+  /work/tests/test_h3_rag_guard.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_h3_rag_guard.py:48
+  /work/tests/test_h3_rag_guard.py:48: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+---------------------- generated xml file: /out/junit.xml ----------------------
+=========================== short test summary info ============================
+ERROR diagnostics/5.3-answer-generation/test_5_3.py
+ERROR diagnostics/5.3-answer-generation/test_domperidone.py - psycopg2.Operat...
+ERROR diagnostics/5.3-answer-generation/test_domperidone_lateral.py - psycopg...
+ERROR diagnostics/5.3-answer-generation/test_gist_lateral.py - psycopg2.Opera...
+ERROR diagnostics/5.3-answer-generation/test_gist_lateral_2.py - psycopg2.Ope...
+ERROR diagnostics/5.3-answer-generation/test_gist_query.py - psycopg2.Operati...
+ERROR diagnostics/5.3-answer-generation/test_hybrid.py - psycopg2.Operational...
+ERROR diagnostics/5.3-answer-generation/test_without_gin.py - psycopg2.Operat...
+ERROR diagnostics/5.5-investigation/h1_test.py - sqlalchemy.exc.OperationalEr...
+ERROR diagnostics/5.5-investigation/h2_test.py - sqlalchemy.exc.OperationalEr...
+ERROR diagnostics/5.5-investigation/test_h2.py - sqlalchemy.exc.OperationalEr...
+ERROR scripts/keyword_test.py - sqlalchemy.exc.OperationalError: (psycopg2.Op...
+ERROR scripts/live_api_test.py - urllib.error.URLError: <urlopen error [Errno...
+ERROR scripts/test_payload.py - requests.exceptions.ConnectionError: HTTPConn...
+!!!!!!!!!!!!!!!!!!! Interrupted: 14 errors during collection !!!!!!!!!!!!!!!!!!!
+================= 13 warnings, 14 errors in 278.35s (0:04:38) ==================
