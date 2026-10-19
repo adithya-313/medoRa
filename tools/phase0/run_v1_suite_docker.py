@@ -29,6 +29,13 @@ ALLOWED_LABELS = ["docker-no-services", "docker-with-db"]
 COMPOSE_NETWORK = "sentinel_flow_mvp_default"
 # assumption: building the small base image (apt only) takes well under 15 minutes.
 BUILD_TIMEOUT_SECONDS = 900
+# reported: the first docker run downloaded about 3.6 GB in 3600 s and was still downloading when the
+# 1 h ceiling killed it; 4 h gives headroom at this laptop's speed (assumption, not a v1 fact).
+CONTAINER_PIP_TIMEOUT_SECONDS = 14400
+# assumption: removing a cloned folder inside a container finishes within 10 minutes.
+CLEANUP_TIMEOUT_SECONDS = 600
+# a named Docker volume that keeps downloaded wheels between runs (a download cache, not a venv).
+PIP_CACHE_VOLUME = "medora-v1-pip-cache"
 
 
 def build_image() -> None:
@@ -50,7 +57,9 @@ def build_image() -> None:
         raise RuntimeError(f"docker build failed: {finished.stderr.strip()[-2000:]}")
 
 
-def container_arguments(project_dir: Path, out_dir: Path, network: str | None, command: list[str]) -> list[str]:
+def container_arguments(
+    project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str
+) -> list[str]:
     """WHAT: Builds a `docker run` argument list that mounts v1's folder at /work and results at /out.
     WHY: One place defines how every container step is started.
 
@@ -59,16 +68,49 @@ def container_arguments(project_dir: Path, out_dir: Path, network: str | None, c
         out_dir: output folder on the host.
         network: compose network to join, or None.
         command: the program and arguments to run inside the container.
+        name: container name, so a timed-out container can be removed.
     Returns:
         The full argument list.
     Example:
         network=None, command=["python", "--version"] -> ["docker", "run", "--rm", ..., "python", "--version"]
     """
     arguments = ["docker", "run", "--rm", "-v", f"{project_dir.as_posix()}:/work",
-                 "-v", f"{out_dir.resolve().as_posix()}:/out", "-w", "/work"]
+                 "-v", f"{out_dir.resolve().as_posix()}:/out", "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
+                 "--name", name, "-w", "/work"]
     if network is not None:
         arguments += ["--network", network]
     return arguments + [IMAGE_NAME] + command
+
+
+def stop_container(name: str) -> None:
+    """WHAT: Force-removes a named container.
+    WHY: Killing only the docker client on a timeout leaves the container (and pip) running on.
+
+    Args:
+        name: container name.
+    Returns:
+        Nothing.
+    Example:
+        stop_container("medora-v1-pip") -> container stopped and removed
+    """
+    base.run_command(["docker", "rm", "-f", name], None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+
+
+def remove_clone_in_container(work_root: Path) -> None:
+    """WHAT: Deletes the cloned v1 folder from inside a container.
+    WHY: The Linux venv has symlinks (lib64) that Windows cannot delete, which broke cleanup.
+
+    Args:
+        work_root: temp folder that holds the "v1" clone.
+    Returns:
+        Nothing.
+    Example:
+        work_root with v1/.venv/lib64 -> v1 folder removed
+    """
+    if not (work_root / "v1").exists():
+        return
+    arguments = ["docker", "run", "--rm", "-v", f"{work_root.as_posix()}:/cleanup", IMAGE_NAME, "rm", "-rf", "/cleanup/v1"]
+    base.run_command(arguments, None, CLEANUP_TIMEOUT_SECONDS)
 
 
 def container_pip_install(project_dir: Path, out_dir: Path, requirements_name: str, log_path: Path) -> base.InstallResult:
@@ -87,16 +129,17 @@ def container_pip_install(project_dir: Path, out_dir: Path, requirements_name: s
         requirements.txt installs fine on Linux -> InstallResult(succeeded=True, return_code=0, ...)
     """
     venv_command = ["python", "-m", "venv", "/work/.venv"]
-    base.run_command(container_arguments(project_dir, out_dir, None, venv_command), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    base.run_command(container_arguments(project_dir, out_dir, None, venv_command, "medora-v1-venv"), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
     pip_command = ["/work/.venv/bin/python", "-m", "pip", "install", "-r", requirements_name]
-    arguments = container_arguments(project_dir, out_dir, None, pip_command)
+    arguments = container_arguments(project_dir, out_dir, None, pip_command, "medora-v1-pip")
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(arguments, None, base.PIP_TIMEOUT_SECONDS)
+        finished = base.run_command(arguments, None, CONTAINER_PIP_TIMEOUT_SECONDS)
         return_code, output = finished.returncode, finished.stdout + finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
+        stop_container("medora-v1-pip")
         return_code, output = -1, base.as_text(error.stdout) + base.as_text(error.stderr)
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"$ {' '.join(pip_command)}\nreturn code: {return_code}\n{output}\n")
@@ -125,10 +168,11 @@ def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, netwo
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(container_arguments(project_dir, out_dir, network, command), None, base.PYTEST_TIMEOUT_SECONDS)
+        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest"), None, base.PYTEST_TIMEOUT_SECONDS)
         return_code, stdout, stderr = finished.returncode, finished.stdout, finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
+        stop_container("medora-v1-pytest")
         return_code, stdout, stderr = -1, base.as_text(error.stdout), base.as_text(error.stderr)
     elapsed = time.monotonic() - started
     (out_dir / "pytest.log").write_text(stdout, encoding="utf-8")
@@ -150,7 +194,7 @@ def container_python_version(project_dir: Path, out_dir: Path) -> str:
         container_python_version(proj, out) -> "Python 3.11.14"
     """
     command = ["python", "--version"]
-    finished = base.run_command(container_arguments(project_dir, out_dir, None, command), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    finished = base.run_command(container_arguments(project_dir, out_dir, None, command, "medora-v1-version"), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
     return finished.stdout.strip()
 
 
@@ -273,6 +317,7 @@ def main(argv: list[str]) -> int:
     try:
         return execute_container_run(args, work_root, out_dir)
     finally:
+        remove_clone_in_container(work_root)
         shutil.rmtree(work_root, onerror=base.make_writable_and_retry)
 
 
