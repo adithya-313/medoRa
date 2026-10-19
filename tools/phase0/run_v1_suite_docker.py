@@ -277,6 +277,7 @@ def container_pip_install(
 def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, network: str | None) -> base.RunResult:
     """WHAT: Runs the whole v1 suite inside the container with no filters.
     Only tests/benchmarks and tests/load are ignored; the pytest cache is off.
+    The plain path "tests" makes pytest find v1's own tests/pytest.ini (approved by the owner).
     WHY: Honest evidence - crashes and timeouts are recorded, never hidden.
 
     Args:
@@ -292,7 +293,7 @@ def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, netwo
         run_label="docker-no-services" -> RunResult(return_code=1, wall_seconds=95.2, ...)
     """
     command = ["/work/.venv/bin/python", "-m", "pytest", "-p", "no:cacheprovider", "-rA",
-               "--junitxml=/out/junit.xml", "--ignore=tests/benchmarks", "--ignore=tests/load"]
+               "--junitxml=/out/junit.xml", "--ignore=tests/benchmarks", "--ignore=tests/load", "tests"]
     started = time.monotonic()
     timed_out = False
     try:
