@@ -393,6 +393,36 @@ def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
     return names[0]
 
 
+# sourced: compose "!reset" (Compose v2.24+) clears a service's list, here the published host ports.
+PORT_OVERRIDE_TEXT = (
+    "services:" + chr(10)
+    + "  timescaledb:" + chr(10) + "    ports: !reset []" + chr(10)
+    + "  redis:" + chr(10) + "    ports: !reset []" + chr(10)
+)
+
+
+def compose_with_override(compose_file: Path, override_file: Path, action: list[str]) -> None:
+    """WHAT: Runs docker compose with v1's file plus an override that removes published host ports.
+    WHY: Host ports 5432 and 6379 belong to other containers on this laptop; the tests run inside
+    the compose network, so no host port is needed. v1's own compose file is left untouched.
+
+    Args:
+        compose_file: v1's docker-compose.yml.
+        override_file: the override file.
+        action: e.g. ["up", "-d", "--wait", "redis"] or ["down"].
+    Returns:
+        Nothing.
+    Raises:
+        RuntimeError: on a non-zero return code.
+    Example:
+        action=["down"] -> containers stopped, volumes kept
+    """
+    arguments = ["docker", "compose", "-f", str(compose_file), "-f", str(override_file)] + action
+    finished = base.run_command(arguments, compose_file.parent, base.DOCKER_TIMEOUT_SECONDS)
+    if finished.returncode != 0:
+        raise RuntimeError(f"docker compose {action[0]} failed: {finished.stderr.strip()}")
+
+
 def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: Path) -> base.RunResult:
     """WHAT: Runs pytest in the container; for docker-with-db it first starts v1's timescaledb and redis
     and joins the container to their compose network, and always stops them afterwards (no -v).
@@ -414,11 +444,13 @@ def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: P
         return container_run_pytest(project_dir, out_dir, args.run_label, None)
     compose_file = project_dir / "docker-compose.yml"
     try:
-        base.compose_command(compose_file, ["up", "-d", "--wait"] + base.DB_SERVICE_NAMES)
+        override_file = project_dir / "docker-compose.no-ports.yml"
+        override_file.write_text(PORT_OVERRIDE_TEXT, encoding="utf-8")
+        compose_with_override(compose_file, override_file, ["up", "-d", "--wait"] + base.DB_SERVICE_NAMES)
         network = discover_compose_network(compose_file, out_dir)
         return container_run_pytest(project_dir, out_dir, args.run_label, network)
     finally:
-        base.compose_command(compose_file, ["down"])
+        compose_with_override(compose_file, project_dir / "docker-compose.no-ports.yml", ["down"])
 
 
 def install_and_record_meta(
