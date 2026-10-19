@@ -27,8 +27,6 @@ from tools.phase0 import run_v1_suite as base
 IMAGE_NAME = "medora-v1-baseline:py311"
 DOCKERFILE_PATH = Path(__file__).resolve().parent / "v1_baseline.Dockerfile"
 ALLOWED_LABELS = ["docker-no-services", "docker-with-db"]
-# sourced: Docker Compose names the default network "<folder>_default"; v1's folder is sentinel_flow_mvp.
-COMPOSE_NETWORK = "sentinel_flow_mvp_default"
 # assumption: building the small base image (apt only) takes well under 15 minutes.
 BUILD_TIMEOUT_SECONDS = 900
 # reported: the first docker run downloaded about 3.6 GB in 3600 s and was still downloading when the
@@ -326,10 +324,40 @@ def record_container_outcome(
     base.write_results(rows, base.summarise(rows), meta, out_dir)
 
 
+def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
+    """WHAT: Finds the network the started redis container is really on, and checks it against
+    the real `docker network ls` output (saved to docker-network-ls.txt and printed).
+    WHY: The name is never assumed; it is read from Docker after compose up.
+
+    Args:
+        compose_file: v1's docker-compose.yml.
+        out_dir: output folder for the saved listing.
+    Returns:
+        The network name.
+    Raises:
+        RuntimeError: if redis is not running, is on a different number of networks than one,
+            or the network is missing from `docker network ls`.
+    Example:
+        redis on "sentinel_flow_mvp_default" -> "sentinel_flow_mvp_default"
+    """
+    timeout = base.SHORT_COMMAND_TIMEOUT_SECONDS
+    listing = base.run_command(["docker", "network", "ls"], None, timeout).stdout
+    (out_dir / "docker-network-ls.txt").write_text(listing, encoding="utf-8")
+    print(listing)
+    ps_arguments = ["docker", "compose", "-f", str(compose_file), "ps", "-q", "redis"]
+    container_id = base.run_command(ps_arguments, compose_file.parent, timeout).stdout.strip()
+    inspect_arguments = ["docker", "inspect", "--format", "{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}", container_id]
+    names = base.run_command(inspect_arguments, None, timeout).stdout.split()
+    if container_id == "" or len(names) != 1 or names[0] not in listing.split():
+        raise RuntimeError(f"cannot determine the compose network (networks seen: {names})")
+    return names[0]
+
+
 def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: Path) -> base.RunResult:
     """WHAT: Runs pytest in the container; for docker-with-db it first starts v1's timescaledb and redis
     and joins the container to their compose network, and always stops them afterwards (no -v).
-    WHY: v1's settings reach Redis by the hostname "redis", which only works on that network.
+    WHY: v1's settings reach Redis by the hostname "redis", which only works on that network;
+    the network name is read from Docker, not assumed.
 
     Args:
         args: parsed command line.
@@ -347,7 +375,8 @@ def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: P
     compose_file = project_dir / "docker-compose.yml"
     try:
         base.compose_command(compose_file, ["up", "-d", "--wait"] + base.DB_SERVICE_NAMES)
-        return container_run_pytest(project_dir, out_dir, args.run_label, COMPOSE_NETWORK)
+        network = discover_compose_network(compose_file, out_dir)
+        return container_run_pytest(project_dir, out_dir, args.run_label, network)
     finally:
         base.compose_command(compose_file, ["down"])
 
