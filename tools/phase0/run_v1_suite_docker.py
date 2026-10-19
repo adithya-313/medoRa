@@ -60,7 +60,8 @@ def build_image() -> None:
 
 
 def container_arguments(
-    project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str
+    project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str,
+    use_cache: bool = False,
 ) -> list[str]:
     """WHAT: Builds a `docker run` argument list that mounts v1's folder at /work and results at /out.
     WHY: One place defines how every container step is started.
@@ -71,14 +72,16 @@ def container_arguments(
         network: compose network to join, or None.
         command: the program and arguments to run inside the container.
         name: container name, so a timed-out container can be removed.
+        use_cache: mount the wheel-cache volume (only pip install should).
     Returns:
         The full argument list.
     Example:
         network=None, command=["python", "--version"] -> ["docker", "run", "--rm", ..., "python", "--version"]
     """
     arguments = ["docker", "run", "--rm", "-v", f"{project_dir.as_posix()}:/work",
-                 "-v", f"{out_dir.resolve().as_posix()}:/out", "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
-                 "--name", name, "-w", "/work"]
+                 "-v", f"{out_dir.resolve().as_posix()}:/out", "--name", name, "-w", "/work"]
+    if use_cache:
+        arguments += ["-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip"]
     if network is not None:
         arguments += ["--network", network]
     return arguments + [IMAGE_NAME] + command
@@ -198,7 +201,9 @@ def remove_clone_in_container(work_root: Path) -> None:
     base.run_command(arguments, None, CLEANUP_TIMEOUT_SECONDS)
 
 
-def container_pip_install(project_dir: Path, out_dir: Path, requirements_name: str, log_path: Path) -> base.InstallResult:
+def container_pip_install(
+    project_dir: Path, out_dir: Path, requirements_name: str, log_path: Path, use_cache: bool
+) -> base.InstallResult:
     """WHAT: Creates /work/.venv if missing, then runs pip install -r <file> inside the container.
     The full output is appended to the log; failure is returned as data.
     WHY: A failed install is a finding, and the venv keeps packages for the later pytest step.
@@ -208,6 +213,7 @@ def container_pip_install(project_dir: Path, out_dir: Path, requirements_name: s
         out_dir: output folder.
         requirements_name: file name inside project_dir.
         log_path: pip log to append to.
+        use_cache: mount the wheel-cache volume (False for --fresh-cache).
     Returns:
         InstallResult.
     Example:
@@ -216,7 +222,7 @@ def container_pip_install(project_dir: Path, out_dir: Path, requirements_name: s
     venv_command = ["python", "-m", "venv", "/work/.venv"]
     base.run_command(container_arguments(project_dir, out_dir, None, venv_command, "medora-v1-venv"), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
     pip_command = ["/work/.venv/bin/python", "-m", "pip", "install", "-r", requirements_name]
-    arguments = container_arguments(project_dir, out_dir, None, pip_command, "medora-v1-pip")
+    arguments = container_arguments(project_dir, out_dir, None, pip_command, "medora-v1-pip", use_cache)
     started = time.monotonic()
     timed_out = False
     try:
@@ -369,14 +375,15 @@ def execute_container_run(args: argparse.Namespace, work_root: Path, out_dir: Pa
     shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
-    cache_before = cache_state()
-    v1_install = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log)
+    use_cache = not args.fresh_cache
+    cache_before = cache_state() if use_cache else "skipped (--fresh-cache)"
+    v1_install = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log, use_cache)
     installed = v1_install
     if installed.succeeded:
-        installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log)
+        installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log, use_cache)
     downloaded_bytes, cached_bytes = parse_pip_sizes(pip_log.read_text(encoding="utf-8", errors="replace"))
     write_meta_json(out_dir, {
-        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before,
+        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before, "fresh_cache": args.fresh_cache,
         "pip_exit_code": v1_install.return_code, "pip_wall_seconds": round(v1_install.wall_seconds, 1),
         "pip_timed_out": v1_install.timed_out, "pip_downloaded_bytes": downloaded_bytes,
         "pip_cached_bytes": cached_bytes,
@@ -402,6 +409,7 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description="Record v1's test results inside a Linux container.")
     parser.add_argument("--run-label", required=True, choices=ALLOWED_LABELS)
+    parser.add_argument("--fresh-cache", action="store_true", help="do not mount the wheel-cache volume (cold install)")
     parser.add_argument("--tag", default=base.V1_DEFAULT_TAG)
     parser.add_argument("--out-root", default="docs/phase0/v1-test-results")
     args = parser.parse_args(argv)
