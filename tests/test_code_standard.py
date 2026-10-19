@@ -11,6 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # Every file created in the Phase 0 baseline task (keep this list up to date).
 NEW_CODE_FILES = [
     "tools/phase0/run_v1_suite.py",
+    "tools/phase0/run_v1_suite_docker.py",
     "tests/phase0/test_parse_junit.py",
     "tests/test_code_standard.py",
 ]
