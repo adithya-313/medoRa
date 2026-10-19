@@ -405,6 +405,7 @@ def compose_with_override(compose_file: Path, override_file: Path, action: list[
     """WHAT: Runs docker compose with v1's file plus an override that removes published host ports.
     WHY: Host ports 5432 and 6379 belong to other containers on this laptop; the tests run inside
     the compose network, so no host port is needed. v1's own compose file is left untouched.
+    It also copies .env.example to .env only while compose runs (compose requires the file).
 
     Args:
         compose_file: v1's docker-compose.yml.
@@ -418,7 +419,14 @@ def compose_with_override(compose_file: Path, override_file: Path, action: list[
         action=["down"] -> containers stopped, volumes kept
     """
     arguments = ["docker", "compose", "-f", str(compose_file), "-f", str(override_file)] + action
-    finished = base.run_command(arguments, compose_file.parent, base.DOCKER_TIMEOUT_SECONDS)
+    # v1's api/worker services declare "env_file: .env", and compose refuses to load without it.
+    # The file exists only while compose runs, so pytest never sees it (pydantic would read it).
+    env_file = compose_file.parent / ".env"
+    shutil.copy(compose_file.parent / ".env.example", env_file)
+    try:
+        finished = base.run_command(arguments, compose_file.parent, base.DOCKER_TIMEOUT_SECONDS)
+    finally:
+        env_file.unlink(missing_ok=True)
     if finished.returncode != 0:
         raise RuntimeError(f"docker compose {action[0]} failed: {finished.stderr.strip()}")
 
