@@ -10,7 +10,9 @@ requirements are never edited, skipped or filtered.
 from __future__ import annotations
 
 import argparse
+import json
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -80,6 +82,89 @@ def container_arguments(
     if network is not None:
         arguments += ["--network", network]
     return arguments + [IMAGE_NAME] + command
+
+
+# sourced: pip prints sizes in decimal units (1 kB = 1000 bytes), e.g. "Downloading x.whl (53.9 MB)".
+BYTES_PER_UNIT = {"kB": 1000, "MB": 1000 * 1000, "GB": 1000 * 1000 * 1000}
+PIP_SIZE_PATTERN = re.compile(r"^(Downloading|Using cached) \S+ \(([0-9.]+) (kB|MB|GB)\)", re.MULTILINE)
+
+
+def parse_pip_sizes(log_text: str) -> tuple[int, int]:
+    """WHAT: Adds up the file sizes pip printed, split into freshly downloaded and served from cache.
+    WHY: The huge CUDA/torch download is a real v1 finding, so its size is recorded from the log.
+
+    Args:
+        log_text: full pip log.
+    Returns:
+        (downloaded_bytes, cached_bytes).
+    Example:
+        "Downloading a.whl (1.5 MB)" and "Using cached b.whl (200 kB)" -> (1500000, 200000)
+    """
+    downloaded_bytes = 0
+    cached_bytes = 0
+    for action, number, unit in PIP_SIZE_PATTERN.findall(log_text):
+        size_bytes = int(float(number) * BYTES_PER_UNIT[unit])
+        if action == "Downloading":
+            downloaded_bytes += size_bytes
+        else:
+            cached_bytes += size_bytes
+    return downloaded_bytes, cached_bytes
+
+
+def image_id() -> str:
+    """WHAT: Reads the local image ID (sha256) of the baseline image.
+    WHY: A locally built image has no registry digest; its ID identifies exactly what ran.
+
+    Args:
+        none.
+    Returns:
+        e.g. "sha256:ab12...".
+    Raises:
+        RuntimeError: if docker image inspect fails.
+    Example:
+        image_id() -> "sha256:4f1c..."
+    """
+    arguments = ["docker", "image", "inspect", "--format", "{{.Id}}", IMAGE_NAME]
+    finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    if finished.returncode != 0:
+        raise RuntimeError(f"docker image inspect failed: {finished.stderr.strip()}")
+    return finished.stdout.strip()
+
+
+def cache_state() -> str:
+    """WHAT: Reports whether the wheel-cache volume is absent, empty or reused (with its size).
+    WHY: A run on a warm cache is not a cold install; the results must say which it was.
+
+    Args:
+        none.
+    Returns:
+        "absent", "empty" or "reused (<N> kB)".
+    Example:
+        volume holding 3 GB of wheels -> "reused (3000000 kB)"
+    """
+    inspect_arguments = ["docker", "volume", "inspect", PIP_CACHE_VOLUME]
+    if base.run_command(inspect_arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS).returncode != 0:
+        return "absent"
+    probe = ["docker", "run", "--rm", "-v", f"{PIP_CACHE_VOLUME}:/cache", IMAGE_NAME, "du", "-sk", "/cache"]
+    finished = base.run_command(probe, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    size_kilobytes = int(finished.stdout.split()[0]) if finished.returncode == 0 else -1
+    # an empty directory still reports a few kB for the directory entry itself
+    return "empty" if 0 <= size_kilobytes <= 8 else f"reused ({size_kilobytes} kB)"
+
+
+def write_meta_json(out_dir: Path, fields: dict[str, object]) -> None:
+    """WHAT: Writes meta.json with the container-run facts.
+    WHY: Results.json holds test data; meta.json holds how the environment was built.
+
+    Args:
+        out_dir: output folder.
+        fields: key/value facts.
+    Returns:
+        Nothing.
+    Example:
+        {"pip_exit_code": 0} -> out_dir/meta.json
+    """
+    (out_dir / "meta.json").write_text(json.dumps(fields, indent=2), encoding="utf-8")
 
 
 def stop_container(name: str) -> None:
@@ -284,9 +369,18 @@ def execute_container_run(args: argparse.Namespace, work_root: Path, out_dir: Pa
     shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
-    installed = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log)
+    cache_before = cache_state()
+    v1_install = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log)
+    installed = v1_install
     if installed.succeeded:
         installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log)
+    downloaded_bytes, cached_bytes = parse_pip_sizes(pip_log.read_text(encoding="utf-8", errors="replace"))
+    write_meta_json(out_dir, {
+        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before,
+        "pip_exit_code": v1_install.return_code, "pip_wall_seconds": round(v1_install.wall_seconds, 1),
+        "pip_timed_out": v1_install.timed_out, "pip_downloaded_bytes": downloaded_bytes,
+        "pip_cached_bytes": cached_bytes,
+    })
     note = "" if installed.succeeded else f"pip install failed (rc={installed.return_code}); tests not run."
     result = run_inside_container(args, project_dir, out_dir) if installed.succeeded else None
     record_container_outcome(args, commit, project_dir, out_dir, result, note)
