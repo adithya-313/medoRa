@@ -153,6 +153,45 @@ def cache_state() -> str:
     return "empty" if 0 <= size_kilobytes <= 8 else f"reused ({size_kilobytes} kB)"
 
 
+SIZE_MEASUREMENT_NOTE = (
+    "ESTIMATE: sums the sizes pip prints on 'Downloading <file> (<size>)' and 'Using cached <file> (<size>)' "
+    "log lines; pip rounds to 3 significant digits and skips files whose size it does not print."
+)
+
+
+def cache_label(cache_before: str) -> str:
+    """WHAT: Names the install condition: "warm cache" when the wheel volume was reused, else cold.
+    WHY: Install time and size only mean something together with the cache state.
+
+    Args:
+        cache_before: value from cache_state(), or the skipped text.
+    Returns:
+        "warm cache" or "cold install".
+    Example:
+        "reused (1500000 kB)" -> "warm cache"; "absent" -> "cold install"
+    """
+    return "warm cache" if cache_before.startswith("reused") else "cold install"
+
+
+def install_note(cache_before: str, wall_seconds: float, downloaded: int, cached: int) -> str:
+    """WHAT: Builds the sentence put into results.md about install time and size.
+    WHY: A reader of results.md must see that the numbers are warm-cache numbers.
+
+    Args:
+        cache_before: cache state text.
+        wall_seconds: pip seconds for v1's requirements.txt.
+        downloaded: bytes pip downloaded.
+        cached: bytes pip took from the cache.
+    Returns:
+        One sentence.
+    Example:
+        ("reused (9 kB)", 300.0, 1000000, 2000000) -> "Install ran on a warm cache: pip 300.0 s, ..."
+    """
+    return (f"Install ran on a {cache_label(cache_before)}: pip {round(wall_seconds, 1)} s, "
+            f"downloaded {round(downloaded / 1_000_000, 1)} MB, served from cache {round(cached / 1_000_000, 1)} MB "
+            f"(sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold).")
+
+
 def write_meta_json(out_dir: Path, fields: dict[str, object]) -> None:
     """WHAT: Writes meta.json with the container-run facts.
     WHY: Results.json holds test data; meta.json holds how the environment was built.
@@ -381,6 +420,42 @@ def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: P
         base.compose_command(compose_file, ["down"])
 
 
+def install_and_record_meta(
+    args: argparse.Namespace, project_dir: Path, out_dir: Path, pip_log: Path
+) -> tuple[base.InstallResult, str]:
+    """WHAT: Installs v1's requirements, then the dev requirements, and writes meta.json.
+    WHY: Install facts (image, cache state, seconds, sizes) are recorded even when pip fails.
+
+    Args:
+        args: parsed command line.
+        project_dir: sentinel_flow_mvp folder.
+        out_dir: output folder.
+        pip_log: pip log path.
+    Returns:
+        (last InstallResult, note text for results.md).
+    Example:
+        install ok on a warm cache -> (InstallResult(succeeded=True, ...), "Install ran on a warm cache: ...")
+    """
+    use_cache = not args.fresh_cache
+    cache_before = cache_state() if use_cache else "skipped (--fresh-cache)"
+    v1_install = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log, use_cache)
+    installed = v1_install
+    if installed.succeeded:
+        installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log, use_cache)
+    downloaded, cached = parse_pip_sizes(pip_log.read_text(encoding="utf-8", errors="replace"))
+    write_meta_json(out_dir, {
+        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before,
+        "fresh_cache": args.fresh_cache, "install_cache_label": cache_label(cache_before),
+        "pip_exit_code": v1_install.return_code, "pip_wall_seconds": round(v1_install.wall_seconds, 1),
+        "pip_timed_out": v1_install.timed_out, "pip_downloaded_bytes": downloaded,
+        "pip_cached_bytes": cached, "size_measurement": SIZE_MEASUREMENT_NOTE,
+    })
+    note = install_note(cache_before, v1_install.wall_seconds, downloaded, cached)
+    if not installed.succeeded:
+        note += f" pip install failed (rc={installed.return_code}); tests not run."
+    return installed, note
+
+
 def execute_container_run(args: argparse.Namespace, work_root: Path, out_dir: Path) -> int:
     """WHAT: Runs every step: check Docker, build image, clone, install, pytest, record.
     WHY: Keeps main() short and the order of steps visible.
@@ -404,20 +479,7 @@ def execute_container_run(args: argparse.Namespace, work_root: Path, out_dir: Pa
     shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
-    use_cache = not args.fresh_cache
-    cache_before = cache_state() if use_cache else "skipped (--fresh-cache)"
-    v1_install = container_pip_install(project_dir, out_dir, "requirements.txt", pip_log, use_cache)
-    installed = v1_install
-    if installed.succeeded:
-        installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log, use_cache)
-    downloaded_bytes, cached_bytes = parse_pip_sizes(pip_log.read_text(encoding="utf-8", errors="replace"))
-    write_meta_json(out_dir, {
-        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before, "fresh_cache": args.fresh_cache,
-        "pip_exit_code": v1_install.return_code, "pip_wall_seconds": round(v1_install.wall_seconds, 1),
-        "pip_timed_out": v1_install.timed_out, "pip_downloaded_bytes": downloaded_bytes,
-        "pip_cached_bytes": cached_bytes,
-    })
-    note = "" if installed.succeeded else f"pip install failed (rc={installed.return_code}); tests not run."
+    installed, note = install_and_record_meta(args, project_dir, out_dir, pip_log)
     result = run_inside_container(args, project_dir, out_dir) if installed.succeeded else None
     record_container_outcome(args, commit, project_dir, out_dir, result, note)
     for log_name in ["pip.log", "pytest.log", "pytest-stderr.log"]:
