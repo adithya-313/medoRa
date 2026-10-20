@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="1"><testcase classname="tests.test_a" name="test_two_errors" time="0.2"><error message="setup failed">a</error><error message="teardown failed">b</error></testcase></testsuite></testsuites>

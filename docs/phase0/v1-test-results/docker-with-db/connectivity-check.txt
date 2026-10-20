@@ -1,0 +1,5 @@
+DATABASE_URL=postgresql://postgres:****@timescaledb:5432/sentinel_db
+REDIS_URL=redis://redis:6379/0
+$ pg_isready -> rc=0 timescaledb:5432 - accepting connections 
+$ python -> rc=0 postgres select 1 -> 1
+redis ping -> True 

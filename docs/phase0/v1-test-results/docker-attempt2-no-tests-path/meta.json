@@ -1,0 +1,13 @@
+{
+  "image_name": "medora-v1-baseline:py311",
+  "image_id": "sha256:73e79add3b84dc3df8a107369ae677c62bc2bc440afcca5106569b56bac3ff67",
+  "cache_before_run": "reused (2059892 kB)",
+  "fresh_cache": false,
+  "install_cache_label": "warm cache",
+  "pip_exit_code": 0,
+  "pip_wall_seconds": 4157.2,
+  "pip_timed_out": false,
+  "pip_downloaded_bytes": 906299500,
+  "pip_cached_bytes": 2077905500,
+  "size_measurement": "ESTIMATE: sums the sizes pip prints on 'Downloading <file> (<size>)' and 'Using cached <file> (<size>)' log lines; pip rounds to 3 significant digits and skips files whose size it does not print."
+}
