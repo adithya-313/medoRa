@@ -14,6 +14,7 @@ from tools.phase0.feature_truth import (
     Evidence,
     Feature,
     FeatureTruthError,
+    Finding,
     InventoryItem,
     check_coverage,
     check_evidence,
@@ -234,3 +235,51 @@ def test_render_table_counts_statuses() -> None:
     text = render_table(features)
     assert "- working: 2" in text and "- mocked: 1" in text and "- broken: 0" in text
     assert "## billing" in text and "| c | name | mocked |" in text
+
+
+def test_finding_citation_is_checked_and_rendered(tmp_path: Path) -> None:
+    """WHAT: Builds a feature with a security finding that cites a correct line and another with a wrong
+    line, checks only the wrong one is reported, and checks the rendered table lists the findings in a
+    "Security findings" section generated from the data.
+    WHY: Findings must be as checkable as statuses, and the table must not contain hand-typed findings.
+
+    Args:
+        tmp_path: pytest's temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        a finding citing app/x.py line 2 that actually has text on line 1 -> one problem; the good one is listed
+    """
+    v1_dir = tmp_path / "v1"
+    (v1_dir / "app").mkdir(parents=True)
+    (v1_dir / "app/x.py").write_text("alpha" + chr(10) + "beta" + chr(10), encoding="utf-8")
+    good = Finding("security", "good finding", Evidence(kind="code", file="app/x.py", line=1, contains="alpha"))
+    bad = Finding("security", "bad finding", Evidence(kind="code", file="app/x.py", line=2, contains="alpha"))
+    feature = make_feature("f1", ["GET /a"])
+    feature.evidence = []  # only the findings are under test here
+    feature.findings = [good, bad]
+    problems = check_evidence([feature], v1_dir, tmp_path / "results")
+    assert len(problems) == 1 and "app/x.py:2" in problems[0]
+    text = render_table([feature])
+    assert "## Security findings" in text and "good finding" in text and "f1" in text
+    assert "## Security findings" not in render_table([make_feature("f2", ["GET /b"])])
+
+
+def test_table_starts_with_the_working_definition_and_bad_finding_names_the_feature() -> None:
+    """WHAT: Checks the rendered table carries the definition line for "working", and that a finding
+    without a category raises an error naming its feature id.
+    WHY: Readers must know what "working" means here, and bad YAML must point at the feature to fix.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        render_table([]) contains "working = passes on SQLite in tests; v1 production uses Postgres 15"
+    """
+    assert "working = passes on SQLite in tests; v1 production uses Postgres 15" in render_table([])
+    code_item = {"type": "code", "file": "a.py", "line": 1, "contains": "x"}
+    raw = {"id": "f9", "name": "n", "area": "billing", "entry_points": ["GET /a"], "status": "untested",
+           "evidence": [code_item], "findings": [{"title": "no category"}]}
+    with pytest.raises(FeatureTruthError, match="f9: a finding needs"):
+        parse_feature(raw)

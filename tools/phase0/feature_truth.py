@@ -33,9 +33,11 @@ AREAS = ["billing", "stock", "procurement", "vendor", "ml", "rag", "health-risk"
          "notifications", "audit", "admin", "infra"]
 EVIDENCE_TYPES = ["test", "code", "doc"]
 EXPECTED_OUTCOMES = ["passed", "failed", "error"]
+FINDING_CATEGORIES = ["security"]
 # sourced: where the v1-final files can be read online (used only to build links in the table).
 V1_BLOB_URL = "https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/"
 MAIN_FILE = "app/main.py"
+WORKING_DEFINITION = "working = passes on SQLite in tests; v1 production uses Postgres 15"
 
 
 class FeatureTruthError(ValueError):
@@ -65,6 +67,15 @@ class Evidence:
 
 
 @dataclasses.dataclass
+class Finding:
+    """A problem noticed in a feature's code (for example a missing tenant filter), with a code citation."""
+
+    category: str
+    title: str
+    evidence: Evidence
+
+
+@dataclasses.dataclass
 class Feature:
     """One row of the feature-truth table."""
 
@@ -76,6 +87,7 @@ class Feature:
     note: str
     mock_check: str
     evidence: list[Evidence]
+    findings: list[Finding] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
@@ -421,6 +433,27 @@ def parse_evidence(raw: object, feature_id: str) -> Evidence:
                     raw.get("file", ""), raw.get("line", 0), raw.get("contains", ""))
 
 
+def parse_finding(raw: object, feature_id: str) -> Finding:
+    """WHAT: Validates one finding mapping (category, title, file, line, contains) from the YAML.
+    The citation is a code citation, checked later like any other evidence.
+    WHY: Findings (such as a missing tenant filter) must be as checkable as statuses.
+
+    Args:
+        raw: the YAML value.
+        feature_id: owning feature, for error messages.
+    Returns:
+        Finding.
+    Raises:
+        FeatureTruthError: for a wrong type, missing field or unknown category.
+    Example:
+        {"category": "security", "title": "no tenant filter", "file": "a.py", "line": 3, "contains": "x"} -> Finding(...)
+    """
+    if not isinstance(raw, dict) or raw.get("category") not in FINDING_CATEGORIES or not raw.get("title"):
+        raise FeatureTruthError(f"{feature_id}: a finding needs a category in {FINDING_CATEGORIES} and a title: {raw!r}")
+    code_fields = {"type": "code", "file": raw.get("file"), "line": raw.get("line"), "contains": raw.get("contains")}
+    return Finding(raw["category"], raw["title"], parse_evidence(code_fields, feature_id))
+
+
 def parse_feature(raw: object) -> Feature:
     """WHAT: Validates one feature mapping and builds a Feature, enforcing the status rules:
     every status needs evidence; "working" needs a passing test item and a mock_check.
@@ -444,8 +477,9 @@ def parse_feature(raw: object) -> Feature:
     if raw["status"] not in STATUSES or raw["area"] not in AREAS:
         raise FeatureTruthError(f"{feature_id}: status must be in {STATUSES} and area in {AREAS}")
     evidence = [parse_evidence(item, feature_id) for item in raw["evidence"] or []]
+    findings = [parse_finding(item, feature_id) for item in raw.get("findings") or []]
     feature = Feature(feature_id, raw["name"], raw["area"], list(raw["entry_points"] or []), raw["status"],
-                      raw.get("note", ""), raw.get("mock_check", ""), evidence)
+                      raw.get("note", ""), raw.get("mock_check", ""), evidence, findings)
     validate_status_rules(feature)
     return feature
 
@@ -636,7 +670,8 @@ def check_evidence(features: list[Feature], v1_dir: Path, results_dir: Path) -> 
     outcomes_by_run: dict[str, dict[str, set[str]]] = {}
     problems: list[str] = []
     for feature in features:
-        for item in feature.evidence:
+        cited = feature.evidence + [finding.evidence for finding in feature.findings]
+        for item in cited:
             problem = check_one_evidence(feature.id, item, v1_dir, results_dir, outcomes_by_run)
             if problem is not None:
                 problems.append(problem)
@@ -662,6 +697,30 @@ def evidence_link(item: Evidence) -> str:
     return f"[{item.file}]({V1_BLOB_URL}{item.file})"
 
 
+def render_findings(features: list[Feature]) -> list[str]:
+    """WHAT: Builds one "<Category> findings" section per finding category, generated from the findings
+    field of features.yaml: feature id, title and a link to the cited line.
+    WHY: Findings must come from the data, never be typed into the rendered table.
+
+    Args:
+        features: validated features.
+    Returns:
+        Markdown lines (empty when no feature has findings).
+    Example:
+        one security finding on feature "inventory-triage" -> ["", "## Security findings", "", "- **inventory-triage**: ..."]
+    """
+    lines: list[str] = []
+    for category in FINDING_CATEGORIES:
+        entries = [(feature, finding) for feature in features for finding in feature.findings
+                   if finding.category == category]
+        if not entries:
+            continue
+        lines += ["", f"## {category.capitalize()} findings", ""]
+        for feature, finding in entries:
+            lines.append(f"- **{feature.id}**: {finding.title} ({evidence_link(finding.evidence)})")
+    return lines
+
+
 def render_table(features: list[Feature]) -> str:
     """WHAT: Renders the Markdown table: a count per status, then one table per area with links.
     WHY: This is the human-readable output; it is generated, never edited by hand.
@@ -674,7 +733,7 @@ def render_table(features: list[Feature]) -> str:
         2 working + 1 mocked -> a summary line "working: 2, mocked: 1, ..." and the rows below it
     """
     lines = ["# v1 feature-truth table", "", "_Generated by tools/phase0/feature_truth.py. Do not edit by hand._", "",
-             "## Summary", ""]
+             WORKING_DEFINITION, "", "## Summary", ""]
     for status in STATUSES:
         lines.append(f"- {status}: {sum(1 for feature in features if feature.status == status)}")
     for area in AREAS:
@@ -686,6 +745,7 @@ def render_table(features: list[Feature]) -> str:
             links = "<br>".join(evidence_link(item) for item in feature.evidence)
             note = feature.note.replace("|", "/").replace(chr(10), " ")
             lines.append(f"| {feature.id} | {feature.name} | {feature.status} | {note} | {links} |")
+    lines += render_findings(features)
     return chr(10).join(lines) + chr(10)
 
 
