@@ -12,9 +12,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 NEW_CODE_FILES = [
     "tools/phase0/run_v1_suite.py",
     "tools/phase0/run_v1_suite_docker.py",
+    "tools/phase0/feature_truth.py",
     "tests/phase0/test_parse_junit.py",
     "tests/phase0/test_pip_log.py",
     "tests/phase0/test_docker_helpers.py",
+    "tests/phase0/test_feature_truth.py",
     "tests/phase0/test_package_diff.py",
     "tests/test_code_standard.py",
 ]
