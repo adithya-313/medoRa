@@ -59,7 +59,7 @@ def build_image() -> None:
 
 def container_arguments(
     project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str,
-    use_cache: bool = False,
+    use_cache: bool = False, image: str = IMAGE_NAME,
 ) -> list[str]:
     """WHAT: Builds a `docker run` argument list that mounts v1's folder at /work and results at /out.
     WHY: One place defines how every container step is started.
@@ -71,6 +71,7 @@ def container_arguments(
         command: the program and arguments to run inside the container.
         name: container name, so a timed-out container can be removed.
         use_cache: mount the wheel-cache volume (only pip install should).
+        image: image to run.
     Returns:
         The full argument list.
     Example:
@@ -82,7 +83,7 @@ def container_arguments(
         arguments += ["-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip"]
     if network is not None:
         arguments += ["--network", network]
-    return arguments + [IMAGE_NAME] + command
+    return arguments + [image] + command
 
 
 # sourced: pip prints sizes in decimal units (1 kB = 1000 bytes), e.g. "Downloading x.whl (53.9 MB)".
@@ -112,12 +113,12 @@ def parse_pip_sizes(log_text: str) -> tuple[int, int]:
     return downloaded_bytes, cached_bytes
 
 
-def image_id() -> str:
+def image_id(image: str = IMAGE_NAME) -> str:
     """WHAT: Reads the local image ID (sha256) of the baseline image.
     WHY: A locally built image has no registry digest; its ID identifies exactly what ran.
 
     Args:
-        none.
+        image: image name or tag.
     Returns:
         e.g. "sha256:ab12...".
     Raises:
@@ -125,7 +126,7 @@ def image_id() -> str:
     Example:
         image_id() -> "sha256:4f1c..."
     """
-    arguments = ["docker", "image", "inspect", "--format", "{{.Id}}", IMAGE_NAME]
+    arguments = ["docker", "image", "inspect", "--format", "{{.Id}}", image]
     finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
     if finished.returncode != 0:
         raise RuntimeError(f"docker image inspect failed: {finished.stderr.strip()}")
@@ -274,7 +275,10 @@ def container_pip_install(
     return base.InstallResult(return_code == 0, return_code, timed_out, time.monotonic() - started, log_path)
 
 
-def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, network: str | None) -> base.RunResult:
+def container_run_pytest(
+    project_dir: Path, out_dir: Path, run_label: str, network: str | None,
+    python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
+) -> base.RunResult:
     """WHAT: Runs the whole v1 suite inside the container with no filters.
     Only tests/benchmarks and tests/load are ignored; the pytest cache is off.
     The plain path "tests" makes pytest find v1's own tests/pytest.ini (approved by the owner).
@@ -285,6 +289,8 @@ def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, netwo
         out_dir: output folder.
         run_label: label for this run.
         network: compose network to join, or None.
+        python_command: python inside the container (the venv one, or "python" in the env image).
+        image: image to run.
     Returns:
         RunResult.
     Side effects:
@@ -292,12 +298,12 @@ def container_run_pytest(project_dir: Path, out_dir: Path, run_label: str, netwo
     Example:
         run_label="docker-no-services" -> RunResult(return_code=1, wall_seconds=95.2, ...)
     """
-    command = ["/work/.venv/bin/python", "-m", "pytest", "-p", "no:cacheprovider", "-rA",
+    command = [python_command, "-m", "pytest", "-p", "no:cacheprovider", "-rA",
                "--junitxml=/out/junit.xml", "--ignore=tests/benchmarks", "--ignore=tests/load", "tests"]
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest"), None, base.PYTEST_TIMEOUT_SECONDS)
+        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest", False, image), None, base.PYTEST_TIMEOUT_SECONDS)
         return_code, stdout, stderr = finished.returncode, finished.stdout, finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
@@ -357,7 +363,7 @@ def record_container_outcome(
             note = (note + " No junit XML was produced.").strip()
         if result.timed_out:
             note = (note + " pytest hit the timeout and was killed.").strip()
-    os_name = f"Linux container (image {IMAGE_NAME}) on host {platform.system()} {platform.release()}"
+    os_name = f"Linux container (image {getattr(args, "image_name", IMAGE_NAME)}) on host {platform.system()} {platform.release()}"
     version = container_python_version(project_dir, out_dir)
     meta = base.RunMeta(args.tag, commit, args.run_label, datetime.now(timezone.utc).isoformat(),
                         os_name, version, round(wall, 1), sha, note)
@@ -393,11 +399,12 @@ def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
     return names[0]
 
 
-# sourced: compose "!reset" (Compose v2.24+) clears a service's list, here the published host ports.
+# sourced: compose "!reset" (Compose v2.24+) clears a key. Host ports 5432/6379 and the fixed container names
+# sentinel_db/sentinel_redis are already taken by other containers on this laptop.
 PORT_OVERRIDE_TEXT = (
     "services:" + chr(10)
-    + "  timescaledb:" + chr(10) + "    ports: !reset []" + chr(10)
-    + "  redis:" + chr(10) + "    ports: !reset []" + chr(10)
+    + "  timescaledb:" + chr(10) + "    container_name: !reset null" + chr(10) + "    ports: !reset []" + chr(10)
+    + "  redis:" + chr(10) + "    container_name: !reset null" + chr(10) + "    ports: !reset []" + chr(10)
 )
 
 
@@ -431,7 +438,278 @@ def compose_with_override(compose_file: Path, override_file: Path, action: list[
         raise RuntimeError(f"docker compose {action[0]} failed: {finished.stderr.strip()}")
 
 
-def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: Path) -> base.RunResult:
+# sourced: the owner asked for the committed environment image to be tagged v1-baseline-env.
+ENV_IMAGE_NAME = "v1-baseline-env"
+ENV_CONTAINER_NAME = "medora-v1-env-build"
+# the earlier no-services run's pip log, used to compare package versions with the new image.
+NO_SERVICES_PIP_LOG = "docker-no-services/pip.log"
+
+
+def normalise_name(name: str) -> str:
+    """WHAT: Lower-cases a package name and turns runs of '-', '_' and '.' into one '-'.
+    WHY: pip freeze and pip logs spell the same package differently (e.g. "Pillow", "typing_extensions").
+
+    Args:
+        name: package name as printed by pip.
+    Returns:
+        The normalised name.
+    Example:
+        "Typing_Extensions" -> "typing-extensions"
+    """
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def parse_freeze(freeze_text: str) -> dict[str, str]:
+    """WHAT: Reads `pip freeze` output (name==version lines) into a name -> version map.
+    WHY: Package lists must be compared by value, not by eye.
+
+    Args:
+        freeze_text: output of pip freeze.
+    Returns:
+        Map of normalised name to version; lines without '==' are ignored.
+    Example:
+        "torch==2.12.0" -> {"torch": "2.12.0"}
+    """
+    packages: dict[str, str] = {}
+    for line in freeze_text.splitlines():
+        if "==" in line:
+            name, version = line.strip().split("==", 1)
+            packages[normalise_name(name)] = version
+    return packages
+
+
+def parse_installed_from_log(log_text: str) -> dict[str, str]:
+    """WHAT: Reads every "Successfully installed name-version ..." line of a pip log.
+    WHY: The earlier run kept only its pip log (its venv was deleted), so the log is its package list.
+
+    Args:
+        log_text: full pip log.
+    Returns:
+        Map of normalised name to version.
+    Example:
+        "Successfully installed torch-2.12.0 numpy-2.1.0" -> {"torch": "2.12.0", "numpy": "2.1.0"}
+    """
+    packages: dict[str, str] = {}
+    for line in log_text.splitlines():
+        if line.startswith("Successfully installed "):
+            for token in line.split()[2:]:
+                name, version = token.rsplit("-", 1)
+                packages[normalise_name(name)] = version
+    return packages
+
+
+def compare_packages(image_packages: dict[str, str], venv_packages: dict[str, str]) -> dict[str, object]:
+    """WHAT: Compares the new image's packages with the earlier run's packages.
+    WHY: Any version difference between the two environments must be reported, never hidden.
+
+    Args:
+        image_packages: from pip freeze in the new image.
+        venv_packages: from the earlier run's pip log.
+    Returns:
+        Dict with only_in_image, only_in_earlier_run and version_differences (name, image, earlier).
+    Example:
+        image {"a": "1", "pip": "24"}, earlier {"a": "2"} -> only_in_image ["pip==24"], version_differences [["a","1","2"]]
+    """
+    only_in_image = [f"{name}=={image_packages[name]}" for name in sorted(set(image_packages) - set(venv_packages))]
+    only_in_earlier = [f"{name}=={venv_packages[name]}" for name in sorted(set(venv_packages) - set(image_packages))]
+    differences = []
+    for name in sorted(set(image_packages) & set(venv_packages)):
+        if image_packages[name] != venv_packages[name]:
+            differences.append([name, image_packages[name], venv_packages[name]])
+    return {"only_in_image": only_in_image, "only_in_earlier_run": only_in_earlier,
+            "version_differences": differences}
+
+
+def start_env_container(project_dir: Path) -> None:
+    """WHAT: Starts an idle container from the base image with only v1's requirement files (read-only)
+    and the wheel-cache volume mounted. Packages will be installed into its own filesystem.
+    WHY: This is the one change from the earlier runs: where the environment lives (container
+    filesystem instead of the Windows bind mount). The install command itself stays the same.
+
+    Args:
+        project_dir: sentinel_flow_mvp folder of a fresh clone.
+    Returns:
+        Nothing.
+    Raises:
+        RuntimeError: if docker run fails.
+    Example:
+        start_env_container(proj) -> container "medora-v1-env-build" running
+    """
+    reqs = (project_dir / "requirements.txt").as_posix()
+    dev_reqs = (project_dir / "requirements-dev.txt").as_posix()
+    arguments = ["docker", "run", "-d", "--name", ENV_CONTAINER_NAME,
+                 "-v", f"{reqs}:/tmp/requirements.txt:ro", "-v", f"{dev_reqs}:/tmp/requirements-dev.txt:ro",
+                 "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip", IMAGE_NAME, "sleep", "infinity"]
+    finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    if finished.returncode != 0:
+        raise RuntimeError(f"cannot start the build container: {finished.stderr.strip()}")
+
+
+def exec_pip(requirements_path: str, log_path: Path) -> base.InstallResult:
+    """WHAT: Runs `python -m pip install -r <file>` inside the build container and appends the output to a log.
+    WHY: Same pip command as the earlier runs; only the install location differs. Timed as FACT.
+
+    Args:
+        requirements_path: path of the requirements file inside the container.
+        log_path: pip log to append to.
+    Returns:
+        InstallResult with return code and wall-clock seconds.
+    Example:
+        exec_pip("/tmp/requirements.txt", log) -> InstallResult(succeeded=True, wall_seconds=900.0, ...)
+    """
+    command = ["python", "-m", "pip", "install", "-r", requirements_path]
+    started = time.monotonic()
+    timed_out = False
+    try:
+        finished = base.run_command(["docker", "exec", ENV_CONTAINER_NAME] + command, None, CONTAINER_PIP_TIMEOUT_SECONDS)
+        return_code, output = finished.returncode, finished.stdout + finished.stderr
+    except subprocess.TimeoutExpired as error:
+        timed_out = True
+        return_code, output = -1, base.as_text(error.stdout) + base.as_text(error.stderr)
+    with log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write(f"$ {' '.join(command)}\nreturn code: {return_code}\n{output}\n")
+    return base.InstallResult(return_code == 0, return_code, timed_out, time.monotonic() - started, log_path)
+
+
+def freeze_and_commit(out_dir: Path) -> tuple[str, str]:
+    """WHAT: Saves `pip freeze` from the build container, then commits the container as the image v1-baseline-env.
+    WHY: The freeze (with its SHA-256) pins exactly which packages the with-db run used.
+
+    Args:
+        out_dir: output folder that receives pip-freeze.txt.
+    Returns:
+        (SHA-256 of pip-freeze.txt, image ID of v1-baseline-env).
+    Raises:
+        RuntimeError: if pip freeze or docker commit fails.
+    Example:
+        freeze_and_commit(out) -> ("9f2c...", "sha256:73e7...")
+    """
+    timeout = base.SHORT_COMMAND_TIMEOUT_SECONDS
+    freeze = base.run_command(["docker", "exec", ENV_CONTAINER_NAME, "python", "-m", "pip", "freeze"], None, timeout)
+    if freeze.returncode != 0:
+        raise RuntimeError(f"pip freeze failed: {freeze.stderr.strip()}")
+    (out_dir / "pip-freeze.txt").write_text(freeze.stdout, encoding="utf-8")
+    commit = base.run_command(["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, timeout)
+    if commit.returncode != 0:
+        raise RuntimeError(f"docker commit failed: {commit.stderr.strip()}")
+    return base.sha256_of_file(out_dir / "pip-freeze.txt"), image_id(ENV_IMAGE_NAME)
+
+
+def build_env_image(project_dir: Path, out_dir: Path, pip_log: Path) -> dict[str, object]:
+    """WHAT: Builds the v1-baseline-env image: installs v1's requirements.txt unchanged inside a container,
+    then the dev requirements (pytest), then freezes and commits. The build container is always removed.
+    WHY: Records install time and package list separately from the later pytest time.
+
+    Args:
+        project_dir: sentinel_flow_mvp folder of a fresh clone (with requirements-dev.txt copied in).
+        out_dir: output folder.
+        pip_log: pip log path.
+    Returns:
+        Facts for meta.json (image ID, freeze hash, pip seconds, build seconds, cache state).
+    Raises:
+        RuntimeError: if the v1 install, freeze or commit fails (the run must stop and be reported).
+    Example:
+        success -> {"env_image_id": "sha256:...", "env_pip_v1_wall_seconds": 3000.1, ...}
+    """
+    cache_before = cache_state()
+    started = time.monotonic()
+    start_env_container(project_dir)
+    try:
+        v1_install = exec_pip("/tmp/requirements.txt", pip_log)
+        if not v1_install.succeeded:
+            raise RuntimeError(f"pip install of v1 requirements failed (rc={v1_install.return_code}); see pip.log")
+        dev_install = exec_pip("/tmp/requirements-dev.txt", pip_log)
+        freeze_hash, env_image_id = freeze_and_commit(out_dir)
+    finally:
+        stop_container(ENV_CONTAINER_NAME)
+    return {"env_image_name": ENV_IMAGE_NAME, "env_image_id": env_image_id, "pip_freeze_sha256": freeze_hash,
+            "cache_before_run": cache_before, "install_cache_label": cache_label(cache_before),
+            "env_pip_v1_exit_code": v1_install.return_code, "env_pip_v1_wall_seconds": round(v1_install.wall_seconds, 1),
+            "env_pip_dev_wall_seconds": round(dev_install.wall_seconds, 1),
+            "env_build_total_wall_seconds": round(time.monotonic() - started, 1)}
+
+
+def compare_with_earlier_run(out_dir: Path) -> dict[str, object]:
+    """WHAT: Compares the new image's pip freeze with the packages the no-services run installed,
+    saves the full difference to package-diff.json, and returns it.
+    WHY: If the two environments differ, the with-db results are not directly comparable.
+
+    Args:
+        out_dir: output folder holding pip-freeze.txt (and receiving package-diff.json).
+    Returns:
+        The difference dict, or {"status": "earlier pip log not found"}.
+    Example:
+        identical package sets -> only_in_image [], only_in_earlier_run [], version_differences []
+    """
+    earlier_log = out_dir.parent / NO_SERVICES_PIP_LOG
+    if not earlier_log.exists():
+        return {"status": "earlier pip log not found"}
+    image_packages = parse_freeze((out_dir / "pip-freeze.txt").read_text(encoding="utf-8"))
+    earlier_packages = parse_installed_from_log(earlier_log.read_text(encoding="utf-8", errors="replace"))
+    difference = compare_packages(image_packages, earlier_packages)
+    (out_dir / "package-diff.json").write_text(json.dumps(difference, indent=2), encoding="utf-8")
+    return difference
+
+
+def update_meta_json(out_dir: Path, extra: dict[str, object]) -> None:
+    """WHAT: Adds keys to the existing meta.json.
+    WHY: pytest time is only known after pytest ends, but meta.json is first written before it.
+
+    Args:
+        out_dir: output folder.
+        extra: keys to add or replace.
+    Returns:
+        Nothing.
+    Example:
+        {"pytest_wall_seconds": 240.1} -> meta.json now has that key
+    """
+    meta_path = out_dir / "meta.json"
+    fields = json.loads(meta_path.read_text(encoding="utf-8"))
+    fields.update(extra)
+    write_meta_json(out_dir, fields)
+
+
+def execute_env_run(args: argparse.Namespace, work_root: Path, out_dir: Path) -> int:
+    """WHAT: The with-db flow: fresh clone, build the v1-baseline-env image, compare packages,
+    then run pytest (same arguments) from that image with services started.
+    WHY: Separates "where the environment lives" from "how it is installed" so timing can be compared.
+
+    Args:
+        args: parsed command line.
+        work_root: new temp folder.
+        out_dir: output folder.
+    Returns:
+        0 on completion.
+    Raises:
+        RuntimeError: if Docker is unavailable or the image build fails.
+    Example:
+        --run-label docker-with-db -> meta.json with env_pip_v1_wall_seconds and pytest_wall_seconds
+    """
+    if not base.docker_available():
+        raise RuntimeError("Docker is not available")
+    build_image()
+    project_dir = base.clone_v1(args.tag, work_root / "v1")
+    commit = base.read_commit_hash(work_root / "v1")
+    shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
+    pip_log = out_dir / "pip.log"
+    pip_log.unlink(missing_ok=True)
+    facts = build_env_image(project_dir, out_dir, pip_log)
+    facts["package_diff"] = compare_with_earlier_run(out_dir)
+    write_meta_json(out_dir, facts)
+    args.image_name = ENV_IMAGE_NAME
+    result = run_inside_container(args, project_dir, out_dir, "python", ENV_IMAGE_NAME)
+    update_meta_json(out_dir, {"pytest_wall_seconds": round(result.wall_seconds, 1)})
+    note = "Environment installed into the container filesystem (image v1-baseline-env), warm wheel cache."
+    record_container_outcome(args, commit, project_dir, out_dir, result, note)
+    for log_name in ["pip.log", "pytest.log", "pytest-stderr.log"]:
+        base.trim_log_if_large(out_dir / log_name)
+    return 0
+
+
+def run_inside_container(
+    args: argparse.Namespace, project_dir: Path, out_dir: Path,
+    python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
+) -> base.RunResult:
     """WHAT: Runs pytest in the container; for docker-with-db it first starts v1's timescaledb and redis
     and joins the container to their compose network, and always stops them afterwards (no -v).
     WHY: v1's settings reach Redis by the hostname "redis", which only works on that network;
@@ -441,6 +719,8 @@ def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: P
         args: parsed command line.
         project_dir: sentinel_flow_mvp folder.
         out_dir: output folder.
+        python_command: python inside the container.
+        image: image to run.
     Returns:
         RunResult.
     Raises:
@@ -449,14 +729,14 @@ def run_inside_container(args: argparse.Namespace, project_dir: Path, out_dir: P
         "docker-with-db" -> compose up timescaledb+redis, pytest on network, compose down
     """
     if args.run_label == "docker-no-services":
-        return container_run_pytest(project_dir, out_dir, args.run_label, None)
+        return container_run_pytest(project_dir, out_dir, args.run_label, None, python_command, image)
     compose_file = project_dir / "docker-compose.yml"
     try:
         override_file = project_dir / "docker-compose.no-ports.yml"
         override_file.write_text(PORT_OVERRIDE_TEXT, encoding="utf-8")
         compose_with_override(compose_file, override_file, ["up", "-d", "--wait"] + base.DB_SERVICE_NAMES)
         network = discover_compose_network(compose_file, out_dir)
-        return container_run_pytest(project_dir, out_dir, args.run_label, network)
+        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image)
     finally:
         compose_with_override(compose_file, project_dir / "docker-compose.no-ports.yml", ["down"])
 
@@ -549,7 +829,8 @@ def main(argv: list[str]) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     work_root = Path(tempfile.mkdtemp(prefix="v1_suite_docker_"))
     try:
-        return execute_container_run(args, work_root, out_dir)
+        executor = execute_env_run if args.run_label == "docker-with-db" else execute_container_run
+        return executor(args, work_root, out_dir)
     finally:
         remove_clone_in_container(work_root)
         shutil.rmtree(work_root, onerror=base.make_writable_and_retry)

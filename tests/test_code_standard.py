@@ -14,6 +14,7 @@ NEW_CODE_FILES = [
     "tools/phase0/run_v1_suite_docker.py",
     "tests/phase0/test_parse_junit.py",
     "tests/phase0/test_pip_log.py",
+    "tests/phase0/test_package_diff.py",
     "tests/test_code_standard.py",
 ]
 # policy: the written code standard allows at most 30 real code lines per function.
