@@ -88,13 +88,14 @@ class TestRow:
 
 @dataclasses.dataclass
 class Summary:
-    """Counts per outcome, computed only from TestRow objects."""
+    """Counts per outcome (one per result row) plus distinct test cases, computed only from TestRow objects."""
 
     total: int
     passed: int
     failed: int
     error: int
     skipped: int
+    test_cases: int
 
 
 @dataclasses.dataclass
@@ -368,39 +369,91 @@ def first_line(text: str) -> str:
     return ""
 
 
-def classify_case(case: ElementTree.Element) -> tuple[str, str]:
-    """WHAT: Decides a test case's outcome and reason from its child elements.
-    A <failure>, <error> or <skipped> child sets the outcome; no child means passed.
-    WHY: This is how junit XML encodes results; reading it in one place avoids mistakes.
+def case_results(case: ElementTree.Element) -> list[tuple[str, str]]:
+    """WHAT: Lists EVERY result a test case carries: one (outcome, reason) per <failure>, <error> or
+    <skipped> child, in file order. A case with no such child is a single "passed".
+    WHY: pytest can attach two results to one test (e.g. a call failure and a teardown error);
+    keeping only the first would make the counts disagree with pytest's own summary.
 
     Args:
         case: a <testcase> element.
     Returns:
-        (outcome, first line of the reason).
+        List of (outcome, first line of the reason); never empty.
     Example:
-        <testcase><skipped message="no db"/></testcase> -> ("skipped", "no db")
+        <testcase><error message="setup"/><error message="teardown"/></testcase> -> [("error", "setup"), ("error", "teardown")]
     """
     outcome_by_tag = {"failure": "failed", "error": "error", "skipped": "skipped"}
+    results: list[tuple[str, str]] = []
     for child in case:
         if child.tag in outcome_by_tag:
             reason_text = child.get("message") or child.text or ""
-            return outcome_by_tag[child.tag], first_line(reason_text)
-    return "passed", ""
+            results.append((outcome_by_tag[child.tag], first_line(reason_text)))
+    return results if results else [("passed", "")]
+
+
+def read_suite_totals(root: ElementTree.Element, xml_path: Path) -> dict[str, int]:
+    """WHAT: Adds up the tests/failures/errors/skipped attributes of every <testsuite> in the file.
+    WHY: These are pytest's own totals; the parsed rows are checked against them.
+
+    Args:
+        root: XML root element.
+        xml_path: file path, for error messages.
+    Returns:
+        Totals keyed by "tests", "failures", "errors", "skipped".
+    Raises:
+        JunitParseError: if a suite lacks a total attribute or it is not a whole number.
+    Example:
+        <testsuite tests="232" failures="27" errors="6" skipped="3"/> -> {"tests": 232, "failures": 27, "errors": 6, "skipped": 3}
+    """
+    totals = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+    suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+    for suite in suites:
+        for key in totals:
+            raw_value = suite.get(key)
+            if raw_value is None or not raw_value.isdigit():
+                raise JunitParseError(f"<testsuite> in {xml_path} lacks a numeric '{key}' attribute")
+            totals[key] += int(raw_value)
+    return totals
+
+
+def check_totals(rows: list[TestRow], case_count: int, totals: dict[str, int], xml_path: Path) -> None:
+    """WHAT: Compares the parsed rows with the suite totals and raises if ANY of them disagree.
+    WHY: A parser that silently drops or double counts results would make the baseline untrustworthy.
+
+    Args:
+        rows: parsed rows.
+        case_count: number of <testcase> elements.
+        totals: from read_suite_totals.
+        xml_path: file path, for error messages.
+    Returns:
+        Nothing.
+    Raises:
+        JunitParseError: listing every mismatch.
+    Example:
+        3 failed rows but failures="2" -> JunitParseError("... failed rows 3 != failures 2")
+    """
+    counted = {outcome: sum(1 for row in rows if row.outcome == outcome) for outcome in VALID_OUTCOMES}
+    pairs = [("test cases", case_count, totals["tests"]), ("failed rows", counted["failed"], totals["failures"]),
+             ("error rows", counted["error"], totals["errors"]), ("skipped rows", counted["skipped"], totals["skipped"])]
+    mismatches = [f"{label} {found} != {expected}" for label, found, expected in pairs if found != expected]
+    if mismatches:
+        raise JunitParseError(f"junit totals do not match parsed rows in {xml_path}: " + "; ".join(mismatches))
 
 
 def parse_junit(xml_path: Path) -> list[TestRow]:
-    """WHAT: Reads a junit XML file and returns one TestRow per <testcase>.
+    """WHAT: Reads a junit XML file and returns one TestRow per RESULT (a test with two results gives two rows),
+    then reconciles the rows against the <testsuite> totals.
     Collection errors appear as rows too because pytest writes them as error testcases.
-    WHY: Every reported number must come from the XML, never from typing by hand.
+    WHY: Every reported number must come from the XML and agree with pytest's own totals.
 
     Args:
         xml_path: path of the junit XML file.
     Returns:
         List of TestRow (empty list only for a truly empty suite).
     Raises:
-        JunitParseError: if the XML is malformed or its root is not testsuite(s).
+        JunitParseError: if the XML is malformed, has an unexpected root, lacks totals, or the totals disagree.
     Example:
-        XML with 3 passing cases -> 3 TestRow objects, all outcome "passed"
+        XML with 3 passing cases and tests="3" -> 3 TestRow objects, all outcome "passed"
     """
     try:
         root = ElementTree.parse(xml_path).getroot()
@@ -409,12 +462,15 @@ def parse_junit(xml_path: Path) -> list[TestRow]:
     if root.tag not in ("testsuites", "testsuite"):
         raise JunitParseError(f"unexpected root element <{root.tag}> in {xml_path}")
     rows: list[TestRow] = []
+    case_count = 0
     for case in root.iter("testcase"):
-        outcome, reason = classify_case(case)
+        case_count += 1
         # pytest's xunit2 output has no file attribute; the classname is the module path.
         file_name = case.get("file") or case.get("classname") or ""
         duration = float(case.get("time") or 0.0)
-        rows.append(TestRow(file_name, case.get("name") or "", outcome, duration, reason))
+        for outcome, reason in case_results(case):
+            rows.append(TestRow(file_name, case.get("name") or "", outcome, duration, reason))
+    check_totals(rows, case_count, read_suite_totals(root, xml_path), xml_path)
     return rows
 
 
@@ -429,14 +485,15 @@ def summarise(rows: list[TestRow]) -> Summary:
     Raises:
         ValueError: if a row has an outcome outside VALID_OUTCOMES.
     Example:
-        3 passed, 1 failed -> Summary(total=4, passed=3, failed=1, error=0, skipped=0)
+        3 passed, 1 failed -> Summary(total=4, passed=3, failed=1, error=0, skipped=0, test_cases=4)
     """
     counts = {outcome: 0 for outcome in VALID_OUTCOMES}
     for row in rows:
         if row.outcome not in counts:
             raise ValueError(f"unknown outcome: {row.outcome}")
         counts[row.outcome] += 1
-    return Summary(len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"])
+    distinct_cases = len({(row.file, row.name) for row in rows})
+    return Summary(len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"], distinct_cases)
 
 
 def sha256_of_file(path: Path) -> str:
@@ -469,7 +526,7 @@ def render_markdown(rows: list[TestRow], summary: Summary, meta: RunMeta) -> str
     lines = [f"# v1 test baseline ({meta.run_label})", ""]
     if meta.note:
         lines += [f"**Note:** {meta.note}", ""]
-    lines += [f"- total: {summary.total}, passed: {summary.passed}, failed: {summary.failed}, "
+    lines += [f"- rows (one per result): {summary.total}, test cases: {summary.test_cases}, passed: {summary.passed}, failed: {summary.failed}, "
               f"error: {summary.error}, skipped: {summary.skipped}"]
     for key, value in dataclasses.asdict(meta).items():
         lines.append(f"- {key}: {value}")

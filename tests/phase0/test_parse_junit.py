@@ -142,6 +142,53 @@ def test_malformed_xml_raises_clear_error() -> None:
         parse_junit(FIXTURE_DIR / "malformed.xml")
 
 
+def test_every_result_of_one_test_is_kept() -> None:
+    """WHAT: A test case with two <error> children (setup and teardown) gives two error rows.
+    WHY: Keeping only the first would make the error count disagree with pytest's own summary.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        one testcase with errors="2" -> 2 rows named test_two_errors, reasons "setup failed" and "teardown failed"
+    """
+    rows = parse_junit(FIXTURE_DIR / "multi_result.xml")
+    assert [row.outcome for row in rows] == ["error", "error"]
+    assert [row.reason for row in rows] == ["setup failed", "teardown failed"]
+    assert summarise(rows).test_cases == 1
+
+
+def test_totals_mismatch_raises() -> None:
+    """WHAT: A file whose <testsuite> says failures="0" but contains a <failure> raises JunitParseError.
+    WHY: A disagreement between rows and pytest's own totals means the parse cannot be trusted.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        failures="0" with 1 failed row -> JunitParseError("... failed rows 1 != 0")
+    """
+    with pytest.raises(JunitParseError, match="failed rows 1 != 0"):
+        parse_junit(FIXTURE_DIR / "totals_mismatch.xml")
+
+
+def test_missing_totals_raise() -> None:
+    """WHAT: A <testsuite> without tests/failures/errors/skipped attributes raises JunitParseError.
+    WHY: Without totals there is nothing to reconcile against, so the file is not accepted silently.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        <testsuite name="pytest"> with no counts -> JunitParseError("lacks a numeric 'tests' attribute")
+    """
+    with pytest.raises(JunitParseError, match="lacks a numeric"):
+        parse_junit(FIXTURE_DIR / "no_totals.xml")
+
+
 def test_summarise_counts_match_rows() -> None:
     """WHAT: Builds rows from all single-case fixtures and checks every count.
     WHY: Totals must come from the rows, so the summary can never disagree with the table.
