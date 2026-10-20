@@ -1,0 +1,222 @@
+{
+  "api.log": {
+    "bytes": 17444,
+    "sha256": "08846b317f2faa87a0bfebbd3cf0e8a3e2827f5fc236e45a890925a6d611d9fb",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "app/infrastructure/init_db.sql": {
+    "bytes": 5612,
+    "sha256": "6d10b8c918f845f9ac697f0175fbd8fa84f7febe37dc23b4453accd8999e7680",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "data/indian_essential_meds.csv": {
+    "bytes": 1695,
+    "sha256": "9be4ac2b31f5dbbd914ca387939961b9a54911ccd8356df0733fbda038ab9483",
+    "row_count": 10,
+    "columns": [
+      "sku_id",
+      "brand_name",
+      "generic_name",
+      "indications",
+      "side_effects",
+      "contraindications",
+      "price_inr"
+    ],
+    "json_type": ""
+  },
+  "data/indian_pharmaceutical_products_clean.csv": {
+    "bytes": 72835140,
+    "sha256": "c99c4a174164ed9b85187b6cccbe4254c2c08b3e44a32a684daf529de363f3ce",
+    "row_count": 253973,
+    "columns": [
+      "product_id",
+      "brand_name",
+      "manufacturer",
+      "price_inr",
+      "is_discontinued",
+      "dosage_form",
+      "pack_size",
+      "pack_unit",
+      "num_active_ingredients",
+      "primary_ingredient",
+      "primary_strength",
+      "active_ingredients",
+      "therapeutic_class",
+      "packaging_raw",
+      "manufacturer_raw"
+    ],
+    "json_type": ""
+  },
+  "data/sample_essential_meds.csv": {
+    "bytes": 2001,
+    "sha256": "6d3ee1a38639505b63b2c16dbd940b2c79efc21eaf4b2ca2d246cd92c39ae678",
+    "row_count": 11,
+    "columns": [
+      "sku_id",
+      "brand_name",
+      "generic_name",
+      "indications",
+      "side_effects",
+      "contraindications",
+      "price_inr",
+      "pregnancy_category",
+      "pediatric_age_threshold_months"
+    ],
+    "json_type": ""
+  },
+  "data/staging/openfda_full_clinical_fields.jsonl": {
+    "bytes": 14686486,
+    "sha256": "a5d3797ff33b325a594176a4cdb6aefd654482cd35e834915296496bdfae8460",
+    "row_count": 1008,
+    "columns": [],
+    "json_type": ""
+  },
+  "data/staging/openfda_full_results.jsonl": {
+    "bytes": 1070315,
+    "sha256": "927a9bedc677e129d65ea9cf836f2e9a9954cc50fab6f58e626557689a2b5ae2",
+    "row_count": 1585,
+    "columns": [],
+    "json_type": ""
+  },
+  "data/staging/openfda_full_results_corrected.jsonl": {
+    "bytes": 1140461,
+    "sha256": "139fd27ab2eba34395b0bbebb61c6f65bd6fb90538bc550d34b4a6032677fdfa",
+    "row_count": 1585,
+    "columns": [],
+    "json_type": ""
+  },
+  "data/staging/openfda_test_results.json": {
+    "bytes": 26327,
+    "sha256": "636ad742cbd57cf21f036ce709e4db8a77409481c488b76fc6ed4740e46b6a80",
+    "row_count": 25,
+    "columns": [],
+    "json_type": "list"
+  },
+  "data/staging/unique_generics.csv": {
+    "bytes": 48737,
+    "sha256": "863d6887b3d2529385bf1cdd0b875032e4d0b6ea2f7195eeb427200c956c4c83",
+    "row_count": 1585,
+    "columns": [
+      "normalized_generic_name",
+      "sample_original_value",
+      "row_count_in_source"
+    ],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/h3_all_cases.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/h3_case1_normalized_query.log": {
+    "bytes": 11700,
+    "sha256": "7caf4c53be19275d6027dc7cebd8ee0e43611ce436f81bfc5ba06c8b2afa9a34",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/h3_case2_direct_normalized_string.log": {
+    "bytes": 14310,
+    "sha256": "1ed489d72d9541ac12bc06cd73b57d26468cf80501acecd9cfc365cfae02054a",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/h3_case3_forced_sku_id.log": {
+    "bytes": 7478,
+    "sha256": "2bf15a544dd0ab33543c1ebeada39d3e67517160e88457b3bc731efce4faaa66",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/query1_paracetamol_overdose.log": {
+    "bytes": 5913,
+    "sha256": "3e18dd843dbdbbd703b89018d08a0400ff7a5abd0da216ec1a14bbe65ea4ad6a",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/query2_augmentin_vs_amoxyclav.log": {
+    "bytes": 6690,
+    "sha256": "00f2cc0257fd4431011103f932d543ec9bdb6241a88ccfaec7bc4ef871136512",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "diagnostics/5.3-answer-generation/query3_nimesulide_dosage.log": {
+    "bytes": 3702,
+    "sha256": "a5a752807d8d42334af21bc7633267c0b6c57a0890aa65eccf8a655a670312c8",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "docker/timescaledb/init.sql": {
+    "bytes": 167,
+    "sha256": "2c018f963c411b7620b696f7bcfc36b53a651f57275a675bb3d914dbfb792286",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "frontend/debug-dev.png": {
+    "bytes": 190898,
+    "sha256": "e52619cd7fd51ab3f007facfbf22bc5c6d0e17bf181515acb2fe0bfb6c131de7",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "frontend/debug-screenshot.png": {
+    "bytes": 4313,
+    "sha256": "2e138339023eac019352107cfd5dda1316214bd1df83a2c89021e6a2548b1d68",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  },
+  "frontend/test-results/.last-run.json": {
+    "bytes": 390,
+    "sha256": "71b54bb9d71204e277a317ea58712ebeec948f62a09eb54f9047cadb9fa0c1dc",
+    "row_count": 2,
+    "columns": [],
+    "json_type": "dict"
+  },
+  "lora_accuracy_report.json": {
+    "bytes": 151,
+    "sha256": "2993e6e6b6f25ec81e55ff11864fe99c6a19f15aca42a66b97a27b60e7160599",
+    "row_count": 5,
+    "columns": [],
+    "json_type": "dict"
+  },
+  "ml_accuracy_report.json": {
+    "bytes": 233,
+    "sha256": "e64d669e4a8420dd1eb1b5819c912a10609ac5641ff09ed7060f7b573de2c9f7",
+    "row_count": 7,
+    "columns": [],
+    "json_type": "dict"
+  },
+  "spot_check_results.json": {
+    "bytes": 3073,
+    "sha256": "0a4a94cd00db5cf8bc1aaee9f242df14458430673c62c50571304b37ae0d3ffa",
+    "row_count": 10,
+    "columns": [],
+    "json_type": "list"
+  },
+  "ultimate_stress_report.json": {
+    "bytes": 206,
+    "sha256": "716e146f7bb950efe07f07d304dd9a26b41636457412d9c2c8d96cd874ebecbb",
+    "row_count": 7,
+    "columns": [],
+    "json_type": "dict"
+  },
+  "worker.log": {
+    "bytes": 2715848,
+    "sha256": "dccbfa0e1cb94070837c4b1d66b23aa5560ef43b3ca0422cded33236be181029",
+    "row_count": null,
+    "columns": [],
+    "json_type": ""
+  }
+}
