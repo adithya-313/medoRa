@@ -19,6 +19,7 @@ NEW_CODE_FILES = [
     "tests/phase0/test_pip_log.py",
     "tests/phase0/test_docker_helpers.py",
     "tests/phase0/test_feature_truth.py",
+    "tests/phase0/test_data_provenance.py",
     "tests/phase0/test_scorecard_runner.py",
     "tests/v1_flaws/scorecard_adapter.py",
     "tests/v1_flaws/test_scorecard_flaws.py",
