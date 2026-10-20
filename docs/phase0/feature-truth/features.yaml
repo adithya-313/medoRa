@@ -120,6 +120,8 @@ features:
   evidence:
   - {type: code, file: app/api/v1/inventory.py, line: 72, contains: '@router.get("/projection/{sku_id}")'}
   - {type: code, file: app/api/v1/inventory.py, line: 80, contains: "db_stock = db.query(MedicationBatchModel)"}
+  findings:
+  - {category: security, title: "No tenant filter: the stock total sums the SKU's batches across all tenants", file: app/api/v1/inventory.py, line: 80, contains: "db_stock = db.query(MedicationBatchModel)"}
 
 - id: inventory-triage
   name: Inventory urgency dashboard (expiry and capital at risk)
@@ -129,6 +131,8 @@ features:
   note: "Real aggregation; no test. It loads all batches without a tenant filter."
   evidence:
   - {type: code, file: app/api/v1/triage.py, line: 51, contains: "batches = db.query(MedicationBatchModel).all()"}
+  findings:
+  - {category: security, title: "No tenant filter: loads every tenant's batches and returns their value and expiry totals", file: app/api/v1/triage.py, line: 51, contains: "batches = db.query(MedicationBatchModel).all()"}
 
 # ------------------------------------------------------------------ procurement
 - id: po-list
@@ -245,7 +249,7 @@ features:
   entry_points: ["GET /api/v1/suppliers [app/api/supplier_router.py]"]
   status: working
   mock_check: "tests/test_supplier_api.py::test_add_and_list_supplier replaces the database session with a stateful MagicMock (get_stateful_mock_db); the endpoint code itself runs for real"
-  note: "Tested with a mocked database session only."
+  note: "Tested with a MagicMock DB session — query logic and tenant filtering are not verified."
   evidence:
   - {type: test, run: docker-with-db, test_id: "test_supplier_api::test_add_and_list_supplier", expect: passed}
   - {type: test, run: docker-with-db, test_id: "test_supplier_api::test_invalid_pagination_params", expect: passed}
@@ -458,18 +462,30 @@ features:
   - {type: test, run: docker-with-db, test_id: "test_filter_fix::test_above_threshold_full_data", expect: passed}
   - {type: test, run: docker-with-db, test_id: "test_schema_contract::test_schema_contract_raw_sql_columns", expect: failed}
 
-- id: kb-ask
-  name: Clinical question answering (routing, Gemini, cache, circuit breaker)
+- id: kb-routing
+  name: Clinical question routing (intent, cache, timeout, circuit breaker, degraded mode)
   area: rag
-  entry_points: ["POST /api/v1/knowledge-base/ask", "app/services/rag_pipeline.py"]
+  entry_points: ["POST /api/v1/knowledge-base/ask"]
   status: working
-  mock_check: "tests/test_rag_routing.py and tests/test_phase4_resilience.py patch google.genai.Client (Gemini), rag_pipeline.get_optimal_fefo_batch, semantic_search.execute_clinical_search and the Redis client; the routing, cache and circuit-breaker logic runs for real"
-  note: "Working for routing, caching, timeouts and degraded mode with the language model faked. The real Gemini call is never exercised. The same tests fail under the trio runner (2+2 cases) and 5 tests in test_h3_* fail with 'async def functions are not natively supported'."
+  mock_check: "tests/test_rag_routing.py and tests/test_phase4_resilience.py patch google.genai.Client (Gemini), rag_pipeline.get_optimal_fefo_batch, semantic_search.execute_clinical_search and the Redis client; the routing, cache, timeout and circuit-breaker logic runs for real"
+  note: "Working for routing, caching, timeouts and degraded mode only. The same tests fail under the trio runner (2+2 cases), and 5 tests in test_h3_* fail with 'async def functions are not natively supported'. Retrieval and answer generation are in kb-answer."
   evidence:
   - {type: test, run: docker-with-db, test_id: "test_rag_routing.TestAdaptiveRoutingObjective::test_objective_mrp_query_returns_database_answer[asyncio]", expect: passed}
   - {type: test, run: docker-with-db, test_id: "test_phase4_resilience.TestCircuitBreaker::test_circuit_open_uses_degraded_mode[asyncio]", expect: passed}
   - {type: test, run: docker-with-db, test_id: "test_phase4_resilience.TestResultCache::test_cache_store_on_success[trio]", expect: failed}
   - {type: test, run: docker-with-db, test_id: "test_h3_rag_guard::test_rag_guard_single_distinct_sku", expect: failed}
+  - {type: code, file: app/api/v1/knowledge_base.py, line: 69, contains: '@router.post("/ask"'}
+
+- id: kb-answer
+  name: Clinical answer generation (semantic retrieval, FEFO stock lookup, Gemini)
+  area: rag
+  entry_points: ["app/services/rag_pipeline.py"]
+  status: untested
+  note: "Only run with Gemini, search and FEFO mocked in tests. The real retrieval, stock lookup and language-model call are never exercised."
+  evidence:
+  - {type: code, file: tests/test_rag_routing.py, line: 280, contains: 'patch("app.services.rag_pipeline.get_optimal_fefo_batch")'}
+  - {type: code, file: tests/test_rag_routing.py, line: 281, contains: 'patch("app.services.semantic_search.execute_clinical_search")'}
+  - {type: code, file: tests/test_rag_routing.py, line: 282, contains: 'patch("google.genai.Client")'}
   - {type: code, file: app/services/rag_pipeline.py, line: 557, contains: "def generate_clinical_response"}
 
 - id: clinical-safety-judge
@@ -512,7 +528,7 @@ features:
   entry_points: ["GET /api/v1/health-risk/current", "GET /api/v1/health-risk/history", "GET /api/v1/health-risk/explain/{score_id}"]
   status: working
   mock_check: "tests/test_health_risk_router.py overrides get_database_session with a MagicMock session and get_current_tenant with a fixed tenant; the endpoint logic runs for real"
-  note: "Tested against mocked database results only; the real tables are not exercised."
+  note: "Tested with a MagicMock DB session — query logic and tenant filtering are not verified. The real tables are not exercised."
   evidence:
   - {type: test, run: docker-with-db, test_id: "test_health_risk_router.TestHealthRiskCurrentEndpoint::test_tenant_with_two_disease_scores_returns_both", expect: passed}
   - {type: test, run: docker-with-db, test_id: "test_health_risk_router.TestHealthRiskExplainEndpoint::test_score_id_does_not_exist_returns_404", expect: passed}
