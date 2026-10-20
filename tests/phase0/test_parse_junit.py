@@ -158,7 +158,7 @@ def test_every_result_of_one_test_is_kept() -> None:
     rows = parse_junit(FIXTURE_DIR / "multi_result.xml")
     assert [row.outcome for row in rows] == ["error", "error"]
     assert [row.reason for row in rows] == ["setup failed", "teardown failed"]
-    assert summarise(rows).test_cases == 1
+    assert summarise(rows).distinct_names == 1
 
 
 def test_totals_mismatch_raises() -> None:

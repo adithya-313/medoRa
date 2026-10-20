@@ -88,14 +88,14 @@ class TestRow:
 
 @dataclasses.dataclass
 class Summary:
-    """Counts per outcome (one per result row) plus distinct test cases, computed only from TestRow objects."""
+    """Counts per outcome (one per result row) plus distinct (file, name) pairs, computed only from TestRow objects."""
 
     total: int
     passed: int
     failed: int
     error: int
     skipped: int
-    test_cases: int
+    distinct_names: int
 
 
 @dataclasses.dataclass
@@ -485,15 +485,15 @@ def summarise(rows: list[TestRow]) -> Summary:
     Raises:
         ValueError: if a row has an outcome outside VALID_OUTCOMES.
     Example:
-        3 passed, 1 failed -> Summary(total=4, passed=3, failed=1, error=0, skipped=0, test_cases=4)
+        3 passed, 1 failed -> Summary(total=4, passed=3, failed=1, error=0, skipped=0, distinct_names=4)
     """
     counts = {outcome: 0 for outcome in VALID_OUTCOMES}
     for row in rows:
         if row.outcome not in counts:
             raise ValueError(f"unknown outcome: {row.outcome}")
         counts[row.outcome] += 1
-    distinct_cases = len({(row.file, row.name) for row in rows})
-    return Summary(len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"], distinct_cases)
+    distinct_names = len({(row.file, row.name) for row in rows})
+    return Summary(len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"], distinct_names)
 
 
 def sha256_of_file(path: Path) -> str:
@@ -526,7 +526,7 @@ def render_markdown(rows: list[TestRow], summary: Summary, meta: RunMeta) -> str
     lines = [f"# v1 test baseline ({meta.run_label})", ""]
     if meta.note:
         lines += [f"**Note:** {meta.note}", ""]
-    lines += [f"- rows (one per result): {summary.total}, test cases: {summary.test_cases}, passed: {summary.passed}, failed: {summary.failed}, "
+    lines += [f"- rows (one per result): {summary.total}, distinct (file, name) pairs: {summary.distinct_names}, passed: {summary.passed}, failed: {summary.failed}, "
               f"error: {summary.error}, skipped: {summary.skipped}"]
     for key, value in dataclasses.asdict(meta).items():
         lines.append(f"- {key}: {value}")
