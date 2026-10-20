@@ -2,7 +2,7 @@
 
 **Note:** Install ran on a warm cache: pip 3394.5 s, downloaded 0.0 MB, served from cache 2984.2 MB (sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold).
 
-- total: 232, passed: 197, failed: 27, error: 5, skipped: 3
+- rows (one per result): 233, test cases: 228, passed: 197, failed: 27, error: 6, skipped: 3
 - tag: v1-final
 - commit: 3b121e1e14ac77e8883864136e7409bce7c983aa
 - run_label: docker-no-services
@@ -20,6 +20,7 @@
 | integration.test_checkout_idempotency.TestCheckoutIdempotencyGuard | test_duplicate_idempotency_hash_returns_409 | passed | 0.024 |  |
 | integration.test_checkout_idempotency.TestCheckoutFefoLockGuard | test_fefo_lock_expired_returns_409 | failed | 0.021 | KeyError: 'verify_inventory_lock_exists' |
 | integration.test_health_risk_job_resilience.TestHealthRiskJobResilience | test_job_survives_sustained_pytrends_failure | error | 0.014 | failed on setup with "sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused |
+| integration.test_health_risk_job_resilience.TestHealthRiskJobResilience | test_job_survives_sustained_pytrends_failure | error | 0.014 | failed on teardown with "sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused |
 | integration.test_health_risk_pipeline.TestHealthRiskRealPipeline | test_success_path_all_three_diseases_scored | failed | 0.009 | sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused |
 | integration.test_health_risk_pipeline.TestHealthRiskRealPipeline | test_success_path_all_three_diseases_scored | error | 0.001 | failed on teardown with "sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused |
 | integration.test_health_risk_pipeline.TestHealthRiskRealPipeline | test_no_weather_no_trend_uses_fallback_neutral | failed | 0.007 | sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused |

@@ -11,11 +11,12 @@
     "note": "Install ran on a warm cache: pip 3394.5 s, downloaded 0.0 MB, served from cache 2984.2 MB (sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold)."
   },
   "summary": {
-    "total": 232,
+    "total": 233,
     "passed": 197,
     "failed": 27,
-    "error": 5,
-    "skipped": 3
+    "error": 6,
+    "skipped": 3,
+    "test_cases": 228
   },
   "tests": [
     {
@@ -52,6 +53,13 @@
       "outcome": "error",
       "duration_seconds": 0.014,
       "reason": "failed on setup with \"sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at \"localhost\" (::1), port 5432 failed: Connection refused"
+    },
+    {
+      "file": "integration.test_health_risk_job_resilience.TestHealthRiskJobResilience",
+      "name": "test_job_survives_sustained_pytrends_failure",
+      "outcome": "error",
+      "duration_seconds": 0.014,
+      "reason": "failed on teardown with \"sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.OperationalError) connection to server at \"localhost\" (::1), port 5432 failed: Connection refused"
     },
     {
       "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
