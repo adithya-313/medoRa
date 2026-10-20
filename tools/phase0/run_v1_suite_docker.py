@@ -574,28 +574,30 @@ def exec_pip(requirements_path: str, log_path: Path) -> base.InstallResult:
     return base.InstallResult(return_code == 0, return_code, timed_out, time.monotonic() - started, log_path)
 
 
-def freeze_and_commit(out_dir: Path) -> tuple[str, str]:
+def freeze_and_commit(out_dir: Path) -> tuple[str, str, float]:
     """WHAT: Saves `pip freeze` from the build container, then commits the container as the image v1-baseline-env.
     WHY: The freeze (with its SHA-256) pins exactly which packages the with-db run used.
 
     Args:
         out_dir: output folder that receives pip-freeze.txt.
     Returns:
-        (SHA-256 of pip-freeze.txt, image ID of v1-baseline-env).
+        (SHA-256 of pip-freeze.txt, image ID of v1-baseline-env, seconds docker commit took).
     Raises:
         RuntimeError: if pip freeze or docker commit fails.
     Example:
-        freeze_and_commit(out) -> ("9f2c...", "sha256:73e7...")
+        freeze_and_commit(out) -> ("9f2c...", "sha256:73e7...", 412.6)
     """
     timeout = base.SHORT_COMMAND_TIMEOUT_SECONDS
     freeze = base.run_command(["docker", "exec", ENV_CONTAINER_NAME, "python", "-m", "pip", "freeze"], None, timeout)
     if freeze.returncode != 0:
         raise RuntimeError(f"pip freeze failed: {freeze.stderr.strip()}")
     (out_dir / "pip-freeze.txt").write_text(freeze.stdout, encoding="utf-8")
+    commit_started = time.monotonic()
     commit = base.run_command(["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, COMMIT_TIMEOUT_SECONDS)
+    commit_seconds = time.monotonic() - commit_started
     if commit.returncode != 0:
         raise RuntimeError(f"docker commit failed: {commit.stderr.strip()}")
-    return base.sha256_of_file(out_dir / "pip-freeze.txt"), image_id(ENV_IMAGE_NAME)
+    return base.sha256_of_file(out_dir / "pip-freeze.txt"), image_id(ENV_IMAGE_NAME), commit_seconds
 
 
 def build_env_image(project_dir: Path, out_dir: Path, pip_log: Path) -> dict[str, object]:
@@ -622,13 +624,14 @@ def build_env_image(project_dir: Path, out_dir: Path, pip_log: Path) -> dict[str
         if not v1_install.succeeded:
             raise RuntimeError(f"pip install of v1 requirements failed (rc={v1_install.return_code}); see pip.log")
         dev_install = exec_pip("/tmp/requirements-dev.txt", pip_log)
-        freeze_hash, env_image_id = freeze_and_commit(out_dir)
+        freeze_hash, env_image_id, save_seconds = freeze_and_commit(out_dir)
     finally:
         stop_container(ENV_CONTAINER_NAME)
     return {"env_image_name": ENV_IMAGE_NAME, "env_image_id": env_image_id, "pip_freeze_sha256": freeze_hash,
             "cache_before_run": cache_before, "install_cache_label": cache_label(cache_before),
             "env_pip_v1_exit_code": v1_install.return_code, "env_pip_v1_wall_seconds": round(v1_install.wall_seconds, 1),
             "env_pip_dev_wall_seconds": round(dev_install.wall_seconds, 1),
+            "env_image_save_wall_seconds": round(save_seconds, 1),
             "env_build_total_wall_seconds": round(time.monotonic() - started, 1)}
 
 
