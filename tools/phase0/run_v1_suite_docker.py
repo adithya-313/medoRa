@@ -37,6 +37,8 @@ CONTAINER_PIP_TIMEOUT_SECONDS = 14400
 COMMIT_TIMEOUT_SECONDS = 3600
 # assumption: removing a cloned folder inside a container finishes within 10 minutes.
 CLEANUP_TIMEOUT_SECONDS = 600
+# policy: the owner asked for a unique compose project name so "down" only touches what this script made.
+COMPOSE_PROJECT_NAME = "medora-v1-baseline"
 # a named Docker volume that keeps downloaded wheels between runs (a download cache, not a venv).
 PIP_CACHE_VOLUME = "medora-v1-pip-cache"
 
@@ -62,7 +64,7 @@ def build_image() -> None:
 
 def container_arguments(
     project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str,
-    use_cache: bool = False, image: str = IMAGE_NAME,
+    use_cache: bool = False, image: str = IMAGE_NAME, environment: dict[str, str] | None = None,
 ) -> list[str]:
     """WHAT: Builds a `docker run` argument list that mounts v1's folder at /work and results at /out.
     WHY: One place defines how every container step is started.
@@ -75,6 +77,7 @@ def container_arguments(
         name: container name, so a timed-out container can be removed.
         use_cache: mount the wheel-cache volume (only pip install should).
         image: image to run.
+        environment: variables to pass with -e (None for none).
     Returns:
         The full argument list.
     Example:
@@ -84,6 +87,8 @@ def container_arguments(
                  "-v", f"{out_dir.resolve().as_posix()}:/out", "--name", name, "-w", "/work"]
     if use_cache:
         arguments += ["-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip"]
+    for key, value in (environment or {}).items():
+        arguments += ["-e", f"{key}={value}"]
     if network is not None:
         arguments += ["--network", network]
     return arguments + [image] + command
@@ -281,6 +286,7 @@ def container_pip_install(
 def container_run_pytest(
     project_dir: Path, out_dir: Path, run_label: str, network: str | None,
     python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
+    environment: dict[str, str] | None = None,
 ) -> base.RunResult:
     """WHAT: Runs the whole v1 suite inside the container with no filters.
     Only tests/benchmarks and tests/load are ignored; the pytest cache is off.
@@ -294,6 +300,7 @@ def container_run_pytest(
         network: compose network to join, or None.
         python_command: python inside the container (the venv one, or "python" in the env image).
         image: image to run.
+        environment: variables passed to the container (e.g. DATABASE_URL).
     Returns:
         RunResult.
     Side effects:
@@ -306,7 +313,7 @@ def container_run_pytest(
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest", False, image), None, base.PYTEST_TIMEOUT_SECONDS)
+        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest", False, image, environment), None, base.PYTEST_TIMEOUT_SECONDS)
         return_code, stdout, stderr = finished.returncode, finished.stdout, finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
@@ -393,7 +400,7 @@ def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
     listing = base.run_command(["docker", "network", "ls"], None, timeout).stdout
     (out_dir / "docker-network-ls.txt").write_text(listing, encoding="utf-8")
     print(listing)
-    ps_arguments = ["docker", "compose", "-f", str(compose_file), "ps", "-q", "redis"]
+    ps_arguments = ["docker", "compose", "-p", COMPOSE_PROJECT_NAME, "-f", str(compose_file), "ps", "-q", "redis"]
     container_id = base.run_command(ps_arguments, compose_file.parent, timeout).stdout.strip()
     inspect_arguments = ["docker", "inspect", "--format", "{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}", container_id]
     names = base.run_command(inspect_arguments, None, timeout).stdout.split()
@@ -428,7 +435,7 @@ def compose_with_override(compose_file: Path, override_file: Path, action: list[
     Example:
         action=["down"] -> containers stopped, volumes kept
     """
-    arguments = ["docker", "compose", "-f", str(compose_file), "-f", str(override_file)] + action
+    arguments = ["docker", "compose", "-p", COMPOSE_PROJECT_NAME, "-f", str(compose_file), "-f", str(override_file)] + action
     # v1's api/worker services declare "env_file: .env", and compose refuses to load without it.
     # The file exists only while compose runs, so pytest never sees it (pydantic would read it).
     env_file = compose_file.parent / ".env"
@@ -635,6 +642,34 @@ def build_env_image(project_dir: Path, out_dir: Path, pip_log: Path) -> dict[str
             "env_build_total_wall_seconds": round(time.monotonic() - started, 1)}
 
 
+def verify_saved_image(earlier_dir: Path, out_dir: Path) -> dict[str, object]:
+    """WHAT: Checks that the saved image v1-baseline-env is exactly the one an earlier run recorded:
+    same image ID and same pip freeze SHA-256. Writes the fresh freeze to out_dir/pip-freeze.txt.
+    WHY: The owner allowed reusing the image only if it is provably the same one.
+
+    Args:
+        earlier_dir: output folder of the run that built the image (holds meta.json).
+        out_dir: output folder of the current run.
+    Returns:
+        The earlier run's build facts plus "env_image_reused_from" and "env_image_verified".
+    Raises:
+        RuntimeError: if the image ID or the freeze hash differs.
+    Example:
+        same ID and same freeze hash -> facts with env_image_verified True
+    """
+    earlier = json.loads((earlier_dir / "meta.json").read_text(encoding="utf-8"))
+    current_id = image_id(ENV_IMAGE_NAME)
+    arguments = ["docker", "run", "--rm", ENV_IMAGE_NAME, "python", "-m", "pip", "freeze"]
+    freeze = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    (out_dir / "pip-freeze.txt").write_text(freeze.stdout, encoding="utf-8")
+    freeze_hash = base.sha256_of_file(out_dir / "pip-freeze.txt")
+    if current_id != earlier["env_image_id"] or freeze_hash != earlier["pip_freeze_sha256"]:
+        raise RuntimeError("saved image differs from the recorded one (ID or freeze hash); not reusing it")
+    earlier.pop("package_diff", None)
+    earlier.update({"env_image_reused_from": str(earlier_dir), "env_image_verified": True})
+    return earlier
+
+
 def compare_with_earlier_run(out_dir: Path) -> dict[str, object]:
     """WHAT: Compares the new image's pip freeze with the packages the no-services run installed,
     saves the full difference to package-diff.json, and returns it.
@@ -699,11 +734,14 @@ def execute_env_run(args: argparse.Namespace, work_root: Path, out_dir: Path) ->
     shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
-    facts = build_env_image(project_dir, out_dir, pip_log)
+    if args.reuse_env_from:
+        facts = verify_saved_image(Path(args.reuse_env_from), out_dir)
+    else:
+        facts = build_env_image(project_dir, out_dir, pip_log)
     facts["package_diff"] = compare_with_earlier_run(out_dir)
     write_meta_json(out_dir, facts)
     args.image_name = ENV_IMAGE_NAME
-    result = run_inside_container(args, project_dir, out_dir, "python", ENV_IMAGE_NAME)
+    result = run_inside_container(args, project_dir, out_dir, "python", ENV_IMAGE_NAME, True)
     update_meta_json(out_dir, {"pytest_wall_seconds": round(result.wall_seconds, 1)})
     note = "Environment installed into the container filesystem (image v1-baseline-env), warm wheel cache."
     record_container_outcome(args, commit, project_dir, out_dir, result, note)
@@ -712,9 +750,87 @@ def execute_env_run(args: argparse.Namespace, work_root: Path, out_dir: Path) ->
     return 0
 
 
+def mask_url(url: str) -> str:
+    """WHAT: Replaces the password part of a URL like scheme://user:password@host with ****.
+    WHY: Credentials must never be printed or saved in results.
+
+    Args:
+        url: connection URL.
+    Returns:
+        The URL with the password masked.
+    Example:
+        "postgresql://postgres:secret@timescaledb:5432/db" -> "postgresql://postgres:****@timescaledb:5432/db"
+    """
+    return re.sub(r"(://[^:/@]+:)[^@]*@", r"\1****@", url)
+
+
+def read_service_env(project_dir: Path) -> dict[str, str]:
+    """WHAT: Reads DATABASE_URL and REDIS_URL from v1's own .env.example (the project's example config).
+    WHY: Inside the compose network the services are reached by name (timescaledb, redis), not localhost.
+
+    Args:
+        project_dir: sentinel_flow_mvp folder.
+    Returns:
+        {"DATABASE_URL": ..., "REDIS_URL": ...}.
+    Raises:
+        RuntimeError: if either key is missing.
+    Example:
+        a line "REDIS_URL=redis://redis:6379/0" -> {"REDIS_URL": "redis://redis:6379/0", ...}
+    """
+    wanted = ["DATABASE_URL", "REDIS_URL"]
+    found: dict[str, str] = {}
+    for line in (project_dir / ".env.example").read_text(encoding="utf-8").splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key.strip() in wanted:
+            found[key.strip()] = value.strip()
+    if sorted(found) != sorted(wanted):
+        raise RuntimeError(f".env.example lacks one of {wanted}")
+    return found
+
+
+def prove_connectivity(
+    project_dir: Path, out_dir: Path, network: str, image: str, environment: dict[str, str]
+) -> None:
+    """WHAT: From a container shaped like the test container (same image, network and variables), checks
+    Postgres with pg_isready plus a real SELECT 1, and Redis with PING. Output goes to connectivity-check.txt
+    (passwords masked).
+    WHY: A run may only be labelled "with-db" if the database was really reachable.
+
+    Args:
+        project_dir: sentinel_flow_mvp folder.
+        out_dir: output folder.
+        network: compose network.
+        image: image to run.
+        environment: variables for the container.
+    Returns:
+        Nothing.
+    Raises:
+        RuntimeError: if any check fails.
+    Example:
+        services up -> file lists "accepting connections", "select 1 -> 1", "redis ping -> True"
+    """
+    code = "; ".join(["import os, psycopg2, redis",
+                      "c = psycopg2.connect(os.environ['DATABASE_URL'], connect_timeout=10)",
+                      "k = c.cursor()", "k.execute('select 1')", "print('postgres select 1 ->', k.fetchone()[0])",
+                      "r = redis.Redis.from_url(os.environ['REDIS_URL'], socket_connect_timeout=10)",
+                      "print('redis ping ->', r.ping())"])
+    report = [f"DATABASE_URL={mask_url(environment['DATABASE_URL'])}", f"REDIS_URL={mask_url(environment['REDIS_URL'])}"]
+    commands = [["pg_isready", "-h", "timescaledb", "-p", "5432"], ["python", "-c", code]]
+    failed = False
+    for command in commands:
+        arguments = container_arguments(project_dir, out_dir, network, command, "medora-v1-check", False, image, environment)
+        finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+        report.append(f"$ {command[0]} -> rc={finished.returncode} {finished.stdout.strip()} {finished.stderr.strip()[-300:]}")
+        failed = failed or finished.returncode != 0
+    (out_dir / "connectivity-check.txt").write_text(chr(10).join(report) + chr(10), encoding="utf-8")
+    if failed:
+        raise RuntimeError("database/redis not reachable from the test container; see connectivity-check.txt")
+
+
 def run_inside_container(
     args: argparse.Namespace, project_dir: Path, out_dir: Path,
     python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
+    use_services_env: bool = False,
 ) -> base.RunResult:
     """WHAT: Runs pytest in the container; for docker-with-db it first starts v1's timescaledb and redis
     and joins the container to their compose network, and always stops them afterwards (no -v).
@@ -727,10 +843,11 @@ def run_inside_container(
         out_dir: output folder.
         python_command: python inside the container.
         image: image to run.
+        use_services_env: pass v1's DATABASE_URL/REDIS_URL and prove the connections first.
     Returns:
         RunResult.
     Raises:
-        RuntimeError: if Docker or compose fails.
+        RuntimeError: if Docker or compose fails, or the connectivity proof fails.
     Example:
         "docker-with-db" -> compose up timescaledb+redis, pytest on network, compose down
     """
@@ -742,7 +859,10 @@ def run_inside_container(
         override_file.write_text(PORT_OVERRIDE_TEXT, encoding="utf-8")
         compose_with_override(compose_file, override_file, ["up", "-d", "--wait"] + base.DB_SERVICE_NAMES)
         network = discover_compose_network(compose_file, out_dir)
-        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image)
+        environment = read_service_env(project_dir) if use_services_env else None
+        if environment is not None:
+            prove_connectivity(project_dir, out_dir, network, image, environment)
+        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image, environment)
     finally:
         compose_with_override(compose_file, project_dir / "docker-compose.no-ports.yml", ["down"])
 
@@ -827,6 +947,7 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description="Record v1's test results inside a Linux container.")
     parser.add_argument("--run-label", required=True, choices=ALLOWED_LABELS)
+    parser.add_argument("--reuse-env-from", default=None, help="out folder of an earlier run; reuse its saved image if provably identical")
     parser.add_argument("--fresh-cache", action="store_true", help="do not mount the wheel-cache volume (cold install)")
     parser.add_argument("--tag", default=base.V1_DEFAULT_TAG)
     parser.add_argument("--out-root", default="docs/phase0/v1-test-results")
