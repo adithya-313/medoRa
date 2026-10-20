@@ -563,6 +563,31 @@ def write_results(rows: list[TestRow], summary: Summary, meta: RunMeta, out_dir:
     (out_dir / "results.md").write_text(render_markdown(rows, summary, meta), encoding="utf-8")
 
 
+def reparse_results(out_dir: Path) -> Summary:
+    """WHAT: Re-reads the saved junit.xml in an output folder with the current parser and rewrites
+    results.json and results.md, keeping the saved meta (commit, timestamp, OS, seconds, hashes).
+    WHY: Results made by an older parser can be corrected from the original evidence without re-running v1.
+
+    Args:
+        out_dir: folder holding junit.xml and results.json.
+    Returns:
+        The new Summary.
+    Raises:
+        JunitParseError: if the junit totals do not reconcile.
+        FileNotFoundError: if junit.xml or results.json is missing.
+    Example:
+        a folder whose old summary said error=5 but junit says errors="6" -> new Summary(error=6, ...)
+    """
+    saved = json.loads((out_dir / "results.json").read_text(encoding="utf-8"))
+    meta = RunMeta(**saved["meta"])
+    if sha256_of_file(out_dir / "junit.xml") != meta.junit_sha256:
+        raise ValueError("junit.xml does not match the SHA-256 saved in results.json")
+    rows = parse_junit(out_dir / "junit.xml")
+    summary = summarise(rows)
+    write_results(rows, summary, meta, out_dir)
+    return summary
+
+
 def trim_log_if_large(log_path: Path) -> bool:
     """WHAT: If a log is over MAX_LOG_BYTES, keeps only its last KEPT_LOG_LINES lines.
     A first line says it was trimmed.

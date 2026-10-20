@@ -32,8 +32,8 @@ BUILD_TIMEOUT_SECONDS = 900
 # reported: the first docker run downloaded about 3.6 GB in 3600 s and was still downloading when the
 # 1 h ceiling killed it; 4 h gives headroom at this laptop's speed (assumption, not a v1 fact).
 CONTAINER_PIP_TIMEOUT_SECONDS = 14400
-# assumption: committing the ~10 GB container to an image finishes within an hour (the 10-minute
-# limit was too short in the first with-db attempt; raised with the owner's approval).
+# policy: 9.9 GB image save - one hour ceiling for docker commit (the 10-minute limit was too short in the
+# first with-db attempt; raised with the owner's approval).
 COMMIT_TIMEOUT_SECONDS = 3600
 # assumption: removing a cloned folder inside a container finishes within 10 minutes.
 CLEANUP_TIMEOUT_SECONDS = 600

@@ -4,11 +4,13 @@
 """Unit tests for parse_junit and summarise. No network, no cloning, no subprocesses."""
 from __future__ import annotations
 
+import json
+import shutil
 from pathlib import Path
 
 import pytest
 
-from tools.phase0.run_v1_suite import JunitParseError, TestRow, parse_junit, summarise
+from tools.phase0.run_v1_suite import JunitParseError, RunMeta, TestRow, parse_junit, reparse_results, sha256_of_file, summarise
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -221,3 +223,25 @@ def test_summarise_rejects_unknown_outcome() -> None:
     bad_row = TestRow("f", "n", "weird", 0.0, "")
     with pytest.raises(ValueError):
         summarise([bad_row])
+
+
+def test_reparse_results_rewrites_summary_from_saved_junit(tmp_path: Path) -> None:
+    """WHAT: Copies a junit fixture and an out-of-date results.json into a temp folder, then checks
+    reparse_results rewrites the summary from the junit file and keeps the saved meta.
+    WHY: Old results must be fixable from the original evidence, and only if that evidence is unchanged (SHA-256).
+
+    Args:
+        tmp_path: pytest's temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        stale summary error=1, junit with errors="2" -> results.json afterwards has error=2
+    """
+    shutil.copy(FIXTURE_DIR / "multi_result.xml", tmp_path / "junit.xml")
+    meta = RunMeta("t", "c", "label", "now", "os", "py", 1.0, sha256_of_file(tmp_path / "junit.xml"), "")
+    stale = {"meta": meta.__dict__, "summary": {"error": 1}, "tests": []}
+    (tmp_path / "results.json").write_text(json.dumps(stale), encoding="utf-8")
+    new_summary = reparse_results(tmp_path)
+    saved = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
+    assert new_summary.error == 2 == saved["summary"]["error"]
+    assert saved["meta"]["commit"] == "c"
