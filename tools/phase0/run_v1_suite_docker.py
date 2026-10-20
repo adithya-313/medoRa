@@ -26,7 +26,7 @@ from tools.phase0 import run_v1_suite as base
 # sourced: tag name for the image built from tools/phase0/v1_baseline.Dockerfile.
 IMAGE_NAME = "medora-v1-baseline:py311"
 DOCKERFILE_PATH = Path(__file__).resolve().parent / "v1_baseline.Dockerfile"
-ALLOWED_LABELS = ["docker-no-services", "docker-with-db"]
+ALLOWED_LABELS = ["docker-no-services", "docker-with-db", "docker-with-db-health-risk"]
 # assumption: building the small base image (apt only) takes well under 15 minutes.
 BUILD_TIMEOUT_SECONDS = 900
 # reported: the first docker run downloaded about 3.6 GB in 3600 s and was still downloading when the
@@ -283,10 +283,27 @@ def container_pip_install(
     return base.InstallResult(return_code == 0, return_code, timed_out, time.monotonic() - started, log_path)
 
 
+def pytest_command(python_command: str, test_path: str) -> list[str]:
+    """WHAT: Builds the pytest command line used inside the container: cache off, full report, junit XML,
+    the two script folders ignored, and one explicit test path. No -k, -x or other filters.
+    WHY: One place defines the arguments so every run uses exactly the same ones; only the path differs.
+
+    Args:
+        python_command: python inside the container.
+        test_path: path (relative to v1's sentinel_flow_mvp folder) that pytest should collect.
+    Returns:
+        The argument list.
+    Example:
+        ("python", "tests") -> ["python", "-m", "pytest", "-p", "no:cacheprovider", "-rA", ..., "tests"]
+    """
+    return [python_command, "-m", "pytest", "-p", "no:cacheprovider", "-rA", "--junitxml=/out/junit.xml",
+            "--ignore=tests/benchmarks", "--ignore=tests/load", test_path]
+
+
 def container_run_pytest(
     project_dir: Path, out_dir: Path, run_label: str, network: str | None,
     python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
-    environment: dict[str, str] | None = None,
+    environment: dict[str, str] | None = None, test_path: str = "tests",
 ) -> base.RunResult:
     """WHAT: Runs the whole v1 suite inside the container with no filters.
     Only tests/benchmarks and tests/load are ignored; the pytest cache is off.
@@ -301,6 +318,7 @@ def container_run_pytest(
         python_command: python inside the container (the venv one, or "python" in the env image).
         image: image to run.
         environment: variables passed to the container (e.g. DATABASE_URL).
+        test_path: path that pytest collects (default: v1's tests folder).
     Returns:
         RunResult.
     Side effects:
@@ -308,8 +326,7 @@ def container_run_pytest(
     Example:
         run_label="docker-no-services" -> RunResult(return_code=1, wall_seconds=95.2, ...)
     """
-    command = [python_command, "-m", "pytest", "-p", "no:cacheprovider", "-rA",
-               "--junitxml=/out/junit.xml", "--ignore=tests/benchmarks", "--ignore=tests/load", "tests"]
+    command = pytest_command(python_command, test_path)
     started = time.monotonic()
     timed_out = False
     try:
@@ -852,7 +869,7 @@ def run_inside_container(
         "docker-with-db" -> compose up timescaledb+redis, pytest on network, compose down
     """
     if args.run_label == "docker-no-services":
-        return container_run_pytest(project_dir, out_dir, args.run_label, None, python_command, image)
+        return container_run_pytest(project_dir, out_dir, args.run_label, None, python_command, image, None, args.test_path)
     compose_file = project_dir / "docker-compose.yml"
     try:
         override_file = project_dir / "docker-compose.no-ports.yml"
@@ -862,7 +879,7 @@ def run_inside_container(
         environment = read_service_env(project_dir) if use_services_env else None
         if environment is not None:
             prove_connectivity(project_dir, out_dir, network, image, environment)
-        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image, environment)
+        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image, environment, args.test_path)
     finally:
         compose_with_override(compose_file, project_dir / "docker-compose.no-ports.yml", ["down"])
 
@@ -948,6 +965,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Record v1's test results inside a Linux container.")
     parser.add_argument("--run-label", required=True, choices=ALLOWED_LABELS)
     parser.add_argument("--reuse-env-from", default=None, help="out folder of an earlier run; reuse its saved image if provably identical")
+    parser.add_argument("--test-path", default="tests", help="path pytest collects, relative to sentinel_flow_mvp")
     parser.add_argument("--fresh-cache", action="store_true", help="do not mount the wheel-cache volume (cold install)")
     parser.add_argument("--tag", default=base.V1_DEFAULT_TAG)
     parser.add_argument("--out-root", default="docs/phase0/v1-test-results")
@@ -956,7 +974,7 @@ def main(argv: list[str]) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     work_root = Path(tempfile.mkdtemp(prefix="v1_suite_docker_"))
     try:
-        executor = execute_env_run if args.run_label == "docker-with-db" else execute_container_run
+        executor = execute_env_run if args.run_label.startswith("docker-with-db") else execute_container_run
         return executor(args, work_root, out_dir)
     finally:
         remove_clone_in_container(work_root)
