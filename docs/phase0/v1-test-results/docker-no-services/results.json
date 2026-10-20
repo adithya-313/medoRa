@@ -16,7 +16,7 @@
     "failed": 27,
     "error": 6,
     "skipped": 3,
-    "test_cases": 228
+    "distinct_names": 228
   },
   "tests": [
     {

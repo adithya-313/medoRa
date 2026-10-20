@@ -2,7 +2,7 @@
 
 **Note:** Install ran on a warm cache: pip 3394.5 s, downloaded 0.0 MB, served from cache 2984.2 MB (sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold).
 
-- rows (one per result): 233, test cases: 228, passed: 197, failed: 27, error: 6, skipped: 3
+- rows (one per result): 233, distinct (file, name) pairs: 228, passed: 197, failed: 27, error: 6, skipped: 3
 - tag: v1-final
 - commit: 3b121e1e14ac77e8883864136e7409bce7c983aa
 - run_label: docker-no-services
