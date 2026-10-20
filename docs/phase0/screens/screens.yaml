@@ -1,0 +1,1078 @@
+# What each v1 screen DOES (not how it looks). Every claim carries code evidence that tools/phase0/screen_inventory.py
+# re-checks against a fresh clone of v1-final. Paths are relative to sentinel_flow_mvp.
+pages:
+- route: /
+  file: frontend/src/app/page.tsx
+  purpose: Redirects straight to the point-of-sale screen; it shows nothing itself.
+  user_actions:
+  - name: Open the app root
+    evidence:
+    - type: code
+      file: frontend/src/app/page.tsx
+      line: 4
+      contains: redirect('/pos')
+    api_calls: []
+    features:
+    - ui-pos-page
+  data_shown:
+  - what: 'Nothing: the page only redirects'
+    source: local-state
+    evidence:
+    - type: code
+      file: frontend/src/app/page.tsx
+      line: 3
+      contains: export default function Home
+  components: []
+  linked_features:
+  - ui-pos-page
+- route: /pos
+  file: frontend/src/app/pos/page.tsx
+  purpose: 'The counter screen: find medicines, build a cart, identify the patient by phone, see recommendations and clinical warnings, ask the clinical copilot, and take payment.'
+  user_actions:
+  - name: Search medicines by name or SKU (2+ characters, 300 ms debounce)
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 131
+      contains: api.searchInventory(searchQuery)
+    api_calls:
+    - GET /api/v1/inventory/search
+    features:
+    - inventory-search
+  - name: Add, reduce or remove cart items
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 567
+      contains: 'onClick={() => addItem({ ...item, quantity: 1 })}'
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 557
+      contains: onClick={() => decrementItem(item.batch_id)}
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 580
+      contains: onClick={() => removeItem(item.batch_id)}
+    api_calls: []
+    features: []
+  - name: Look up the patient by a 10-digit phone number
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 156
+      contains: api.lookupPatient(phone)
+    api_calls:
+    - GET /api/v1/pos/patient/lookup/{param}
+    features:
+    - pos-patient-lookup
+  - name: See clinical cross-sell and cheaper generic suggestions for the last item added
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 96
+      contains: fetchRecommendations(lastItem.sku_id)
+    api_calls:
+    - GET /api/v1/pos/recommendations/{param}
+    features:
+    - pos-recommendations
+  - name: Add a suggested item to the cart (looks up its price if missing)
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 439
+      contains: onAddItem={async (item) => {
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 444
+      contains: api.searchInventory(item.sku_id)
+    api_calls:
+    - GET /api/v1/inventory/search
+    features:
+    - pos-recommendations
+    - inventory-search
+  - name: Pay with cash, UPI or card (submits the cart)
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 173
+      contains: api.submitCheckout(cart
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 605
+      contains: onClick={() => executeCheckout('CASH')}
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 613
+      contains: onClick={() => executeCheckout('UPI')}
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 621
+      contains: onClick={() => executeCheckout('CARD')}
+    api_calls:
+    - POST /api/v1/pos/checkout
+    features:
+    - pos-checkout
+  - name: Ask the clinical copilot a question (with the cart as context)
+    evidence:
+    - type: code
+      file: frontend/src/components/pos/CopilotPanel.tsx
+      line: 73
+      contains: fetch('/api/v1/knowledge-base/ask'
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 265
+      contains: onClick={toggleCopilot}
+    api_calls:
+    - POST /api/v1/knowledge-base/ask
+    features:
+    - kb-routing
+    - kb-answer
+    - query-sanitizer
+  - name: Checkout is locked when the copilot says a drug is unsafe; override the lock
+    evidence:
+    - type: code
+      file: frontend/src/components/pos/CopilotPanel.tsx
+      line: 102
+      contains: setSafetyLock(lockReason)
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 507
+      contains: '{activeSafetyLock && ('
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 519
+      contains: onClick={() => clearSafetyLock()}
+    api_calls: []
+    features:
+    - clinical-safety-judge
+  - name: Open the inventory triage dashboard
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 308
+      contains: onClick={() => setIsTriageOpen(true)}
+    - type: code
+      file: frontend/src/components/InventoryTriageModal.tsx
+      line: 30
+      contains: api.get('/api/v1/inventory/triage')
+    api_calls:
+    - GET /api/v1/inventory/triage
+    features:
+    - inventory-triage
+  - name: Read notifications and open one (marks it read, then goes to /orders or /health-risk-radar)
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 259
+      contains: <NotificationBell />
+    - type: code
+      file: frontend/src/components/NotificationBell.tsx
+      line: 44
+      contains: api.markNotificationRead(notification.id)
+    - type: code
+      file: frontend/src/components/NotificationBell.tsx
+      line: 21
+      contains: api.fetchNotifications()
+    api_calls:
+    - GET /api/v1/notifications
+    - PATCH /api/v1/notifications/{param}/read
+    features:
+    - notifications-api
+  - name: See and expand the health-risk warning banner
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 328
+      contains: <PreemptiveWarningBanner />
+    - type: code
+      file: frontend/src/components/PreemptiveWarningBanner.tsx
+      line: 50
+      contains: api.fetchHealthRiskExplain(scoreId)
+    api_calls:
+    - GET /api/v1/health-risk/current
+    - GET /api/v1/health-risk/explain/{param}
+    features:
+    - health-risk-api
+  - name: Go to the history, audit log, suppliers, orders, health-risk radar and admin settings screens
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 239
+      contains: <Link href="/history">
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 249
+      contains: <Link href="/audit-log">
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 277
+      contains: <Link href="/suppliers">
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 287
+      contains: <Link href="/orders">
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 297
+      contains: <Link href="/health-risk-radar">
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 314
+      contains: <Link href="/admin/settings">
+    api_calls: []
+    features: []
+  data_shown:
+  - what: Search results (batch, SKU, price, available quantity)
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 133
+      contains: setSearchResults(data)
+    api_call: GET /api/v1/inventory/search
+  - what: Cart lines and the running total
+    source: local-state
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 108
+      contains: const totalAmount = cart.reduce
+  - what: Cross-sell and generic alternatives
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 98
+      contains: setRecommendations(data)
+    api_call: GET /api/v1/pos/recommendations/{param}
+  - what: Patient name once a known phone number is typed
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 158
+      contains: setCustomer(phone, result.name, result.patient_id)
+    api_call: GET /api/v1/pos/patient/lookup/{param}
+  - what: Receipt id shown after checkout (falls back to a fixed id)
+    source: hard-coded
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 176
+      contains: 'receipt_id.slice(-5) : "805F"'
+  - what: Price used for a suggested item when none is found
+    source: hard-coded
+    evidence:
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 446
+      contains: 'finalPrice = realItem ? realItem.price : 99.99'
+    - type: code
+      file: frontend/src/app/pos/page.tsx
+      line: 448
+      contains: finalPrice = 99.99; // Fallback default if API fails
+  components:
+  - frontend/src/components/pos/CopilotPanel.tsx
+  - frontend/src/components/pos/ClinicalCompanion.tsx
+  - frontend/src/components/InventoryTriageModal.tsx
+  - frontend/src/components/NotificationBell.tsx
+  - frontend/src/components/PreemptiveWarningBanner.tsx
+  - frontend/src/components/DynamicCapsule.tsx
+  - frontend/src/store/posStore.ts
+  linked_features:
+  - ui-pos-page
+  - pos-checkout
+  - inventory-search
+  - pos-patient-lookup
+  - pos-recommendations
+  - kb-routing
+  - kb-answer
+  - clinical-safety-judge
+  - inventory-triage
+  - notifications-api
+  - health-risk-api
+- route: /history
+  file: frontend/src/app/history/page.tsx
+  purpose: Shows the list of past sales receipts; each row can be expanded.
+  user_actions:
+  - name: Open the page and load the transaction history
+    evidence:
+    - type: code
+      file: frontend/src/app/history/page.tsx
+      line: 23
+      contains: api.fetchTransactionHistory()
+    api_calls:
+    - GET /api/v1/pos/history
+    features:
+    - pos-history
+    - ui-history-page
+  - name: Expand or collapse one receipt
+    evidence:
+    - type: code
+      file: frontend/src/app/history/page.tsx
+      line: 71
+      contains: 'onToggle={() => setExpandedId(expandedId === tx.id ? null : tx.id)}'
+    api_calls: []
+    features: []
+  data_shown:
+  - what: Receipts (transactions list)
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/history/page.tsx
+      line: 24
+      contains: setTransactions(data)
+    api_call: GET /api/v1/pos/history
+  - what: Empty and loading messages
+    source: local-state
+    evidence:
+    - type: code
+      file: frontend/src/app/history/page.tsx
+      line: 62
+      contains: No transactions found.
+  components:
+  - frontend/src/components/ui/core/TransactionMatrix.tsx
+  - frontend/src/components/ui/core/LedgerRow.tsx
+  - frontend/src/components/ui/BackButton.tsx
+  linked_features:
+  - ui-history-page
+  - pos-history
+- route: /audit-log
+  file: frontend/src/app/audit-log/page.tsx
+  purpose: Lists the audit trail of data changes, with filters, paging and a before/after view of each change.
+  user_actions:
+  - name: Load the audit log page (50 entries at a time)
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 194
+      contains: const res = await fetch(`/api/v1/audit-logs?${params.toString()}`
+    api_calls:
+    - GET /api/v1/audit-logs
+    features:
+    - audit-log-api
+    - ui-audit-log-page
+  - name: Filter by entity type
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 261
+      contains: onChange={(e) => handleFilterChange(setEntityType)(e.target.value)}
+    api_calls:
+    - GET /api/v1/audit-logs
+    features:
+    - audit-log-api
+  - name: Filter by action type (created, updated, deleted)
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 274
+      contains: onChange={(e) => handleFilterChange(setActionType)(e.target.value)}
+    api_calls:
+    - GET /api/v1/audit-logs
+    features:
+    - audit-log-api
+  - name: Go to the previous or next page of entries
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 337
+      contains: onClick={() => setOffset(Math.max(0, offset - LIMIT))}
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 347
+      contains: onClick={() => setOffset(offset + LIMIT)}
+    api_calls:
+    - GET /api/v1/audit-logs
+    features:
+    - audit-log-api
+  - name: Refresh the list
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 307
+      contains: onClick={fetchLogs}
+    api_calls:
+    - GET /api/v1/audit-logs
+    features:
+    - audit-log-api
+  - name: Expand an entry to see the before and after values
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 115
+      contains: onClick={() => hasDiff && setExpanded(!expanded)}
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 157
+      contains: <DiffView label="Before"
+    api_calls: []
+    features:
+    - audit-log-api
+  data_shown:
+  - what: Audit entries (entity, action, old and new values, time)
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 194
+      contains: const res = await fetch(`/api/v1/audit-logs?${params.toString()}`
+    api_call: GET /api/v1/audit-logs
+  - what: The entity-type filter options (five fixed types)
+    source: hard-coded
+    evidence:
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 265
+      contains: <option value="purchase_order">Purchase Order</option>
+    - type: code
+      file: frontend/src/app/audit-log/page.tsx
+      line: 269
+      contains: <option value="supplier">Supplier</option>
+  components:
+  - frontend/src/components/ui/BackButton.tsx
+  linked_features:
+  - ui-audit-log-page
+  - audit-log-api
+- route: /health-risk-radar
+  file: frontend/src/app/health-risk-radar/page.tsx
+  purpose: Shows current disease-risk scores for the pharmacy's pincode with a 30-day history chart and the inputs behind each score.
+  user_actions:
+  - name: Open the radar (loads current scores and 30 days of history)
+    evidence:
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 137
+      contains: api.fetchHealthRiskCurrent()
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 138
+      contains: api.fetchHealthRiskHistory(30)
+    api_calls:
+    - GET /api/v1/health-risk/current
+    - GET /api/v1/health-risk/history
+    features:
+    - health-risk-api
+    - ui-health-risk-radar-page
+  - name: Expand a disease card to see how its score was computed
+    evidence:
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 179
+      contains: api.fetchHealthRiskExplain(scoreId)
+    api_calls:
+    - GET /api/v1/health-risk/explain/{param}
+    features:
+    - health-risk-api
+  - name: Open the 'How this works' explanation
+    evidence:
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 211
+      contains: onClick={() => setHowOpen(true)}
+    api_calls: []
+    features: []
+  data_shown:
+  - what: Current score per disease, risk tier and data-quality pill
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 137
+      contains: api.fetchHealthRiskCurrent()
+    api_call: GET /api/v1/health-risk/current
+  - what: 30-day score history per disease
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/health-risk-radar/page.tsx
+      line: 138
+      contains: api.fetchHealthRiskHistory(30)
+    api_call: GET /api/v1/health-risk/history
+  - what: Explanation text of the score and its limits
+    source: hard-coded
+    evidence:
+    - type: code
+      file: frontend/src/components/health-risk/HowThisWorksModal.tsx
+      line: 6
+      contains: Prose-only, static content
+  components:
+  - frontend/src/components/health-risk/RiskExplainDetails.tsx
+  - frontend/src/components/health-risk/HowThisWorksModal.tsx
+  - frontend/src/components/ui/BackButton.tsx
+  linked_features:
+  - ui-health-risk-radar-page
+  - health-risk-api
+  - health-risk-ingestion-job
+- route: /orders
+  file: frontend/src/app/orders/page.tsx
+  purpose: 'The purchase-order ledger: every order with status and delay, and a panel to record a delivery against a submitted or partly delivered order.'
+  user_actions:
+  - name: Open the ledger and load all purchase orders
+    evidence:
+    - type: code
+      file: frontend/src/app/orders/page.tsx
+      line: 24
+      contains: api.get('/api/v1/purchase-orders')
+    api_calls:
+    - GET /api/v1/purchase-orders
+    features:
+    - po-list
+    - ui-orders-page
+  - name: Open the receive-delivery panel for a submitted or partial order
+    evidence:
+    - type: code
+      file: frontend/src/app/orders/page.tsx
+      line: 193
+      contains: (order.status === 'SUBMITTED' || order.status === 'PARTIAL')
+    - type: code
+      file: frontend/src/components/orders/ReceiveOrderPanel.tsx
+      line: 42
+      contains: api.fetchPurchaseOrder(poId)
+    api_calls:
+    - GET /api/v1/purchase-orders/{param}
+    features:
+    - po-detail
+  - name: Record a delivery (date and received quantity per item)
+    evidence:
+    - type: code
+      file: frontend/src/components/orders/ReceiveOrderPanel.tsx
+      line: 103
+      contains: await api.post('/api/v1/purchase-orders/receive'
+    - type: code
+      file: frontend/src/components/orders/ReceiveOrderPanel.tsx
+      line: 78
+      contains: Cannot receive more than the remaining balance
+    api_calls:
+    - POST /api/v1/purchase-orders/receive
+    features:
+    - po-receive
+  data_shown:
+  - what: Orders with status badge and days late
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/orders/page.tsx
+      line: 25
+      contains: setOrders(response)
+    - type: code
+      file: frontend/src/app/orders/page.tsx
+      line: 175
+      contains: calculateDaysLate(order.status
+    api_call: GET /api/v1/purchase-orders
+  - what: Loading skeleton rows (grey bars, not data)
+    source: local-state
+    evidence:
+    - type: code
+      file: frontend/src/app/orders/page.tsx
+      line: 83
+      contains: except every cell shows a gray pulsing bar instead of real data
+  components:
+  - frontend/src/components/orders/ReceiveOrderPanel.tsx
+  - frontend/src/utils/orderDelay.ts
+  - frontend/src/utils/orderBadges.ts
+  - frontend/src/components/ui/BackButton.tsx
+  linked_features:
+  - ui-orders-page
+  - po-list
+  - po-detail
+  - po-receive
+- route: /suppliers
+  file: frontend/src/app/suppliers/page.tsx
+  purpose: 'Vendor intelligence: the list of distributors, each with a scorecard, and actions to add a vendor, order stock from a vendor and view that vendor''s order history.'
+  user_actions:
+  - name: Open the page and load the vendor list
+    evidence:
+    - type: code
+      file: frontend/src/app/suppliers/page.tsx
+      line: 29
+      contains: fetch('/api/v1/suppliers?limit=50&offset=0'
+    api_calls:
+    - GET /api/v1/suppliers
+    features:
+    - supplier-list
+    - ui-suppliers-page
+  - name: Search vendors by name
+    evidence:
+    - type: code
+      file: frontend/src/app/suppliers/page.tsx
+      line: 124
+      contains: onChange={(e) => setSearchQuery(e.target.value)}
+    api_calls: []
+    features: []
+  - name: Add a vendor (name and contact e-mail)
+    evidence:
+    - type: code
+      file: frontend/src/app/suppliers/page.tsx
+      line: 131
+      contains: onClick={() => setIsModalOpen(true)}
+    - type: code
+      file: frontend/src/components/suppliers/AddVendorModal.tsx
+      line: 31
+      contains: api.post('/api/v1/suppliers'
+    api_calls:
+    - POST /api/v1/suppliers
+    features:
+    - supplier-create
+  - name: See a vendor's scorecard (trust score, delivery rate, financial loss)
+    evidence:
+    - type: code
+      file: frontend/src/app/suppliers/page.tsx
+      line: 197
+      contains: <Scorecard supplierId={v.supplierId} />
+    - type: code
+      file: frontend/src/components/suppliers/Scorecard.tsx
+      line: 46
+      contains: fetch(`/api/v1/suppliers/${supplierId}/scorecard`
+    api_calls:
+    - GET /api/v1/suppliers/{param}/scorecard
+    features:
+    - supplier-scorecard
+  - name: Search the catalogue and order stock from a vendor
+    evidence:
+    - type: code
+      file: frontend/src/components/suppliers/Scorecard.tsx
+      line: 99
+      contains: onClick={() => setIsPanelOpen(true)}
+    - type: code
+      file: frontend/src/components/suppliers/OrderStockPanel.tsx
+      line: 38
+      contains: api.get(`/api/v1/purchase-orders/catalog/search?q=${searchQuery}`)
+    - type: code
+      file: frontend/src/components/suppliers/OrderStockPanel.tsx
+      line: 70
+      contains: await api.post('/api/v1/purchase-orders'
+    api_calls:
+    - GET /api/v1/purchase-orders/catalog/search
+    - POST /api/v1/purchase-orders
+    features:
+    - po-catalog-search
+    - po-create
+  - name: View a vendor's order history (can sort delayed first)
+    evidence:
+    - type: code
+      file: frontend/src/components/suppliers/Scorecard.tsx
+      line: 106
+      contains: onClick={() => setIsHistoryPanelOpen(true)}
+    - type: code
+      file: frontend/src/components/suppliers/VendorHistoryPanel.tsx
+      line: 32
+      contains: api.get(`/api/v1/suppliers/${supplierId}/orders`)
+    api_calls:
+    - GET /api/v1/suppliers/{param}/orders
+    features:
+    - supplier-orders
+  data_shown:
+  - what: Vendor list
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/app/suppliers/page.tsx
+      line: 29
+      contains: fetch('/api/v1/suppliers?limit=50&offset=0'
+    api_call: GET /api/v1/suppliers
+  - what: Scorecard figures
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/components/suppliers/Scorecard.tsx
+      line: 51
+      contains: setData(json)
+    api_call: GET /api/v1/suppliers/{param}/scorecard
+  - what: Scorecard fallback shown when the scorecard call fails (name 'Unknown Supplier', all zeros, risk HIGH)
+    source: hard-coded
+    evidence:
+    - type: code
+      file: frontend/src/components/suppliers/Scorecard.tsx
+      line: 53
+      contains: 'name: "Unknown Supplier"'
+  components:
+  - frontend/src/components/suppliers/Scorecard.tsx
+  - frontend/src/components/suppliers/OrderStockPanel.tsx
+  - frontend/src/components/suppliers/AddVendorModal.tsx
+  - frontend/src/components/suppliers/VendorHistoryPanel.tsx
+  linked_features:
+  - ui-suppliers-page
+  - supplier-list
+  - supplier-create
+  - supplier-scorecard
+  - po-catalog-search
+  - po-create
+  - supplier-orders
+- route: /admin/settings
+  file: frontend/src/app/admin/settings/page.tsx
+  purpose: Lets the pharmacy set its WhatsApp API credentials and UPI payment id (the credentials the refill reminders use).
+  user_actions:
+  - name: Open settings and load the tenant's current values
+    evidence:
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 47
+      contains: 'fetch(''/api/v1/settings'', { headers: { ''X-Tenant-ID'': ''PHARM-001'' } })'
+    api_calls:
+    - GET /api/v1/settings
+    features:
+    - tenant-settings
+    - ui-admin-settings-page
+  - name: Switch between the WhatsApp API and UPI Payments tabs
+    evidence:
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 114
+      contains: onClick={() => setActiveTab(tab.id)}
+    api_calls: []
+    features: []
+  - name: Show or hide the WhatsApp token
+    evidence:
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 172
+      contains: onClick={() => setShowToken(!showToken)}
+    api_calls: []
+    features: []
+  - name: Save the settings
+    evidence:
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 223
+      contains: onClick={handleSave}
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 68
+      contains: await fetch('/api/v1/settings', {
+    api_calls:
+    - PUT /api/v1/settings
+    features:
+    - tenant-settings
+    - adherence-reminders
+  data_shown:
+  - what: UPI id, WhatsApp phone number id, and whether a token is configured
+    source: api
+    evidence:
+    - type: code
+      file: frontend/src/components/admin/SettingsDashboard.tsx
+      line: 52
+      contains: 'upi_id: data.upi_id || '''''
+    api_call: GET /api/v1/settings
+  components:
+  - frontend/src/components/admin/SettingsDashboard.tsx
+  linked_features:
+  - ui-admin-settings-page
+  - tenant-settings
+unused_calls:
+- call: GET /api/v1/ingestion/health
+  reason: api.health() is defined but nothing calls it.
+  evidence:
+  - type: code
+    file: frontend/src/services/api.ts
+    line: 222
+    contains: 'health: () =>'
+  - type: unreferenced_identifier
+    name: api.health
+    defined_in: frontend/src/services/api.ts
+- call: POST /api/v1/predict
+  reason: Only the older InferenceConsole component calls api.predict, and no screen imports that component.
+  evidence:
+  - type: code
+    file: frontend/components/InferenceConsole.tsx
+    line: 152
+    contains: api.predict(
+  - type: orphan_file
+    name: frontend/components/InferenceConsole.tsx
+- call: GET /api/v1/tasks/{param}
+  reason: Only InferenceConsole polls the task, and no screen imports it.
+  evidence:
+  - type: code
+    file: frontend/components/InferenceConsole.tsx
+    line: 175
+    contains: api.getTaskStatus(
+  - type: orphan_file
+    name: frontend/components/InferenceConsole.tsx
+- call: POST /api/v1/federated/weights/aggregate
+  reason: api.aggregateWeights() is defined but nothing calls it.
+  evidence:
+  - type: code
+    file: frontend/src/services/api.ts
+    line: 255
+    contains: 'aggregateWeights: (payload'
+  - type: unreferenced_identifier
+    name: api.aggregateWeights
+    defined_in: frontend/src/services/api.ts
+- call: GET /api/v1/adapters
+  reason: Only the older TelemetryEngine component calls api.listAdapters, and no screen imports it.
+  evidence:
+  - type: code
+    file: frontend/components/TelemetryEngine.tsx
+    line: 35
+    contains: api.listAdapters(
+  - type: orphan_file
+    name: frontend/components/TelemetryEngine.tsx
+- call: GET /api/v1/system/stats
+  reason: Only TelemetryEngine calls fetchSystemStats, and no screen imports it.
+  evidence:
+  - type: code
+    file: frontend/components/TelemetryEngine.tsx
+    line: 37
+    contains: fetchSystemStats(
+  - type: orphan_file
+    name: frontend/components/TelemetryEngine.tsx
+- call: GET /api/v1/risk/dashboard
+  reason: Only the older GlobalRiskMatrix component calls fetchRiskDashboard, and no screen imports it.
+  evidence:
+  - type: code
+    file: frontend/components/GlobalRiskMatrix.tsx
+    line: 169
+    contains: fetchRiskDashboard(
+  - type: orphan_file
+    name: frontend/components/GlobalRiskMatrix.tsx
+- call: GET /api/v1/risk/catalog
+  reason: Only InferenceConsole calls fetchHardwareCatalog, and no screen imports it.
+  evidence:
+  - type: code
+    file: frontend/components/InferenceConsole.tsx
+    line: 112
+    contains: fetchHardwareCatalog(
+  - type: orphan_file
+    name: frontend/components/InferenceConsole.tsx
+- call: GET /api/v1/inventory/projection/{param}
+  reason: Only the StockPulse component calls it, and no screen imports StockPulse.
+  evidence:
+  - type: code
+    file: frontend/src/components/StockPulse.tsx
+    line: 23
+    contains: api.get(`/api/v1/inventory/projection/${skuId}`)
+  - type: orphan_file
+    name: frontend/src/components/StockPulse.tsx
+- call: POST /api/v1/pos/sell
+  reason: posApi.ts is not imported anywhere, so the Kafka sale-event call is never made by the UI.
+  evidence:
+  - type: code
+    file: frontend/src/services/posApi.ts
+    line: 15
+    contains: fetch('/api/v1/pos/sell'
+  - type: orphan_file
+    name: frontend/src/services/posApi.ts
+reviewed_non_literal_calls:
+- file: frontend/src/services/api.ts
+  line: 204
+  reason: 'api.get(url) wrapper: the URL is the caller''s argument, and every api.get caller passes a literal /api/v1 path that the scan already lists.'
+  evidence:
+  - type: code
+    file: frontend/src/services/api.ts
+    line: 204
+    contains: 'const res = await fetch(url, { headers: { ''X-Tenant-ID'': DEFAULT_TENANT } });'
+- file: frontend/src/services/api.ts
+  line: 210
+  reason: 'api.post(url, body) wrapper: same reasoning; every api.post caller passes a literal /api/v1 path the scan already lists.'
+  evidence:
+  - type: code
+    file: frontend/src/services/api.ts
+    line: 210
+    contains: const res = await fetch(url, {
+hard_coded_data:
+- where: frontend/src/app/pos/page.tsx:176
+  what: Fallback receipt id "805F" when the checkout reply has no receipt id
+  effect: A made-up receipt id can be shown to the cashier.
+  page: /pos
+  evidence:
+  - type: code
+    file: frontend/src/app/pos/page.tsx
+    line: 176
+    contains: 'receipt_id.slice(-5) : "805F"'
+- where: frontend/src/app/pos/page.tsx:446
+  what: Fallback price 99.99 for a suggested item whose price cannot be found
+  effect: A suggested item can be added to the cart at a made-up price of 99.99.
+  page: /pos
+  evidence:
+  - type: code
+    file: frontend/src/app/pos/page.tsx
+    line: 446
+    contains: 'finalPrice = realItem ? realItem.price : 99.99'
+  - type: code
+    file: frontend/src/app/pos/page.tsx
+    line: 448
+    contains: finalPrice = 99.99; // Fallback default if API fails
+- where: frontend/src/services/api.ts:100
+  what: Tenant id "PHARM-001" sent as X-Tenant-ID on every call (no login)
+  effect: Every screen acts as one fixed pharmacy; the same constant is repeated in 5 more files.
+  page: all pages
+  evidence:
+  - type: code
+    file: frontend/src/services/api.ts
+    line: 100
+    contains: const DEFAULT_TENANT = "PHARM-001"
+  - type: code
+    file: frontend/src/app/audit-log/page.tsx
+    line: 195
+    contains: '''X-Tenant-ID'': ''PHARM-001'''
+  - type: code
+    file: frontend/src/components/admin/SettingsDashboard.tsx
+    line: 47
+    contains: '''X-Tenant-ID'': ''PHARM-001'''
+  - type: code
+    file: frontend/src/components/suppliers/Scorecard.tsx
+    line: 47
+    contains: '''X-Tenant-ID'': ''PHARM-001'''
+  - type: code
+    file: frontend/src/components/pos/CopilotPanel.tsx
+    line: 75
+    contains: '''X-Tenant-ID'': ''PHARM-001'''
+- where: frontend/src/components/suppliers/Scorecard.tsx:53
+  what: 'Scorecard fallback when its call fails: ''Unknown Supplier'', all zeros, risk HIGH'
+  effect: A failed request looks like a real (bad) scorecard.
+  page: /suppliers
+  evidence:
+  - type: code
+    file: frontend/src/components/suppliers/Scorecard.tsx
+    line: 53
+    contains: 'name: "Unknown Supplier"'
+- where: frontend/src/app/audit-log/page.tsx:265
+  what: The five entity types in the audit-log filter are typed into the page
+  effect: A new audited entity type would not appear in the filter.
+  page: /audit-log
+  evidence:
+  - type: code
+    file: frontend/src/app/audit-log/page.tsx
+    line: 265
+    contains: <option value="purchase_order">Purchase Order</option>
+  - type: code
+    file: frontend/src/app/audit-log/page.tsx
+    line: 269
+    contains: <option value="supplier">Supplier</option>
+- where: frontend/src/components/suppliers/AddVendorModal.tsx:34
+  what: New vendors are always sent with industry_vertical "PHARMACEUTICALS"
+  effect: The vertical cannot be chosen.
+  page: /suppliers
+  evidence:
+  - type: code
+    file: frontend/src/components/suppliers/AddVendorModal.tsx
+    line: 34
+    contains: 'industry_vertical: "PHARMACEUTICALS"'
+- where: frontend/src/components/health-risk/HowThisWorksModal.tsx:6
+  what: The 'How this works' explanation is static prose written in the file
+  effect: Not data; it explains the score and its limits and must be kept in step with the formula.
+  page: /health-risk-radar
+  evidence:
+  - type: code
+    file: frontend/src/components/health-risk/HowThisWorksModal.tsx
+    line: 6
+    contains: Prose-only, static content
+- where: frontend/src/components/PreemptiveWarningBanner.tsx:21
+  what: The banner's comment says the old hard-coded disease-wave placeholders were removed; it now shows real health-risk scores
+  effect: No hard-coded data remains in the banner (comment only).
+  page: /pos
+  evidence:
+  - type: code
+    file: frontend/src/components/PreemptiveWarningBanner.tsx
+    line: 21
+    contains: removed hardcoded
+must_keep:
+- page: /pos
+  action: Search medicines by name or SKU (2+ characters, 300 ms debounce)
+  feature: inventory-search
+  reason: The counter cannot sell without finding stock; v1 never tested this path.
+- page: /pos
+  action: Add, reduce or remove cart items
+  feature: ui-pos-page
+  reason: Cart editing is client-side logic in the POS page that v2's counter screen needs.
+- page: /pos
+  action: Look up the patient by a 10-digit phone number
+  feature: pos-patient-lookup
+  reason: Known patients are filled in automatically at checkout; untested in v1.
+- page: /pos
+  action: See clinical cross-sell and cheaper generic suggestions for the last item added
+  feature: pos-recommendations
+  reason: Margin and clinical value at the counter; untested in v1.
+- page: /pos
+  action: Pay with cash, UPI or card (submits the cart)
+  feature: pos-checkout
+  reason: The core sale; tested against a real database (stock deducted, audit entries).
+- page: /pos
+  action: Ask the clinical copilot a question (with the cart as context)
+  feature: kb-routing
+  reason: Question routing, caching and degraded mode are tested; answer quality is not (see kb-answer).
+- page: /pos
+  action: Checkout is locked when the copilot says a drug is unsafe; override the lock
+  feature: clinical-safety-judge
+  reason: The safety rules are tested logic that blocks dangerous sales; keep the lock and an auditable override.
+- page: /pos
+  action: Open the inventory triage dashboard
+  feature: inventory-triage
+  reason: Expiry and capital-at-risk overview; untested, and v1's query has no tenant filter.
+- page: /pos
+  action: Read notifications and open one (marks it read, then goes to /orders or /health-risk-radar)
+  feature: notifications-api
+  reason: Surfaces overdue orders and disease warnings; untested endpoints.
+- page: /pos
+  action: See and expand the health-risk warning banner
+  feature: health-risk-api
+  reason: Real scores with an explain view; tested against mocked database results.
+- page: /history
+  action: Open the page and load the transaction history
+  feature: pos-history
+  reason: Receipt history per tenant; tested.
+- page: /audit-log
+  action: Load the audit log page (50 entries at a time)
+  feature: audit-log-api
+  reason: Audit trail with tenant isolation; tested.
+- page: /audit-log
+  action: Expand an entry to see the before and after values
+  feature: audit-log-api
+  reason: The before/after diff is what makes the log useful.
+- page: /health-risk-radar
+  action: Open the radar (loads current scores and 30 days of history)
+  feature: health-risk-api
+  reason: Current and history views are tested; the scoring job behind them is broken in v1 (health-risk-ingestion-job).
+- page: /orders
+  action: Open the ledger and load all purchase orders
+  feature: po-list
+  reason: Order ledger; tested.
+- page: /orders
+  action: Record a delivery (date and received quantity per item)
+  feature: po-receive
+  reason: Needed to close orders; v1's tests of this path FAIL, so v2 must build it with working tests.
+- page: /suppliers
+  action: Open the page and load the vendor list
+  feature: supplier-list
+  reason: Vendor list with paging; tested with a mocked database session.
+- page: /suppliers
+  action: Add a vendor (name and contact e-mail)
+  feature: supplier-create
+  reason: Tested with a real database.
+- page: /suppliers
+  action: See a vendor's scorecard (trust score, delivery rate, financial loss)
+  feature: supplier-scorecard
+  reason: Wanted by pharmacists, but v1's formula has 8 proven flaws; keep the screen, redesign the calculation.
+- page: /suppliers
+  action: Search the catalogue and order stock from a vendor
+  feature: po-create
+  reason: Needed to buy stock; v1's order-creation tests FAIL, so rebuild with tests.
+- page: /suppliers
+  action: View a vendor's order history (can sort delayed first)
+  feature: supplier-orders
+  reason: Tested with a real database.
+- page: /admin/settings
+  action: Save the settings
+  feature: tenant-settings
+  reason: Pharmacy-level WhatsApp/UPI configuration; untested in v1.
+rebuild_in_v2:
+- page: all pages
+  action: Every screen acts as the fixed tenant PHARM-001 (no login or tenant choice)
+  feature: ui-authentication
+  reason: 'v1 has no real sign-in: the browser sends a constant tenant id and the backend defaults a missing one to system_admin.'
+- page: none
+  action: Disease-wave stock alert with a one-click automatic purchase order
+  feature: disease-wave-alerts
+  reason: No v1 screen calls it; v1's alert uses hard-coded probability 0.89 and volume 500.
+- page: none
+  action: One-click automatic purchase order
+  feature: auto-po
+  reason: No v1 screen calls it; every order is created at a made-up cost of 10.0.
+- page: none
+  action: Upload legacy ERP sales CSV for model training
+  feature: erp-legacy-csv-upload
+  reason: No v1 screen calls it; the upload is parsed but never stored.
+- page: none
+  action: Batch telemetry with stockout predictions
+  feature: telemetry-batch-ingestion
+  reason: No v1 screen calls it; predictions come from a random-number stand-in.
