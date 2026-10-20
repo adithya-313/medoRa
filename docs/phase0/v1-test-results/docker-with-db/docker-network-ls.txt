@@ -1,0 +1,8 @@
+NETWORK ID     NAME                         DRIVER    SCOPE
+7292f606776c   bridge                       bridge    local
+e0a2b247318c   graphragproject_default      bridge    local
+682cf39ca2f0   host                         host      local
+6dea787b93e3   kind                         bridge    local
+d26ec5eb89be   medora-v1-baseline_default   bridge    local
+863e248a8d31   none                         null      local
+09ed4772db5d   project-ashfall_default      bridge    local
