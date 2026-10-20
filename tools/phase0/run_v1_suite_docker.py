@@ -32,6 +32,9 @@ BUILD_TIMEOUT_SECONDS = 900
 # reported: the first docker run downloaded about 3.6 GB in 3600 s and was still downloading when the
 # 1 h ceiling killed it; 4 h gives headroom at this laptop's speed (assumption, not a v1 fact).
 CONTAINER_PIP_TIMEOUT_SECONDS = 14400
+# assumption: committing the ~10 GB container to an image finishes within an hour (the 10-minute
+# limit was too short in the first with-db attempt; raised with the owner's approval).
+COMMIT_TIMEOUT_SECONDS = 3600
 # assumption: removing a cloned folder inside a container finishes within 10 minutes.
 CLEANUP_TIMEOUT_SECONDS = 600
 # a named Docker volume that keeps downloaded wheels between runs (a download cache, not a venv).
@@ -589,7 +592,7 @@ def freeze_and_commit(out_dir: Path) -> tuple[str, str]:
     if freeze.returncode != 0:
         raise RuntimeError(f"pip freeze failed: {freeze.stderr.strip()}")
     (out_dir / "pip-freeze.txt").write_text(freeze.stdout, encoding="utf-8")
-    commit = base.run_command(["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, timeout)
+    commit = base.run_command(["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, COMMIT_TIMEOUT_SECONDS)
     if commit.returncode != 0:
         raise RuntimeError(f"docker commit failed: {commit.stderr.strip()}")
     return base.sha256_of_file(out_dir / "pip-freeze.txt"), image_id(ENV_IMAGE_NAME)
