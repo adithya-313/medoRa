@@ -1,0 +1,665 @@
+# v1 feature-truth inventory. Paths are relative to sentinel_flow_mvp at tag v1-final (3b121e1).
+# Test evidence cites rows of results.json in docs/phase0/v1-test-results/<run>/ as "file::name",
+# exactly as written there (file = the junit classname). Verified by tools/phase0/feature_truth.py.
+# Notes on how to read statuses:
+#   - A feature whose only tests FAIL is "broken", even when the cause may be stale test data or an
+#     empty test database. The note says what the failure actually was.
+#   - UI pages are "untested": the Playwright specs in frontend/tests were not run (needs full stack).
+features:
+
+# ------------------------------------------------------------------ billing
+- id: pos-checkout
+  name: Point-of-sale checkout (cart, patient, idempotency, stock deduction)
+  area: billing
+  entry_points: ["POST /api/v1/pos/checkout"]
+  status: working
+  mock_check: "tests/test_checkout_and_vendor_audit.py::test_checkout_new_patient_writes_4_audit_entries patches pos_router.is_duplicate_checkout_request, is_above_checkout_rate_limit, mark_checkout_completed and log_audit_event (Redis guards and audit helper); the database is a real SQLite session"
+  note: "Working for the paths tested. One lock-expiry test fails with KeyError 'verify_inventory_lock_exists' (looks like a stale test). Redis guards are patched, so the real Redis behaviour is not exercised."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_checkout_and_vendor_audit::test_checkout_new_patient_writes_4_audit_entries", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_checkout_and_vendor_audit::test_checkout_existing_patient_writes_3_audit_entries", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_checkout_idempotency.TestCheckoutFefoLockGuard::test_fefo_lock_expired_returns_409", expect: failed}
+  - {type: code, file: app/api/pos_router.py, line: 259, contains: '@router.post("/checkout"'}
+
+- id: pos-sale-event
+  name: Fire-and-forget sale event to Kafka and ledger update by consumer
+  area: billing
+  entry_points: ["POST /api/v1/pos/sell", "app/services/kafka_producer.py", "app/workers/kafka_consumer.py"]
+  status: untested
+  note: "Real code, no test. The producer silently drops the event when it was never started (Kafka producer is a planned-to-drop module in v2)."
+  evidence:
+  - {type: code, file: app/api/pos_router.py, line: 47, contains: "await publish_medication_sold(event)"}
+  - {type: code, file: app/services/kafka_producer.py, line: 43, contains: "Event dropped."}
+  - {type: code, file: app/workers/kafka_consumer.py, line: 13, contains: "def consume_sales_events"}
+
+- id: pos-history
+  name: Receipt history per tenant
+  area: billing
+  entry_points: ["GET /api/v1/pos/history"]
+  status: working
+  mock_check: "tests/test_pos_history_tenant_isolation.py overrides get_database_session with a real SQLite session; nothing in the endpoint is patched"
+  note: "Tested only for tenant isolation."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_pos_history_tenant_isolation::test_pos_history_tenant_isolation", expect: passed}
+  - {type: code, file: app/api/pos_router.py, line: 559, contains: '@router.get("/history"'}
+
+- id: pos-patient-lookup
+  name: Patient lookup by phone number at the counter
+  area: billing
+  entry_points: ["GET /api/v1/pos/patient/lookup/{phone_number}"]
+  status: untested
+  note: "Real code path; no test calls it."
+  evidence:
+  - {type: code, file: app/api/pos_router.py, line: 151, contains: '@router.get("/patient/lookup/{phone_number}"'}
+
+- id: pos-recommendations
+  name: Cross-sell and high-margin generic recommendations
+  area: billing
+  entry_points: ["GET /api/v1/pos/recommendations/{sku_id}", "app/services/recommendation_engine.py"]
+  status: untested
+  note: "Real market-basket query code; no test references recommendation_engine."
+  evidence:
+  - {type: code, file: app/services/recommendation_engine.py, line: 7, contains: "def get_clinical_cross_sells"}
+
+- id: erp-legacy-csv-upload
+  name: Legacy ERP (Marg/Vyapaar) CSV upload for model training
+  area: billing
+  entry_points: ["POST /api/v1/erp/upload-legacy-csv", "app/services/erp_bridge_service.py"]
+  status: mocked
+  note: "The CSV is parsed, but nothing is stored or queued. The response still says the data points were staged. Brand-to-ingredient mapping is a tiny hard-coded dictionary."
+  evidence:
+  - {type: code, file: app/api/erp_router.py, line: 24, contains: "For now, we acknowledge successful parsing."}
+  - {type: code, file: app/api/erp_router.py, line: 30, contains: "data_points_staged"}
+  - {type: code, file: app/services/erp_bridge_service.py, line: 11, contains: "API_NORMALIZATION_MAP"}
+
+- id: ui-pos-page
+  name: Point-of-sale screen (and the home page that redirects to it)
+  area: billing
+  entry_points: ["frontend/src/app/pos/page.tsx", "frontend/src/app/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack). The receipt id falls back to a made-up short id when none is returned."
+  evidence:
+  - {type: code, file: frontend/src/app/pos/page.tsx, line: 175, contains: "mock a short one if missing"}
+  - {type: code, file: frontend/src/app/page.tsx, line: 4, contains: "redirect('/pos')"}
+
+- id: ui-history-page
+  name: Transaction history screen
+  area: billing
+  entry_points: ["frontend/src/app/history/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/history/page.tsx, line: 6, contains: "TransactionHistoryItem"}
+
+# ------------------------------------------------------------------ stock
+- id: pos-fefo-routing
+  name: First-expire-first-out batch picking
+  area: stock
+  entry_points: ["GET /api/v1/pos/fefo-routing/{sku_id}", "app/services/fefo_engine.py"]
+  status: untested
+  note: "Real query code. The only tests that mention it patch it out (tests/test_h3_*), so it is not exercised."
+  evidence:
+  - {type: code, file: app/services/fefo_engine.py, line: 25, contains: "order_by(MedicationBatchModel.expiry_date.asc())"}
+  - {type: code, file: tests/test_h3_context_dedup.py, line: 29, contains: "app.services.rag_pipeline.get_optimal_fefo_batch"}
+
+- id: inventory-search
+  name: Inventory batch search by SKU
+  area: stock
+  entry_points: ["GET /api/v1/inventory/search"]
+  status: untested
+  note: "Real tenant-scoped query; no test."
+  evidence:
+  - {type: code, file: app/api/v1/inventory.py, line: 24, contains: '@router.get("/search"'}
+
+- id: inventory-stock-projection
+  name: Physical stock total per SKU
+  area: stock
+  entry_points: ["GET /api/v1/inventory/projection/{sku_id}"]
+  status: untested
+  note: "Real query; no test. The query does not filter by tenant (it sums all tenants' batches for the SKU)."
+  evidence:
+  - {type: code, file: app/api/v1/inventory.py, line: 72, contains: '@router.get("/projection/{sku_id}")'}
+  - {type: code, file: app/api/v1/inventory.py, line: 80, contains: "db_stock = db.query(MedicationBatchModel)"}
+
+- id: inventory-triage
+  name: Inventory urgency dashboard (expiry and capital at risk)
+  area: stock
+  entry_points: ["GET /api/v1/inventory/triage"]
+  status: untested
+  note: "Real aggregation; no test. It loads all batches without a tenant filter."
+  evidence:
+  - {type: code, file: app/api/v1/triage.py, line: 51, contains: "batches = db.query(MedicationBatchModel).all()"}
+
+# ------------------------------------------------------------------ procurement
+- id: po-list
+  name: Purchase-order ledger list
+  area: procurement
+  entry_points: ["GET /api/v1/purchase-orders"]
+  status: working
+  mock_check: "tests/integration/test_purchase_order_ledger.py overrides get_database_session with a real SQLite session; no endpoint logic is patched"
+  note: "Working for ledger values, vendor names and chronological order."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_ledger.TestPurchaseOrderLedger::test_ledger_shows_vendor_name_and_handles_missing_supplier", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_chronological_sort::test_purchase_orders_sort_chronologically", expect: passed}
+  - {type: code, file: app/api/purchase_order_router.py, line: 18, contains: '@router.get("/purchase-orders")'}
+
+- id: po-detail
+  name: Single purchase-order detail
+  area: procurement
+  entry_points: ["GET /api/v1/purchase-orders/{po_id}"]
+  status: untested
+  note: "Real code; no test calls it."
+  evidence:
+  - {type: code, file: app/api/purchase_order_router.py, line: 83, contains: '@router.get("/purchase-orders/{po_id}")'}
+
+- id: po-catalog-search
+  name: Medication catalog search for the order form
+  area: procurement
+  entry_points: ["GET /api/v1/purchase-orders/catalog/search"]
+  status: untested
+  note: "Real code; no test."
+  evidence:
+  - {type: code, file: app/api/purchase_order_router.py, line: 125, contains: '@router.get("/purchase-orders/catalog/search")'}
+
+- id: po-create
+  name: Create purchase order
+  area: procurement
+  entry_points: ["POST /api/v1/purchase-orders"]
+  status: broken
+  note: "Both tests that create an order fail. One shows HTTP 400 'Expected delivery date cannot be in the past'; the other returns 400 as well (probably the same check, ESTIMATE). The tests use fixed dates, so this may be test-data rot rather than a code bug (ESTIMATE)."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_audit_logging.TestAuditLoggingOnCreate::test_create_writes_audit_with_new_value", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_chronological_sort::test_purchase_order_endpoint_auto_populates_created_at", expect: failed}
+  - {type: code, file: app/api/purchase_order_router.py, line: 149, contains: "Expected delivery date cannot be in the past"}
+
+- id: po-receive
+  name: Receive delivery against a purchase order
+  area: procurement
+  entry_points: ["POST /api/v1/purchase-orders/receive"]
+  status: broken
+  note: "All three real-database delivery tests fail with HTTP 500. The log of the first shows the audit_logs insert breaking on SQLite ('NOT NULL constraint failed: audit_logs.id'). It is unknown whether Postgres behaves differently. The audit-logging tests pass only because they use mocks."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_receive_logic::test_single_full_delivery", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_receive_logic::test_two_partial_deliveries", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_purchase_order_receive_logic::test_over_delivery", expect: failed}
+  - {type: code, file: app/api/purchase_order_router.py, line: 199, contains: "Bulk PO integrity error"}
+
+- id: po-overdue-notifications
+  name: Daily overdue purchase-order check that creates notifications
+  area: procurement
+  entry_points: ["check_overdue_purchase_orders"]
+  status: working
+  mock_check: "tests/integration/test_overdue_po_notifications.py patches app.tasks.purchase_order_tasks.SessionLocal to return a real SQLite session"
+  note: "Tested for escalation, duplicate prevention and tenant isolation."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "integration.test_overdue_po_notifications::test_escalation_and_duplicate_prevention", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_overdue_po_notifications::test_tenant_isolation", expect: passed}
+  - {type: code, file: app/tasks/purchase_order_tasks.py, line: 11, contains: 'name="check_overdue_purchase_orders"'}
+
+- id: disease-wave-alerts
+  name: Disease-wave stock alerts built from health-risk scores
+  area: procurement
+  entry_points: ["GET /api/v1/procurement/disease-wave-alerts"]
+  status: mocked
+  note: "The trigger is real (health-risk score over a threshold, notification created). But the alert's probability (0.89) and expected volume (500) are hard-coded, and the supplier falls back to 'SUPP-001'. v1 marks them TODO(Phase 2). The tests that pass use mocked database queries."
+  evidence:
+  - {type: code, file: app/api/v1/procurement_router.py, line: 162, contains: "probability_score=0.89"}
+  - {type: code, file: app/api/v1/procurement_router.py, line: 164, contains: "expected_volume=500"}
+  - {type: code, file: app/api/v1/procurement_router.py, line: 136, contains: 'else "SUPP-001"'}
+  - {type: test, run: docker-with-db, test_id: "test_procurement_router_health_risk.TestProcurementHealthRiskFlag::test_flag_enabled_uses_health_risk_scores", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_procurement_vendor_scoring.TestProcurementVendorScoring::test_vendor_scoring_picks_supplier_with_most_fulfilled_orders", expect: failed}
+
+- id: auto-po
+  name: One-click automatic purchase order
+  area: procurement
+  entry_points: ["POST /api/v1/procurement/auto-po"]
+  status: mocked
+  note: "Idempotency and tenant handling are real and tested (against a mocked session), but every order is created with a made-up cost price of 10.0 and expected MRP of 15.0."
+  evidence:
+  - {type: code, file: app/api/v1/procurement_router.py, line: 211, contains: "cost_price=10.0"}
+  - {type: test, run: docker-with-db, test_id: "integration.test_auto_po_tenant.TestAutoPOTenantAssignment::test_auto_po_creates_with_correct_tenant_id", expect: passed}
+
+- id: optimize-procurement
+  name: Reorder-quantity and supplier optimisation
+  area: procurement
+  entry_points: ["POST /api/v1/optimize_procurement", "app/services/procurement_engine.py"]
+  status: untested
+  note: "Real engine; no test references it."
+  evidence:
+  - {type: code, file: app/main.py, line: 481, contains: 'path="/api/v1/optimize_procurement"'}
+  - {type: code, file: app/services/procurement_engine.py, line: 26, contains: "class ProcurementOptimizationEngine"}
+
+- id: ui-orders-page
+  name: Purchase-order screen
+  area: procurement
+  entry_points: ["frontend/src/app/orders/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/orders/page.tsx, line: 24, contains: "api.get('/api/v1/purchase-orders')"}
+
+# ------------------------------------------------------------------ vendor
+- id: supplier-list
+  name: Paged supplier list
+  area: vendor
+  entry_points: ["GET /api/v1/suppliers [app/api/supplier_router.py]"]
+  status: working
+  mock_check: "tests/test_supplier_api.py::test_add_and_list_supplier replaces the database session with a stateful MagicMock (get_stateful_mock_db); the endpoint code itself runs for real"
+  note: "Tested with a mocked database session only."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_supplier_api::test_add_and_list_supplier", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_supplier_api::test_invalid_pagination_params", expect: passed}
+  - {type: code, file: app/api/supplier_router.py, line: 64, contains: '@router.get("", response_model=SupplierListResponse)'}
+
+- id: supplier-create
+  name: Add a supplier
+  area: vendor
+  entry_points: ["POST /api/v1/suppliers"]
+  status: working
+  mock_check: "tests/test_checkout_and_vendor_audit.py::test_add_vendor_writes_1_audit_entry patches log_audit_event; the database is a real SQLite session"
+  note: "Tested through the audit-entry assertion."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_checkout_and_vendor_audit::test_add_vendor_writes_1_audit_entry", expect: passed}
+  - {type: code, file: app/api/supplier_router.py, line: 125, contains: '@router.post("", response_model=DistributorScorecardResponse)'}
+
+- id: supplier-orders
+  name: Order history per supplier
+  area: vendor
+  entry_points: ["GET /api/v1/suppliers/{supplier_id}/orders"]
+  status: working
+  mock_check: "tests/test_supplier_history_api.py overrides get_database_session with a real SQLite session; nothing in the endpoint is patched"
+  note: "One test."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_supplier_history_api::test_supplier_history_endpoint", expect: passed}
+  - {type: code, file: app/api/supplier_router.py, line: 36, contains: '@router.get("/{supplier_id}/orders"'}
+
+- id: supplier-scorecard
+  name: Supplier financial scorecard (trust score, loss in rupees)
+  area: vendor
+  entry_points: ["GET /api/v1/suppliers/{supplier_id}/scorecard", "app/services/supplier_scorecard_service.py"]
+  status: untested
+  note: "Real calculation from purchase orders; no test references it."
+  evidence:
+  - {type: code, file: app/services/supplier_scorecard_service.py, line: 73, contains: "trust_score = max(0, 100 - (recent_failures * 15))"}
+  - {type: code, file: app/api/supplier_router.py, line: 50, contains: '@router.get("/{supplier_id}/scorecard"'}
+
+- id: supplier-id-list-main
+  name: Supplier id list defined directly in main.py
+  area: vendor
+  entry_points: ["GET /api/v1/suppliers [app/main.py]"]
+  status: untested
+  note: "Same URL as the supplier_router list. The router is included earlier (main.py:322) than this route is declared (main.py:529), so the router version probably answers requests and this one is dead (ESTIMATE; first-registered route wins in FastAPI)."
+  evidence:
+  - {type: code, file: app/main.py, line: 529, contains: 'path="/api/v1/suppliers"'}
+  - {type: code, file: app/main.py, line: 322, contains: "include_router(supplier_router"}
+
+- id: ui-suppliers-page
+  name: Vendor intelligence screen
+  area: vendor
+  entry_points: ["frontend/src/app/suppliers/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/suppliers/page.tsx, line: 29, contains: "/api/v1/suppliers?limit=50&offset=0"}
+
+# ------------------------------------------------------------------ ml
+- id: predict-async
+  name: Demand/stockout prediction request (Celery task, Chronos model)
+  area: ml
+  entry_points: ["POST /api/v1/predict", "GET /api/v1/tasks/{task_id}", "predict_forecast", "app/services/prediction_orchestrator.py", "app/services/ml_interfaces.py"]
+  status: broken
+  note: "The endpoint now answers 202 and runs a Celery task, but the tests still expect the old synchronous reply (200 with model_version), so they fail (HTTP 404 or 400; the likely causes are the old synchronous contract and an unseeded database, ESTIMATE). Tests B and C in the same file 'pass' only because they return early without asserting. So the real path is unproven either way."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_inference_edge_cases::test_a_happy_path", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "test_backend_resilience::test_vector_c_missing_supplier", expect: failed}
+  - {type: code, file: app/main.py, line: 342, contains: "status_code=202,"}
+  - {type: code, file: tests/test_inference_edge_cases.py, line: 57, contains: "assert response.status_code == 200"}
+
+- id: demand-forecast-module
+  name: Demand forecasting with Chronos-T5 and LoRA adapters
+  area: ml
+  entry_points: ["app/services/models/demand_forecast.py"]
+  status: untested
+  note: "Real model code. Only reachable through the failing predict tests, and the two edge-case tests that pass return early without checking anything."
+  evidence:
+  - {type: code, file: app/services/models/demand_forecast.py, line: 41, contains: "class DemandForecastingModule"}
+  - {type: code, file: tests/test_inference_edge_cases.py, line: 73, contains: "Test B FAILED: No active adapter found."}
+  - {type: test, run: docker-with-db, test_id: "test_inference_edge_cases::test_b_missing_weights_file", expect: passed}
+
+- id: stockout-prediction-module
+  name: Stockout-risk prediction with Chronos-T5
+  area: ml
+  entry_points: ["app/services/models/stockout_prediction.py"]
+  status: untested
+  note: "Real model code; no test references it."
+  evidence:
+  - {type: code, file: app/services/models/stockout_prediction.py, line: 38, contains: "class StockoutPredictionModule"}
+
+- id: compute-hypervisor
+  name: Budget-based routing between Chronos, LoRA and heuristic
+  area: ml
+  entry_points: ["app/services/compute_hypervisor.py"]
+  status: untested
+  note: "Real routing rules, called by the orchestrator; no test. v2 plans to drop this module."
+  evidence:
+  - {type: code, file: app/services/compute_hypervisor.py, line: 29, contains: "class ComputeHypervisor"}
+  - {type: doc, file: docs/V1_EVALUATION_REPORT.md, contains: "Compute Hypervisor"}
+
+- id: telemetry-batch-ingestion
+  name: Batch telemetry ingestion with stockout predictions
+  area: ml
+  entry_points: ["POST /api/v1/ingestion/batch", "process_telemetry_batch", "app/services/ingestion_service.py", "app/services/regional_router.py", "app/services/worker_tasks.py", "app/services/aegis_service.py", "app/services/ml_service.py"]
+  status: mocked
+  note: "The prediction stored for every record comes from generate_mock_stockout_prediction (a base risk plus random.uniform), not from a model. The docstring calls it a stand-in for the Temporal Fusion Transformer. The risk dashboard and stats read these rows."
+  evidence:
+  - {type: code, file: app/services/ml_service.py, line: 31, contains: "simulated_probability = base_risk + random.uniform(0.01, 0.1)"}
+  - {type: code, file: app/services/ml_service.py, line: 3, contains: "Simulates the output of the Temporal Fusion Transformer"}
+  - {type: code, file: app/services/worker_tasks.py, line: 66, contains: "raw_ml_prediction = generate_mock_stockout_prediction("}
+  - {type: code, file: app/core/circuit_breaker.py, line: 88, contains: "result = generate_mock_stockout_prediction("}
+
+- id: ingestion-health
+  name: Ingestion service health check
+  area: infra
+  entry_points: ["GET /api/v1/ingestion/health"]
+  status: untested
+  note: "Real code; no test."
+  evidence:
+  - {type: code, file: app/api/v1/ingestion.py, line: 135, contains: "@router.get("}
+
+- id: stream-telemetry
+  name: Redis-stream telemetry intake with batch persistence
+  area: ml
+  entry_points: ["POST /api/v1/stream/telemetry", "app/workers/stream_consumer.py"]
+  status: missing
+  note: "The endpoint queues messages, but the consumer's persistence function only logs and discards them ('warehouse domain purged'), so nothing is saved. The v1 audit trail still describes batch inserts."
+  evidence:
+  - {type: code, file: app/workers/stream_consumer.py, line: 80, contains: "acknowledges and discards any remaining stream messages."}
+  - {type: code, file: app/workers/stream_consumer.py, line: 86, contains: "return 0"}
+  - {type: doc, file: docs/ENGINEERING_AUDIT_TRAIL.md, contains: "worker to batch-insert telemetry"}
+
+- id: drift-analysis
+  name: Prediction drift check (PSI) that can trigger LoRA retraining
+  area: ml
+  entry_points: ["run_drift_analysis", "app/services/drift_service.py"]
+  status: untested
+  note: "Real PSI calculation, scheduled every 5 minutes; no test."
+  evidence:
+  - {type: code, file: app/services/drift_service.py, line: 57, contains: "def calculate_psi"}
+  - {type: code, file: app/services/worker_tasks.py, line: 112, contains: 'name="run_drift_analysis"'}
+
+- id: lora-training
+  name: LoRA adapter fine-tuning worker
+  area: ml
+  entry_points: ["train_lora_adapter", "app/services/lora_training_worker.py"]
+  status: untested
+  note: "Real PyTorch/PEFT training code (its header says it replaced an earlier mock). tests/chaos only holds scripts that call a running server; they are not tests."
+  evidence:
+  - {type: code, file: app/services/lora_training_worker.py, line: 157, contains: "def train_lora_adapter"}
+  - {type: code, file: app/services/lora_training_worker.py, line: 3, contains: "replaces the previous mock training loop"}
+
+- id: federated-aggregation
+  name: Federated weight aggregation (trimmed mean)
+  area: ml
+  entry_points: ["POST /api/v1/federated/weights/aggregate", "app/services/sgwa_service.py"]
+  status: untested
+  note: "Real aggregation code; no test. v2 plans to drop it."
+  evidence:
+  - {type: code, file: app/services/sgwa_service.py, line: 36, contains: "class SGWAService"}
+  - {type: code, file: app/api/v1/federated.py, line: 28, contains: "@router.post("}
+
+- id: isolation-forest-anomaly
+  name: Isolation-Forest anomaly / fraud detection
+  area: ml
+  entry_points: []
+  status: missing
+  note: "Exists only as an offline script and a benchmark write-up. The table that stored its results was dropped by migration a1b2c3d4e5f6, and no app code uses it."
+  evidence:
+  - {type: code, file: scripts/audit_ml_anomalies.py, line: 9, contains: "from sklearn.ensemble import IsolationForest"}
+  - {type: code, file: alembic/versions/a1b2c3d4e5f6_drop_audit_anomaly_scores_table.py, line: 4, contains: "Isolation Forest fraud detection results"}
+  - {type: doc, file: docs/benchmarks/RCA_010_isolation_forest_baseline.md, contains: "Isolation Forest"}
+
+- id: risk-dashboard
+  name: Supply-risk dashboard (stockouts, dead stock, anomalies)
+  area: ml
+  entry_points: ["GET /api/v1/risk/dashboard", "GET /api/v1/risk/catalog", "app/services/risk_service.py"]
+  status: untested
+  note: "Real code, but it reads telemetry rows whose predictions come from the mock in telemetry-batch-ingestion. No test."
+  evidence:
+  - {type: code, file: app/services/risk_service.py, line: 19, contains: "def get_risk_dashboard"}
+
+- id: velocity-rate-limiter
+  name: Redis rate limiter for audit events
+  area: audit
+  entry_points: ["app/services/velocity_service.py"]
+  status: untested
+  note: "Real class, but nothing in the app imports it (dead code) and no test."
+  evidence:
+  - {type: code, file: app/services/velocity_service.py, line: 23, contains: "class VelocityRateLimiter"}
+
+# ------------------------------------------------------------------ rag
+- id: kb-ingest
+  name: Clinical knowledge ingestion with embeddings
+  area: rag
+  entry_points: ["POST /api/v1/knowledge-base/ingest", "app.workers.embedding_tasks.generate_and_store_embedding", "app/workers/embedding_tasks.py"]
+  status: untested
+  note: "Real code (PubMedBERT embedding stored in pgvector); no test. The data-prep tests in test_phase5_etl.py cover only text transforms."
+  evidence:
+  - {type: code, file: app/api/v1/knowledge_base.py, line: 35, contains: "generate_and_store_embedding.delay("}
+  - {type: code, file: app/workers/embedding_tasks.py, line: 22, contains: "def generate_and_store_embedding"}
+
+- id: kb-search
+  name: Semantic clinical search with confidence threshold
+  area: rag
+  entry_points: ["POST /api/v1/knowledge-base/search", "app/services/semantic_search.py"]
+  status: untested
+  note: "Only the post-query filtering is tested, against a mocked database; the vector search itself is not. The real-DB schema-contract test fails (missing table)."
+  evidence:
+  - {type: code, file: app/services/semantic_search.py, line: 40, contains: "def execute_clinical_search"}
+  - {type: test, run: docker-with-db, test_id: "test_filter_fix::test_above_threshold_full_data", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_schema_contract::test_schema_contract_raw_sql_columns", expect: failed}
+
+- id: kb-ask
+  name: Clinical question answering (routing, Gemini, cache, circuit breaker)
+  area: rag
+  entry_points: ["POST /api/v1/knowledge-base/ask", "app/services/rag_pipeline.py"]
+  status: working
+  mock_check: "tests/test_rag_routing.py and tests/test_phase4_resilience.py patch google.genai.Client (Gemini), rag_pipeline.get_optimal_fefo_batch, semantic_search.execute_clinical_search and the Redis client; the routing, cache and circuit-breaker logic runs for real"
+  note: "Working for routing, caching, timeouts and degraded mode with the language model faked. The real Gemini call is never exercised. The same tests fail under the trio runner (2+2 cases) and 5 tests in test_h3_* fail with 'async def functions are not natively supported'."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_rag_routing.TestAdaptiveRoutingObjective::test_objective_mrp_query_returns_database_answer[asyncio]", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_phase4_resilience.TestCircuitBreaker::test_circuit_open_uses_degraded_mode[asyncio]", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_phase4_resilience.TestResultCache::test_cache_store_on_success[trio]", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "test_h3_rag_guard::test_rag_guard_single_distinct_sku", expect: failed}
+  - {type: code, file: app/services/rag_pipeline.py, line: 557, contains: "def generate_clinical_response"}
+
+- id: clinical-safety-judge
+  name: Rule-based clinical safety check (pregnancy, pediatric)
+  area: rag
+  entry_points: ["app/services/rule_engine.py"]
+  status: working
+  mock_check: none
+  note: "Pure logic tested directly with no mocks."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_phase3_safety.TestPregnancySafety::test_blocks_category_x_drug", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_phase3_safety.TestPediatricSafety::test_blocks_age_restricted_drug", expect: passed}
+  - {type: code, file: app/services/rule_engine.py, line: 47, contains: "class ClinicalSafetyJudge"}
+
+- id: query-sanitizer
+  name: Query clean-up, intent and SKU extraction
+  area: rag
+  entry_points: ["app/services/sanitizer.py"]
+  status: working
+  mock_check: none
+  note: "Tested directly. The v1 backlog lists a known mismatch between extracted SKU formats and database SKUs."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_phase2_routing.TestExtractSku::test_extracts_hyphenated_sku", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_phase2_routing.TestSanitizerPipeline::test_full_pipeline_pregnancy", expect: passed}
+  - {type: code, file: app/services/sanitizer.py, line: 328, contains: "def extract_sku"}
+
+- id: kb-substitute
+  name: Clinically similar substitute finder (pgvector)
+  area: rag
+  entry_points: ["POST /api/v1/knowledge-base/substitute"]
+  status: untested
+  note: "Real SQL similarity search; no test calls it."
+  evidence:
+  - {type: code, file: app/api/v1/knowledge_base.py, line: 449, contains: '@router.post("/substitute"'}
+
+# ------------------------------------------------------------------ health-risk
+- id: health-risk-api
+  name: Health-risk scores API (current, history, explain)
+  area: health-risk
+  entry_points: ["GET /api/v1/health-risk/current", "GET /api/v1/health-risk/history", "GET /api/v1/health-risk/explain/{score_id}"]
+  status: working
+  mock_check: "tests/test_health_risk_router.py overrides get_database_session with a MagicMock session and get_current_tenant with a fixed tenant; the endpoint logic runs for real"
+  note: "Tested against mocked database results only; the real tables are not exercised."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_health_risk_router.TestHealthRiskCurrentEndpoint::test_tenant_with_two_disease_scores_returns_both", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_health_risk_router.TestHealthRiskExplainEndpoint::test_score_id_does_not_exist_returns_404", expect: passed}
+  - {type: code, file: app/api/v1/health_risk_router.py, line: 89, contains: "@router.get("}
+
+- id: health-risk-ingestion-job
+  name: Scheduled health-risk scoring from weather and search trends
+  area: health-risk
+  entry_points: ["run_health_risk_ingestion_task"]
+  status: broken
+  note: "The real-database pipeline tests fail or error because the test database has no exogenous_covariates table. The 51 unit tests in app/health_risk/tests (scoring formula, risk tiers, trend fetcher, ingestion service with doubles) all pass, so the logic is sound but the end-to-end path is unproven."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline::test_success_path_all_three_diseases_scored", expect: failed}
+  - {type: test, run: docker-with-db, test_id: "integration.test_health_risk_job_resilience.TestHealthRiskJobResilience::test_job_survives_sustained_pytrends_failure", expect: error}
+  - {type: test, run: docker-with-db-health-risk, test_id: "app.health_risk.tests.test_scoring_formula.TestScoringFormulaRealData::test_high_trend_high_weather", expect: passed}
+  - {type: test, run: docker-with-db-health-risk, test_id: "app.health_risk.tests.test_ingestion_service.TestIngestionSuccess::test_all_three_diseases_are_scored_and_saved", expect: passed}
+  - {type: code, file: app/tasks/health_risk_tasks.py, line: 25, contains: 'name="run_health_risk_ingestion_task"'}
+
+- id: covariates-fetch
+  name: Weather and search-trend covariate fetch
+  area: health-risk
+  entry_points: ["fetch_exogenous_covariates_task", "app/services/covariates/parsers.py"]
+  status: mocked
+  note: "The search-trend part of the older covariate parser returns simulated, hard-coded scores for a few cities. The health_risk module's own trend fetcher (pytrends) replaces it for health scoring."
+  evidence:
+  - {type: code, file: app/services/covariates/parsers.py, line: 77, contains: "Simulated dynamic response based on city and keyword"}
+  - {type: code, file: app/health_risk/infrastructure/trend_fetcher.py, line: 5, contains: "returns simulated data"}
+  - {type: code, file: app/tasks/covariate_tasks.py, line: 19, contains: 'name="fetch_exogenous_covariates_task"'}
+
+- id: ui-health-risk-radar-page
+  name: Health-risk radar screen
+  area: health-risk
+  entry_points: ["frontend/src/app/health-risk-radar/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/health-risk-radar/page.tsx, line: 279, contains: "honestly"}
+
+# ------------------------------------------------------------------ crm
+- id: patient-registration
+  name: Register patient (idempotent per tenant)
+  area: crm
+  entry_points: ["POST /api/v1/patients/register", "app/services/patient_service.py"]
+  status: untested
+  note: "Real code; no test."
+  evidence:
+  - {type: code, file: app/api/v1/patients.py, line: 12, contains: '@router.post("/register"'}
+  - {type: code, file: app/services/patient_service.py, line: 8, contains: "def register_patient"}
+
+- id: treatment-plan
+  name: Treatment plan with projected depletion date
+  area: crm
+  entry_points: ["POST /api/v1/patients/treatment-plan"]
+  status: untested
+  note: "Real code; no test."
+  evidence:
+  - {type: code, file: app/api/v1/patients.py, line: 23, contains: '@router.post("/treatment-plan"'}
+  - {type: code, file: app/services/patient_service.py, line: 25, contains: "def create_treatment_plan"}
+
+- id: crm-dashboard-counts
+  name: Active treatments, upcoming refills and disease statistics
+  area: crm
+  entry_points: ["GET /api/v1/patients/active-treatment-count", "GET /api/v1/patients/upcoming-refills", "GET /api/v1/patients/disease-stats"]
+  status: untested
+  note: "Real tenant-scoped queries; no test."
+  evidence:
+  - {type: code, file: app/api/v1/patients.py, line: 43, contains: '@router.get("/active-treatment-count"'}
+
+- id: adherence-reminders
+  name: WhatsApp refill reminders (daily sweep)
+  area: crm
+  entry_points: ["app.workers.adherence_tasks.send_whatsapp_reminder", "app.workers.adherence_tasks.sweep_depletion_horizons", "app/workers/adherence_tasks.py"]
+  status: untested
+  note: "Real code, no test. When a tenant has no Meta token or phone id it only logs a mock delivery and still marks the reminder as sent."
+  evidence:
+  - {type: code, file: app/workers/adherence_tasks.py, line: 45, contains: "WHATSAPP MOCK"}
+  - {type: code, file: app/workers/adherence_tasks.py, line: 79, contains: "def sweep_depletion_horizons"}
+
+# ------------------------------------------------------------------ notifications
+- id: notifications-api
+  name: Notification list and mark-as-read
+  area: notifications
+  entry_points: ["GET /api/v1/notifications", "GET /api/v1/notifications/", "PATCH /api/v1/notifications/{notification_id}/read"]
+  status: untested
+  note: "Real code; no test calls these endpoints (the overdue-order test checks that notifications are created, not read)."
+  evidence:
+  - {type: code, file: app/api/v1/notification_router.py, line: 31, contains: '@router.get("", response_model=List[NotificationResponse])'}
+  - {type: code, file: app/api/v1/notification_router.py, line: 67, contains: "@router.patch("}
+
+# ------------------------------------------------------------------ audit
+- id: audit-log-api
+  name: Audit log viewer with filters and pagination
+  area: audit
+  entry_points: ["GET /api/v1/audit-logs", "app/services/audit_service.py"]
+  status: working
+  mock_check: "tests/test_audit_log_endpoint.py overrides get_database_session with a real SQLite session; nothing in the endpoint is patched"
+  note: "Tenant isolation, pagination and filters are tested."
+  evidence:
+  - {type: test, run: docker-with-db, test_id: "test_audit_log_endpoint::test_audit_logs_tenant_isolation", expect: passed}
+  - {type: test, run: docker-with-db, test_id: "test_audit_log_endpoint::test_audit_logs_filters", expect: passed}
+  - {type: code, file: app/services/audit_service.py, line: 38, contains: "def log_audit_event"}
+
+- id: ui-audit-log-page
+  name: Audit log screen
+  area: audit
+  entry_points: ["frontend/src/app/audit-log/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/audit-log/page.tsx, line: 194, contains: "/api/v1/audit-logs?"}
+
+# ------------------------------------------------------------------ admin
+- id: tenant-settings
+  name: Tenant settings (UPI id, WhatsApp credentials)
+  area: admin
+  entry_points: ["GET /api/v1/settings", "GET /api/v1/settings/", "PUT /api/v1/settings", "PUT /api/v1/settings/"]
+  status: untested
+  note: "Real code; no test."
+  evidence:
+  - {type: code, file: app/api/v1/settings.py, line: 10, contains: '@router.get("", response_model=TenantSettingsResponse)'}
+  - {type: code, file: app/api/v1/settings.py, line: 28, contains: '@router.put("", response_model=TenantSettingsResponse)'}
+
+- id: ui-admin-settings-page
+  name: Admin settings screen
+  area: admin
+  entry_points: ["frontend/src/app/admin/settings/page.tsx"]
+  status: untested
+  note: "UI e2e not run (needs full stack)."
+  evidence:
+  - {type: code, file: frontend/src/app/admin/settings/page.tsx, line: 7, contains: "SettingsDashboard"}
+
+- id: adapter-registry-and-stats
+  name: LoRA adapter list and system statistics
+  area: admin
+  entry_points: ["GET /api/v1/adapters", "GET /api/v1/system/stats"]
+  status: untested
+  note: "Real queries; no test. The stats endpoint returns the model name as a fixed string."
+  evidence:
+  - {type: code, file: app/main.py, line: 548, contains: 'path="/api/v1/adapters"'}
+  - {type: code, file: app/api/v1/stats.py, line: 48, contains: 'neural_backbone="amazon/chronos-t5-mini"'}
+
+# ------------------------------------------------------------------ infra
+- id: nightly-backup
+  name: Nightly database backup to Google Drive
+  area: infra
+  entry_points: ["nightly_backup_to_drive"]
+  status: untested
+  note: "Real code scheduled by Celery beat; no test."
+  evidence:
+  - {type: code, file: app/tasks/backup_tasks.py, line: 128, contains: 'name="nightly_backup_to_drive"'}
