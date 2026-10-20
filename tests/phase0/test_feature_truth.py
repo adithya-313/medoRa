@@ -283,3 +283,28 @@ def test_table_starts_with_the_working_definition_and_bad_finding_names_the_feat
            "evidence": [code_item], "findings": [{"title": "no category"}]}
     with pytest.raises(FeatureTruthError, match="f9: a finding needs"):
         parse_feature(raw)
+
+
+def test_evidence_can_cite_a_junit_only_run_folder(tmp_path: Path) -> None:
+    """WHAT: Writes a run folder that has only junit.xml (like the scorecard flaw run) with one failed test
+    and checks that test evidence expecting "failed" holds while one expecting "passed" is reported.
+    WHY: The flaw run has no results.json, so the checker must be able to read the junit file directly.
+
+    Args:
+        tmp_path: pytest temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        junit with test_x failed -> expect failed: no problem; expect passed: one problem
+    """
+    run_dir = tmp_path / "results" / "flawrun"
+    run_dir.mkdir(parents=True)
+    xml = ('<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1">'
+           '<testcase classname="t" name="test_x" time="0.1"><failure message="AssertionError: x">tb</failure>'
+           '</testcase></testsuite></testsuites>')
+    (run_dir / "junit.xml").write_text(xml, encoding="utf-8")
+    feature = make_feature("f1", ["GET /a"])
+    feature.evidence = [Evidence(kind="test", run="flawrun", test_id="t::test_x", expect="failed")]
+    assert check_evidence([feature], tmp_path / "v1", tmp_path / "results") == []
+    feature.evidence = [Evidence(kind="test", run="flawrun", test_id="t::test_x", expect="passed")]
+    assert len(check_evidence([feature], tmp_path / "v1", tmp_path / "results")) == 1

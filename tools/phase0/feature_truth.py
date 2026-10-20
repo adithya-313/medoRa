@@ -25,7 +25,7 @@ import yaml
 # The script is run as `python tools/phase0/feature_truth.py`, so the repo root must be importable.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, clone_v1, make_writable_and_retry  # noqa: E402
+from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, clone_v1, make_writable_and_retry, parse_junit  # noqa: E402
 
 ROUTE_METHODS = ["get", "post", "put", "patch", "delete"]
 STATUSES = ["working", "mocked", "broken", "missing", "untested"]
@@ -595,23 +595,30 @@ def check_coverage(inventory: list[InventoryItem], features: list[Feature], igno
 
 
 def load_test_outcomes(results_dir: Path, run: str) -> dict[str, set[str]]:
-    """WHAT: Reads <results_dir>/<run>/results.json into a map "file::name" -> set of outcomes.
-    A test with two results (e.g. failed plus a teardown error) has both outcomes in its set.
+    """WHAT: Reads <results_dir>/<run>/results.json into a map "file::name" -> set of outcomes. If that
+    folder has no results.json but has a junit.xml (the scorecard flaw run), the junit XML is parsed instead
+    with the same reconciling parser. A test with two results (e.g. failed plus a teardown error) has both
+    outcomes in its set.
     WHY: Test evidence is checked against the recorded results, never against memory.
 
     Args:
         results_dir: folder holding one sub-folder per run.
         run: sub-folder name, e.g. "docker-with-db".
     Returns:
-        The map; empty if the run has no results.json.
+        The map; empty if the run has neither results.json nor junit.xml.
     Example:
         a row (file "test_a", name "test_x", outcome "passed") -> {"test_a::test_x": {"passed"}}
     """
     results_path = results_dir / run / "results.json"
-    if not results_path.exists():
+    junit_path = results_dir / run / "junit.xml"
+    if results_path.exists():
+        rows = json.loads(results_path.read_text(encoding="utf-8"))["tests"]
+    elif junit_path.exists():
+        rows = [dataclasses.asdict(row) for row in parse_junit(junit_path)]
+    else:
         return {}
     outcomes: dict[str, set[str]] = {}
-    for row in json.loads(results_path.read_text(encoding="utf-8"))["tests"]:
+    for row in rows:
         outcomes.setdefault(f"{row['file']}::{row['name']}", set()).add(row["outcome"])
     return outcomes
 

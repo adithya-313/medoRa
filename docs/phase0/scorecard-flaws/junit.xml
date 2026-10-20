@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="9" time="1.770" timestamp="2026-10-20T18:22:44.453985+00:00" hostname="6762ec24a0a4"><testcase classname="test_scorecard_flaws" name="test_positive_control" time="0.081" /><testcase classname="test_scorecard_flaws" name="test_f1_no_orders_is_not_trusted" time="0.031"><failure message="AssertionError: v1 returned risk_level=TRUSTED, success_rate=100 for a supplier with zero orders; correct: an unrated supplier is not TRUSTED&#10;assert 'TRUSTED' != 'TRUSTED'&#10; +  where 'TRUSTED' = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('0.0'), financial_loss_python_type='float', delivery_success_rate=100, trust_score=100, risk_level='TRUSTED', recent_failures=0).risk_level">def test_f1_no_orders_is_not_trusted() -&gt; None:
+        """WHAT: Flaw F1 (v1 lines 30-39): a supplier with no orders at all must not be rated TRUSTED.
+        WHY: A pharmacy would otherwise treat an unknown distributor as the safest one.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            no orders -&gt; v1 returns TRUSTED with success rate 100; correct: not TRUSTED
+        """
+        result = score_supplier([], SHOP_A, AS_OF)
+&gt;       assert result.risk_level != "TRUSTED", (
+            f"v1 returned risk_level={result.risk_level}, success_rate={result.delivery_success_rate} for a supplier "
+            "with zero orders; correct: an unrated supplier is not TRUSTED")
+E       AssertionError: v1 returned risk_level=TRUSTED, success_rate=100 for a supplier with zero orders; correct: an unrated supplier is not TRUSTED
+E       assert 'TRUSTED' != 'TRUSTED'
+E        +  where 'TRUSTED' = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('0.0'), financial_loss_python_type='float', delivery_success_rate=100, trust_score=100, risk_level='TRUSTED', recent_failures=0).risk_level
+
+/flaws/test_scorecard_flaws.py:88: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f2_score_reflects_failure_rate_not_failure_count" time="0.122"><failure message="AssertionError: v1 scored 2-of-2 failing = 70 and 7-of-200 failing = 0; correct: failing every order scores lower than failing 3.5% of orders&#10;assert 70 &lt; 0&#10; +  where 70 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('100.0'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=70, risk_level='TRUSTED', recent_failures=2).trust_score&#10; +  and   0 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('350.0'), financial_loss_python_type='float', delivery_success_rate=96, trust_score=0, risk_level='HIGH', recent_failures=7).trust_score">def test_f2_score_reflects_failure_rate_not_failure_count() -&gt; None:
+        """WHAT: Flaw F2 (v1 line 73): trust is 100 - 15 x failures, not a rate. A supplier failing 2 of 2
+        orders must score strictly lower than one failing 7 of 200.
+        WHY: A big, mostly reliable distributor would otherwise rank below a tiny one that always fails.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1: 2 of 2 failed -&gt; trust 70; 7 of 200 failed -&gt; trust 0; correct: first &lt; second
+        """
+        always_failing = score_supplier([failed_order() for _ in range(2)], SHOP_A, AS_OF)
+        mostly_good = score_supplier([failed_order() for _ in range(7)] + [good_order() for _ in range(193)], SHOP_A, AS_OF)
+&gt;       assert always_failing.trust_score &lt; mostly_good.trust_score, (
+            f"v1 scored 2-of-2 failing = {always_failing.trust_score} and 7-of-200 failing = {mostly_good.trust_score}; "
+            "correct: failing every order scores lower than failing 3.5% of orders")
+E       AssertionError: v1 scored 2-of-2 failing = 70 and 7-of-200 failing = 0; correct: failing every order scores lower than failing 3.5% of orders
+E       assert 70 &lt; 0
+E        +  where 70 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('100.0'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=70, risk_level='TRUSTED', recent_failures=2).trust_score
+E        +  and   0 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('350.0'), financial_loss_python_type='float', delivery_success_rate=96, trust_score=0, risk_level='HIGH', recent_failures=7).trust_score
+
+/flaws/test_scorecard_flaws.py:107: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f3_pending_orders_not_yet_due_are_not_failures" time="0.030"><failure message="AssertionError: v1 returned recent_failures=1 with 5 good orders and 1 PENDING order due on 2026-03-10; correct: 0&#10;assert 1 == 0&#10; +  where 1 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=83, trust_score=85, risk_level='TRUSTED', recent_failures=1).recent_failures">def test_f3_pending_orders_not_yet_due_are_not_failures() -&gt; None:
+        """WHAT: Flaw F3 (v1 lines 55-59): 5 on-time deliveries plus 1 PENDING order whose delivery is not due
+        yet (relative to AS_OF) must show recent_failures == 0.
+        WHY: A pharmacy placing a fresh order would otherwise see its distributor's score drop at once.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1: delivered_qty 0 &lt; ordered 10 -&gt; counted as a failure (recent_failures 1); correct: 0
+        """
+        not_due = OrderSpec(SHOP_A, 10, 0, PRICE, MRP, AS_OF - timedelta(days=1), AS_OF + timedelta(days=9), None, "PENDING")
+        result = score_supplier([good_order() for _ in range(5)] + [not_due], SHOP_A, AS_OF)
+&gt;       assert result.recent_failures == 0, (
+            f"v1 returned recent_failures={result.recent_failures} with 5 good orders and 1 PENDING order due on "
+            f"{not_due.expected_delivery_date}; correct: 0")
+E       AssertionError: v1 returned recent_failures=1 with 5 good orders and 1 PENDING order due on 2026-03-10; correct: 0
+E       assert 1 == 0
+E        +  where 1 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=83, trust_score=85, risk_level='TRUSTED', recent_failures=1).recent_failures
+
+/flaws/test_scorecard_flaws.py:126: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f4_scorecard_does_not_mix_tenants" time="0.032"><failure message="AssertionError: v1 returned recent_failures=3 to viewer shop-A, who has only good orders; the failures belong to shop-B; correct: 0&#10;assert 3 == 0&#10; +  where 3 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('150.0'), financial_loss_python_type='float', delivery_success_rate=50, trust_score=55, risk_level='WARNING', recent_failures=3).recent_failures">def test_f4_scorecard_does_not_mix_tenants() -&gt; None:
+        """WHAT: Flaw F4 (v1 lines 26-28): shop A has only good orders with a supplier; shop B's orders with the
+        same supplier all fail. Shop A's scorecard must show recent_failures == 0.
+        WHY: Showing one pharmacy another pharmacy's order history is a data leak and a wrong score.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1: no tenant filter, so A sees B's 3 failures; correct: 0
+        """
+        orders = [good_order(SHOP_A) for _ in range(3)] + [failed_order(SHOP_B) for _ in range(3)]
+        result = score_supplier(orders, SHOP_A, AS_OF)
+&gt;       assert result.recent_failures == 0, (
+            f"v1 returned recent_failures={result.recent_failures} to viewer {SHOP_A}, who has only good orders; "
+            f"the failures belong to {SHOP_B}; correct: 0")
+E       AssertionError: v1 returned recent_failures=3 to viewer shop-A, who has only good orders; the failures belong to shop-B; correct: 0
+E       assert 3 == 0
+E        +  where 3 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('150.0'), financial_loss_python_type='float', delivery_success_rate=50, trust_score=55, risk_level='WARNING', recent_failures=3).recent_failures
+
+/flaws/test_scorecard_flaws.py:145: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f5_money_is_exact_decimal" time="0.028"><failure message="AssertionError: v1 returned 100000099989999.98 as float; correct: exact Decimal 100000099989999.99&#10;assert (Decimal('100000099989999.98') == Decimal('100000099989999.99'))&#10; +  where Decimal('100000099989999.98') = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('100000099989999.98'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=85, risk_level='TRUSTED', recent_failures=1).financial_loss">def test_f5_money_is_exact_decimal() -&gt; None:
+        """WHAT: Flaw F5 (v1 lines 44 and 62): the loss is added up as a float. For one short order of
+        1,000,001 units with a margin of Rs 99,999,999.99 the exact loss is 100000099989999.99; the money
+        must also not be carried as a float.
+        WHY: Money must be exact to the paisa. NOTE: the wrong value only appears at about Rs 1e14; in 200,000
+        random realistic trials (margin up to Rs 500, up to 40 orders) float and Decimal agreed, so this is a
+        type flaw whose wrong value is demonstrated only at an extreme but schema-legal input.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1 returns the float 100000099989999.98 (one paisa off); correct: 100000099989999.99 as Decimal
+        """
+        order = OrderSpec(SHOP_A, 1_000_001, 0, Decimal("0.00"), Decimal("99999999.99"),
+                          AS_OF - timedelta(days=30), AS_OF - timedelta(days=20), None, "FAILED")
+        result = score_supplier([order], SHOP_A, AS_OF)
+        exact = Decimal("1000001") * Decimal("99999999.99")
+&gt;       assert result.financial_loss == exact and result.financial_loss_python_type != "float", (
+            f"v1 returned {result.financial_loss} as {result.financial_loss_python_type}; correct: exact Decimal {exact}")
+E       AssertionError: v1 returned 100000099989999.98 as float; correct: exact Decimal 100000099989999.99
+E       assert (Decimal('100000099989999.98') == Decimal('100000099989999.99'))
+E        +  where Decimal('100000099989999.98') = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('100000099989999.98'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=85, risk_level='TRUSTED', recent_failures=1).financial_loss
+
+/flaws/test_scorecard_flaws.py:169: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f6_old_failures_age_out" time="0.053"><failure message="AssertionError: v1 scored the 3-year-old failure 85 and the 7-day-old failure 85; correct: the old failure scores strictly higher&#10;assert 85 &gt; 85&#10; +  where 85 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=80, trust_score=85, risk_level='TRUSTED', recent_failures=1).trust_score&#10; +  and   85 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=80, trust_score=85, risk_level='TRUSTED', recent_failures=1).trust_score">def test_f6_old_failures_age_out() -&gt; None:
+        """WHAT: Flaw F6 (v1 lines 45-65): two suppliers identical except that one failure is dated 3 years
+        before AS_OF versus 7 days before. The old-failure supplier must score strictly higher.
+        WHY: A distributor that fixed its problems years ago should not be punished like one failing this week.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1 scores both 85 (no time window); correct: old-failure score &gt; recent-failure score
+        """
+        good_orders = [good_order() for _ in range(4)]
+        old_failure = score_supplier(good_orders + [failed_order(days_before=3 * 365)], SHOP_A, AS_OF)
+        recent_failure = score_supplier(good_orders + [failed_order(days_before=7)], SHOP_A, AS_OF)
+&gt;       assert old_failure.trust_score &gt; recent_failure.trust_score, (
+            f"v1 scored the 3-year-old failure {old_failure.trust_score} and the 7-day-old failure "
+            f"{recent_failure.trust_score}; correct: the old failure scores strictly higher")
+E       AssertionError: v1 scored the 3-year-old failure 85 and the 7-day-old failure 85; correct: the old failure scores strictly higher
+E       assert 85 &gt; 85
+E        +  where 85 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=80, trust_score=85, risk_level='TRUSTED', recent_failures=1).trust_score
+E        +  and   85 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=80, trust_score=85, risk_level='TRUSTED', recent_failures=1).trust_score
+
+/flaws/test_scorecard_flaws.py:188: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f7_loss_is_never_negative" time="0.033"><failure message="AssertionError: v1 returned financial_loss=-100.0; correct: &gt;= 0&#10;assert Decimal('-100.0') &gt;= 0&#10; +  where Decimal('-100.0') = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('-100.0'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=85, risk_level='TRUSTED', recent_failures=1).financial_loss">def test_f7_loss_is_never_negative() -&gt; None:
+        """WHAT: Flaw F7 (v1 lines 61-62): when cost_price is above expected_mrp and the delivery is short,
+        financial_loss must not be negative.
+        WHY: A short delivery can never make a distributor look like it earned the pharmacy money.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            cost 120, MRP 100, 10 ordered, 5 delivered -&gt; v1 loss -100.0; correct: &gt;= 0
+        """
+        order = OrderSpec(SHOP_A, 10, 5, Decimal("120.00"), Decimal("100.00"), AS_OF - timedelta(days=30),
+                          AS_OF - timedelta(days=20), AS_OF - timedelta(days=20), "PARTIAL")
+        result = score_supplier([order], SHOP_A, AS_OF)
+&gt;       assert result.financial_loss &gt;= 0, f"v1 returned financial_loss={result.financial_loss}; correct: &gt;= 0"
+E       AssertionError: v1 returned financial_loss=-100.0; correct: &gt;= 0
+E       assert Decimal('-100.0') &gt;= 0
+E        +  where Decimal('-100.0') = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('-100.0'), financial_loss_python_type='float', delivery_success_rate=0, trust_score=85, risk_level='TRUSTED', recent_failures=1).financial_loss
+
+/flaws/test_scorecard_flaws.py:208: AssertionError</failure></testcase><testcase classname="test_scorecard_flaws" name="test_f8_success_rate_is_not_truncated" time="0.046"><failure message="AssertionError: v1 returned delivery_success_rate=99 for 199 good orders of 200 (99.5 percent, truncated by int()); correct: not 99&#10;assert 99 != 99&#10; +  where 99 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=99, trust_score=85, risk_level='TRUSTED', recent_failures=1).delivery_success_rate">def test_f8_success_rate_is_not_truncated() -&gt; None:
+        """WHAT: Flaw F8 (v1 line 70): 199 good orders out of 200 is 99.5 percent. int() cuts it to 99.
+        The rate must not be 99 (rounding to the nearest whole percent gives 100).
+        WHY: Truncation always rounds against the supplier, so near-perfect suppliers never reach 100.
+    
+        Args:
+            none.
+        Returns:
+            Nothing.
+        Example:
+            v1 returns delivery_success_rate 99; correct: not 99 (100 when rounded to nearest)
+        """
+        result: ScorecardResult = score_supplier([good_order() for _ in range(199)] + [failed_order()], SHOP_A, AS_OF)
+&gt;       assert result.delivery_success_rate != 99, (
+            f"v1 returned delivery_success_rate={result.delivery_success_rate} for 199 good orders of 200 "
+            "(99.5 percent, truncated by int()); correct: not 99")
+E       AssertionError: v1 returned delivery_success_rate=99 for 199 good orders of 200 (99.5 percent, truncated by int()); correct: not 99
+E       assert 99 != 99
+E        +  where 99 = ScorecardResult(supplier_id='SUPP-FLAW-1', name='Flaw Test Pharma', financial_loss=Decimal('50.0'), financial_loss_python_type='float', delivery_success_rate=99, trust_score=85, risk_level='TRUSTED', recent_failures=1).delivery_success_rate
+
+/flaws/test_scorecard_flaws.py:224: AssertionError</failure></testcase></testsuite></testsuites>

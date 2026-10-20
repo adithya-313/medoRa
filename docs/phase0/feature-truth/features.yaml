@@ -281,11 +281,22 @@ features:
   name: Supplier financial scorecard (trust score, loss in rupees)
   area: vendor
   entry_points: ["GET /api/v1/suppliers/{supplier_id}/scorecard", "app/services/supplier_scorecard_service.py"]
-  status: untested
-  note: "Real calculation from purchase orders; no test references it."
+  status: broken
+  note: "Runs and rates a simple all-on-time supplier correctly (positive control passes). Eight designed flaw tests fail on v1, each with an AssertionError: F1 no orders is TRUSTED, F2 score is 100 minus 15 per failure (not a rate), F3 orders not yet due count as failures, F4 no tenant filter, F5 money is a float (a wrong paisa shows only near Rs 1e14; an exploratory run of 200,000 random realistic trials, not saved, showed no difference), F6 failures never age, F7 negative loss, F8 rate truncated. See docs/phase0/scorecard-flaws/results.md."
   evidence:
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_positive_control", expect: passed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f1_no_orders_is_not_trusted", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f2_score_reflects_failure_rate_not_failure_count", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f3_pending_orders_not_yet_due_are_not_failures", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f4_scorecard_does_not_mix_tenants", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f5_money_is_exact_decimal", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f6_old_failures_age_out", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f7_loss_is_never_negative", expect: failed}
+  - {type: test, run: "../scorecard-flaws", test_id: "test_scorecard_flaws::test_f8_success_rate_is_not_truncated", expect: failed}
   - {type: code, file: app/services/supplier_scorecard_service.py, line: 73, contains: "trust_score = max(0, 100 - (recent_failures * 15))"}
   - {type: code, file: app/api/supplier_router.py, line: 50, contains: '@router.get("/{supplier_id}/scorecard"'}
+  findings:
+  - {category: security, title: "No tenant filter: the scorecard mixes every shop's orders for a supplier (flaw F4)", file: app/services/supplier_scorecard_service.py, line: 27, contains: "PurchaseOrderModel.supplier_id == supplier_id"}
 
 - id: supplier-id-list-main
   name: Supplier id list defined directly in main.py
