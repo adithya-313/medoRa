@@ -1,0 +1,6 @@
+# Inventory items that are not features. Keys are exactly as printed by discover_inventory.
+ignored:
+- {key: app/services/__init__.py, reason: "package marker (docstring only)"}
+- {key: app/services/covariates/__init__.py, reason: "package marker (one line)"}
+- {key: app/services/models/__init__.py, reason: "package marker; also holds one shared asyncio lock used by the forecasting modules (a helper, not a feature)"}
+- {key: app/workers/__init__.py, reason: "package marker (one line)"}

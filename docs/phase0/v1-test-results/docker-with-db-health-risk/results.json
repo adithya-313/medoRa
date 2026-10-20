@@ -1,0 +1,380 @@
+{
+  "meta": {
+    "tag": "v1-final",
+    "commit": "3b121e1e14ac77e8883864136e7409bce7c983aa",
+    "run_label": "docker-with-db-health-risk",
+    "timestamp_iso": "2026-10-20T17:44:15.522703+00:00",
+    "os_name": "Linux container (image v1-baseline-env) on host Windows 11",
+    "python_version": "Python 3.11.17",
+    "wall_seconds": 8.0,
+    "junit_sha256": "0a7a065b8987bf4327cbc9f4907d85b3ac700aa1fdd5f9751213eb339286e6fb",
+    "note": "Environment installed into the container filesystem (image v1-baseline-env), warm wheel cache."
+  },
+  "summary": {
+    "total": 51,
+    "passed": 51,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0,
+    "distinct_names": 51
+  },
+  "tests": [
+    {
+      "file": "app.health_risk.tests.test_feature_flag.TestFeatureFlagAndGate",
+      "name": "test_both_true_returns_true",
+      "outcome": "passed",
+      "duration_seconds": 0.04,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_feature_flag.TestFeatureFlagAndGate",
+      "name": "test_global_true_tenant_false_returns_false",
+      "outcome": "passed",
+      "duration_seconds": 0.002,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_feature_flag.TestFeatureFlagAndGate",
+      "name": "test_global_false_tenant_true_returns_false",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_feature_flag.TestFeatureFlagAndGate",
+      "name": "test_both_false_returns_false",
+      "outcome": "passed",
+      "duration_seconds": 0.002,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_feature_flag.TestFeatureFlagAndGate",
+      "name": "test_global_default_is_false",
+      "outcome": "passed",
+      "duration_seconds": 0.016,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_ingestion_service.TestIngestionSuccess",
+      "name": "test_all_three_diseases_are_scored_and_saved",
+      "outcome": "passed",
+      "duration_seconds": 0.024,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_ingestion_service.TestIngestionSuccess",
+      "name": "test_no_weather_row_still_scores_all_diseases",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_ingestion_service.TestIngestionFailureIsolation",
+      "name": "test_one_disease_failure_does_not_block_others",
+      "outcome": "passed",
+      "duration_seconds": 0.031,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_ingestion_service.TestIngestionDBFailureIsolation",
+      "name": "test_db_commit_failure_does_not_block_remaining_diseases",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_ingestion_service.TestIngestionFeatureFlagIndependence",
+      "name": "test_no_feature_flag_check_inside_ingestion",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_low_band",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_moderate_band",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_high_band",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_severe_band",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_low_moderate_boundary",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_moderate_high_boundary",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_risk_tier.TestComputeRiskTier",
+      "name": "test_high_severe_boundary",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoreValidation",
+      "name": "test_raises_value_error_when_score_is_150",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoreValidation",
+      "name": "test_raises_value_error_when_score_is_negative_10",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoreValidation",
+      "name": "test_accepts_valid_score",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoringStrategyContract",
+      "name": "test_cannot_instantiate_abstract_class_directly",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoringStrategyContract",
+      "name": "test_transparent_formula_scorer_can_be_instantiated",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scaffold.TestRiskScoringStrategyContract",
+      "name": "test_transparent_formula_scorer_returns_valid_risk_score",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyHigh",
+      "name": "test_high_humidity_high_rain",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyHigh",
+      "name": "test_boundary_high",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyHigh",
+      "name": "test_extreme_values",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyModerate",
+      "name": "test_high_humidity_only",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyModerate",
+      "name": "test_high_rain_only",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyLow",
+      "name": "test_both_low",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyLow",
+      "name": "test_barely_below_thresholds",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyLow",
+      "name": "test_zero_values",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyMissingData",
+      "name": "test_none_humidity",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyMissingData",
+      "name": "test_none_rain",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestWeatherAnomalyMissingData",
+      "name": "test_both_none",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaRealData",
+      "name": "test_high_trend_high_weather",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaRealData",
+      "name": "test_mid_trend_moderate_weather",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaRealData",
+      "name": "test_zero_trend_low_weather",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaFallbackNeutral",
+      "name": "test_trend_none_uses_weather_only",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaFallbackNeutral",
+      "name": "test_trend_none_moderate_weather",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaFallbackNeutral",
+      "name": "test_trend_none_weather_partial",
+      "outcome": "passed",
+      "duration_seconds": 0.002,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaFallbackNeutral",
+      "name": "test_all_none",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaContributingFactors",
+      "name": "test_all_inputs_present_in_factors",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaContributingFactors",
+      "name": "test_partial_inputs_in_factors",
+      "outcome": "passed",
+      "duration_seconds": 0.001,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_scoring_formula.TestScoringFormulaContributingFactors",
+      "name": "test_all_none_in_factors",
+      "outcome": "passed",
+      "duration_seconds": 0.002,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherSuccess",
+      "name": "test_returns_float_when_pytrends_succeeds",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherSuccess",
+      "name": "test_returns_float_at_boundaries",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherFailure",
+      "name": "test_returns_none_when_pytrends_times_out",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherFailure",
+      "name": "test_returns_none_when_pytrends_returns_empty",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherCircuitBreaker",
+      "name": "test_returns_none_without_calling_pytrends_when_circuit_open",
+      "outcome": "passed",
+      "duration_seconds": 0.015,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherCache",
+      "name": "test_uses_cached_value_without_calling_pytrends",
+      "outcome": "passed",
+      "duration_seconds": 0.003,
+      "reason": ""
+    },
+    {
+      "file": "app.health_risk.tests.test_trend_fetcher.TestTrendFetcherCache",
+      "name": "test_cache_miss_calls_pytrends",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    }
+  ]
+}

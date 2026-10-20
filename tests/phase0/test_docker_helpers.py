@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.phase0.run_v1_suite_docker import mask_url, read_service_env
+from tools.phase0.run_v1_suite_docker import mask_url, pytest_command, read_service_env
 
 
 def test_mask_url_hides_the_password_only() -> None:
@@ -54,3 +54,22 @@ def test_read_service_env_raises_when_a_key_is_missing(tmp_path: Path) -> None:
     (tmp_path / ".env.example").write_text("DATABASE_URL=x\n", encoding="utf-8")
     with pytest.raises(RuntimeError):
         read_service_env(tmp_path)
+
+
+def test_pytest_command_has_no_filters_and_uses_the_given_path() -> None:
+    """WHAT: Checks the pytest command keeps the cache off, writes junit XML, adds no -k/-x filter,
+    and ends with exactly the path it was given.
+    WHY: Runs on different test folders must use identical arguments except the path.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        ("python", "app/health_risk/tests") -> [..., "--ignore=tests/load", "app/health_risk/tests"]
+    """
+    command = pytest_command("python", "app/health_risk/tests")
+    assert command[-1] == "app/health_risk/tests"
+    assert "-p" in command and "no:cacheprovider" in command
+    assert "--junitxml=/out/junit.xml" in command
+    assert "-k" not in command and "-x" not in command

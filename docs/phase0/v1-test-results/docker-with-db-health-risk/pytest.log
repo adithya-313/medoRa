@@ -1,0 +1,98 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0
+rootdir: /work
+plugins: anyio-4.13.0
+collected 51 items
+
+app/health_risk/tests/test_feature_flag.py .....                         [  9%]
+app/health_risk/tests/test_ingestion_service.py .....                    [ 19%]
+app/health_risk/tests/test_risk_tier.py .......                          [ 33%]
+app/health_risk/tests/test_scaffold.py ......                            [ 45%]
+app/health_risk/tests/test_scoring_formula.py .....................      [ 86%]
+app/health_risk/tests/test_trend_fetcher.py .......                      [100%]
+
+==================================== PASSES ====================================
+_ TestIngestionFailureIsolation.test_one_disease_failure_does_not_block_others _
+------------------------------ Captured log call -------------------------------
+ERROR    app.health_risk.service.ingestion_service:ingestion_service.py:112 Failed to process disease 'leptospirosis' for pincode 682001: Google Trends timed out for leptospirosis symptoms
+Traceback (most recent call last):
+  File "/work/app/health_risk/service/ingestion_service.py", line 94, in run_ingestion_for_pincode
+    _process_single_disease(
+  File "/work/app/health_risk/service/ingestion_service.py", line 177, in _process_single_disease
+    trend_score: float | None = fetch_trend_score(
+                                ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/mock.py", line 1189, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/app/health_risk/tests/test_ingestion_service.py", line 206, in trend_side_effect
+    raise RuntimeError(
+RuntimeError: Google Trends timed out for leptospirosis symptoms
+_ TestIngestionDBFailureIsolation.test_db_commit_failure_does_not_block_remaining_diseases _
+------------------------------ Captured log call -------------------------------
+WARNING  app.health_risk.service.ingestion_service:ingestion_service.py:224 Duplicate score for pincode=682001, disease=dengue: already scored at 2026-10-20 17:44:10.489922+00:00. Skipping.
+______ TestTrendFetcherFailure.test_returns_none_when_pytrends_times_out _______
+------------------------------ Captured log call -------------------------------
+ERROR    app.health_risk.infrastructure.trend_fetcher:trend_fetcher.py:170 Failed to fetch trend for 'dengue symptoms' at pincode 682001: Google Trends timed out
+_ TestTrendFetcherCircuitBreaker.test_returns_none_without_calling_pytrends_when_circuit_open _
+------------------------------ Captured log call -------------------------------
+WARNING  app.health_risk.infrastructure.trend_fetcher:trend_fetcher.py:142 Circuit breaker OPEN for trend fetch. Skipping 'dengue symptoms' at pincode 682001.
+---------------------- generated xml file: /out/junit.xml ----------------------
+=========================== short test summary info ============================
+PASSED app/health_risk/tests/test_feature_flag.py::TestFeatureFlagAndGate::test_both_true_returns_true
+PASSED app/health_risk/tests/test_feature_flag.py::TestFeatureFlagAndGate::test_global_true_tenant_false_returns_false
+PASSED app/health_risk/tests/test_feature_flag.py::TestFeatureFlagAndGate::test_global_false_tenant_true_returns_false
+PASSED app/health_risk/tests/test_feature_flag.py::TestFeatureFlagAndGate::test_both_false_returns_false
+PASSED app/health_risk/tests/test_feature_flag.py::TestFeatureFlagAndGate::test_global_default_is_false
+PASSED app/health_risk/tests/test_ingestion_service.py::TestIngestionSuccess::test_all_three_diseases_are_scored_and_saved
+PASSED app/health_risk/tests/test_ingestion_service.py::TestIngestionSuccess::test_no_weather_row_still_scores_all_diseases
+PASSED app/health_risk/tests/test_ingestion_service.py::TestIngestionFailureIsolation::test_one_disease_failure_does_not_block_others
+PASSED app/health_risk/tests/test_ingestion_service.py::TestIngestionDBFailureIsolation::test_db_commit_failure_does_not_block_remaining_diseases
+PASSED app/health_risk/tests/test_ingestion_service.py::TestIngestionFeatureFlagIndependence::test_no_feature_flag_check_inside_ingestion
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_low_band
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_moderate_band
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_high_band
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_severe_band
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_low_moderate_boundary
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_moderate_high_boundary
+PASSED app/health_risk/tests/test_risk_tier.py::TestComputeRiskTier::test_high_severe_boundary
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoreValidation::test_raises_value_error_when_score_is_150
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoreValidation::test_raises_value_error_when_score_is_negative_10
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoreValidation::test_accepts_valid_score
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoringStrategyContract::test_cannot_instantiate_abstract_class_directly
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoringStrategyContract::test_transparent_formula_scorer_can_be_instantiated
+PASSED app/health_risk/tests/test_scaffold.py::TestRiskScoringStrategyContract::test_transparent_formula_scorer_returns_valid_risk_score
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyHigh::test_high_humidity_high_rain
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyHigh::test_boundary_high
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyHigh::test_extreme_values
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyModerate::test_high_humidity_only
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyModerate::test_high_rain_only
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyLow::test_both_low
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyLow::test_barely_below_thresholds
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyLow::test_zero_values
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyMissingData::test_none_humidity
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyMissingData::test_none_rain
+PASSED app/health_risk/tests/test_scoring_formula.py::TestWeatherAnomalyMissingData::test_both_none
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaRealData::test_high_trend_high_weather
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaRealData::test_mid_trend_moderate_weather
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaRealData::test_zero_trend_low_weather
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaFallbackNeutral::test_trend_none_uses_weather_only
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaFallbackNeutral::test_trend_none_moderate_weather
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaFallbackNeutral::test_trend_none_weather_partial
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaFallbackNeutral::test_all_none
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaContributingFactors::test_all_inputs_present_in_factors
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaContributingFactors::test_partial_inputs_in_factors
+PASSED app/health_risk/tests/test_scoring_formula.py::TestScoringFormulaContributingFactors::test_all_none_in_factors
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherSuccess::test_returns_float_when_pytrends_succeeds
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherSuccess::test_returns_float_at_boundaries
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherFailure::test_returns_none_when_pytrends_times_out
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherFailure::test_returns_none_when_pytrends_returns_empty
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherCircuitBreaker::test_returns_none_without_calling_pytrends_when_circuit_open
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherCache::test_uses_cached_value_without_calling_pytrends
+PASSED app/health_risk/tests/test_trend_fetcher.py::TestTrendFetcherCache::test_cache_miss_calls_pytrends
+============================== 51 passed in 3.34s ==============================

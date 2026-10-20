@@ -1,0 +1,20 @@
+{
+  "env_image_name": "v1-baseline-env",
+  "env_image_id": "sha256:f1fa9c405975b2d8152623bf7c69dacd6c487c5cd5edebea5c67e3ad2bfcfd2d",
+  "pip_freeze_sha256": "1b41cd0502afdb5734102453498e4bd15f7cf1b55500cb979c4b14f5e6935bd7",
+  "cache_before_run": "reused (2946568 kB)",
+  "install_cache_label": "warm cache",
+  "env_pip_v1_exit_code": 0,
+  "env_pip_v1_wall_seconds": 501.7,
+  "env_pip_dev_wall_seconds": 10.0,
+  "env_image_save_wall_seconds": 708.7,
+  "env_build_total_wall_seconds": 1247.2,
+  "pytest_wall_seconds": 8.0,
+  "env_image_reused_from": "docs\\phase0\\v1-test-results\\docker-with-db",
+  "env_image_verified": true,
+  "package_diff": {
+    "only_in_image": [],
+    "only_in_earlier_run": [],
+    "version_differences": []
+  }
+}
