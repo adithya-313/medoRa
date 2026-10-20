@@ -18,6 +18,7 @@ from tools.phase0.data_provenance import (
     ProvenanceError,
     check_coverage,
     check_git_evidence,
+    clone_arguments,
     count_csv,
     count_jsonl,
     discover_data_files,
@@ -247,3 +248,21 @@ def test_git_evidence_must_name_the_first_adding_commit(tmp_path: Path) -> None:
     assert check_git_evidence(GitEvidence(head[:7], "add data"), "data/a.csv", tmp_path) is None
     assert "not" in (check_git_evidence(GitEvidence(head[:7], "other subject"), "data/a.csv", tmp_path) or "")
     assert "no commit" in (check_git_evidence(GitEvidence(head[:7], "add data"), "data/missing.csv", tmp_path) or "")
+
+
+def test_clone_arguments_disable_line_ending_conversion() -> None:
+    """WHAT: Checks the clone command turns core.autocrlf off, uses --depth 1 only for shallow clones, and
+    passes the branch.
+    WHY: On Windows, CRLF conversion would change sizes and SHA-256 values, so the audit would differ per machine.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        shallow v1-final -> [..., "-c", "core.autocrlf=false", "clone", "--depth", "1", "--branch", "v1-final", ...]
+    """
+    shallow = clone_arguments("v1-final", Path("t"), True)
+    full = clone_arguments("v1-legacy", Path("t"), False)
+    assert "core.autocrlf=false" in shallow and "--depth" in shallow and shallow[shallow.index("--branch") + 1] == "v1-final"
+    assert "core.autocrlf=false" in full and "--depth" not in full

@@ -30,7 +30,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.feature_truth import Evidence, FeatureTruthError, check_one_evidence, parse_evidence  # noqa: E402
-from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, V1_REPO_URL, clone_v1, make_writable_and_retry, run_command  # noqa: E402
+from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, V1_REPO_URL, make_writable_and_retry, run_command  # noqa: E402
 
 DATA_EXTENSIONS = [".csv", ".tsv", ".json", ".jsonl", ".parquet", ".xlsx", ".sql", ".db", ".sqlite", ".pkl",
                    ".pt", ".bin", ".safetensors", ".npy", ".log", ".png", ".jpg"]
@@ -634,26 +634,60 @@ def render_row(entry: Entry, measurements: dict[str, Measurement], hits: dict[st
             f"{entry.production_use}: {entry.production_reason.replace('|', '/')} |")
 
 
-def clone_history(target_dir: Path) -> Path:
-    """WHAT: Makes a full-history clone of the v1-legacy branch (no depth limit) into a new folder.
-    WHY: First-add commits can only be found with the whole history of the branch.
+def clone_arguments(branch_or_tag: str, target_dir: Path, shallow: bool) -> list[str]:
+    """WHAT: Builds the `git clone` argument list with core.autocrlf=false.
+    WHY: On Windows git may convert LF to CRLF on checkout, which would change file sizes and SHA-256
+    values; the audit must measure the bytes stored in git, the same on every machine.
 
     Args:
+        branch_or_tag: branch or tag to clone.
+        target_dir: folder to clone into.
+        shallow: True for --depth 1, False for the full history.
+    Returns:
+        The argument list.
+    Example:
+        ("v1-final", Path("t"), True) -> ["git", "-c", "core.autocrlf=false", "clone", "--depth", "1", "--branch", "v1-final", URL, "t"]
+    """
+    depth = ["--depth", "1"] if shallow else []
+    return ["git", "-c", "core.autocrlf=false", "clone"] + depth + ["--branch", branch_or_tag, V1_REPO_URL, str(target_dir)]
+
+
+def clone_exact(branch_or_tag: str, target_dir: Path, shallow: bool) -> Path:
+    """WHAT: Clones v1 into a new folder without line-ending conversion and returns the clone's root.
+    WHY: A fresh clone every time (never reused), measuring exactly what git stores.
+
+    Args:
+        branch_or_tag: branch or tag to clone.
         target_dir: folder that must not exist.
+        shallow: True for --depth 1, False for the full history.
     Returns:
         The clone's root folder.
     Raises:
         FileExistsError: if target_dir exists.
         RuntimeError: if git clone fails.
     Example:
-        clone_history(Path("tmp/hist")) -> Path("tmp/hist") with all 382 commits of v1-legacy
+        clone_exact("v1-legacy", Path("tmp/hist"), False) -> Path("tmp/hist") with all commits
     """
     if target_dir.exists():
         raise FileExistsError(f"refusing to reuse existing folder: {target_dir}")
-    finished = run_command(["git", "clone", "--branch", "v1-legacy", V1_REPO_URL, str(target_dir)], None, GIT_TIMEOUT_SECONDS)
+    finished = run_command(clone_arguments(branch_or_tag, target_dir, shallow), None, GIT_TIMEOUT_SECONDS)
     if finished.returncode != 0:
-        raise RuntimeError(f"git clone of v1-legacy failed: {finished.stderr.strip()}")
+        raise RuntimeError(f"git clone of {branch_or_tag} failed: {finished.stderr.strip()}")
     return target_dir
+
+
+def clone_history(target_dir: Path) -> Path:
+    """WHAT: Makes a full-history clone of the v1-legacy branch (no depth limit, no line-ending conversion).
+    WHY: First-add commits can only be found with the whole history of the branch.
+
+    Args:
+        target_dir: folder that must not exist.
+    Returns:
+        The clone's root folder.
+    Example:
+        clone_history(Path("tmp/hist")) -> Path("tmp/hist") with all 382 commits of v1-legacy
+    """
+    return clone_exact("v1-legacy", target_dir, shallow=False)
 
 
 def main(argv: list[str]) -> int:
@@ -677,7 +711,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="data_provenance_"))
     try:
-        v1_dir = clone_v1(args.tag, work_root / "v1")
+        v1_dir = clone_exact(args.tag, work_root / "v1", shallow=True) / "sentinel_flow_mvp"
         history_dir = clone_history(work_root / "history")
         return audit(v1_dir, history_dir, Path(args.dir))
     finally:
