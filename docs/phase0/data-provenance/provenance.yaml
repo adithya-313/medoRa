@@ -1,0 +1,558 @@
+# Judgement fields of the v1 data audit. Measured facts (bytes, sha256, rows, columns) are computed by
+# tools/phase0/data_provenance.py and are never written here. 'unknown — verify manually' is a correct answer.
+items:
+- path: data/indian_pharmaceutical_products_clean.csv
+  kind: dataset
+  source:
+  - type: git
+    commit: 4709bcb
+    message: 'fix(knowledge_base): resolve brand_name crash by referencing correct array column'
+  - type: code
+    file: scripts/ingest_generics_52e.py
+    line: 15
+    contains: 253,973-row dataset
+  licence: &id001
+    value: unknown — verify manually
+  personal_data:
+    value: 'no'
+    reason: columns describe products, companies and prices only; no person-level column
+  production_use:
+    value: not-for-production
+    reason: licence unknown and no source recorded anywhere in the repo
+  note: Believed to match the Kaggle 'A-Z Medicine Dataset of India' (UNVERIFIED). A web search found only a third-party mirror; the Kaggle page was not fetched,
+    so no licence is recorded. Added to git by a commit titled as a knowledge_base fix.
+- path: data/indian_essential_meds.csv
+  kind: dataset
+  source:
+  - type: git
+    commit: 09f5c81
+    message: 'chore: baseline pre-flight state and secure uncommitted files'
+  - type: code
+    file: scripts/etl_pipeline.py
+    line: 25
+    contains: Read CSV rows from
+  - type: code
+    file: scripts/etl_pipeline.py
+    line: 129
+    contains: curated by the CDSCO (Indian government)
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: 'columns: sku_id, brand_name, generic_name, indications, side_effects, contraindications, price_inr; no person-level column'
+  production_use:
+    value: not-for-production
+    reason: licence unknown; ten rows that look hand-typed with prices nobody verified
+  note: v1's own comment claims the file was curated by CDSCO; nothing in the repo proves it.
+- path: data/sample_essential_meds.csv
+  kind: test-fixture
+  source:
+  - type: git
+    commit: 09f5c81
+    message: 'chore: baseline pre-flight state and secure uncommitted files'
+  - type: code
+    file: scripts/etl_pipeline.py
+    line: 90
+    contains: sample_essential_meds.csv
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: same kind of columns as the essential-meds file plus pregnancy_category and pediatric_age_threshold_months; no person-level column
+  production_use:
+    value: test-fixture-only
+    reason: a small sample used by the ETL and end-to-end check scripts
+- path: data/staging/openfda_full_clinical_fields.jsonl
+  kind: derived-dataset
+  source:
+  - type: git
+    commit: 9e1e243
+    message: '5.2e-patch: fetch missing OpenFDA clinical fields (dosage/pregnancy/pediatric/warnings/interactions/contraindications), update 1008 existing clinical_knowledge_base
+      rows in place'
+  - type: code
+    file: scripts/patch_clinical_fields_52e.py
+    line: 34
+    contains: openfda_full_clinical_fields.jsonl
+  licence: &id002
+    value: 'public domain (openFDA terms: ''unless otherwise noted''; CC0 1.0 dedication)'
+    evidence_url: https://open.fda.gov/terms/
+    retrieved_on: '2026-10-21'
+    quote: Unless otherwise noted, the content, data, documentation, code, and related materials on openFDA is public domain
+  personal_data:
+    value: 'no'
+    reason: drug label text and product metadata from api.fda.gov; no patient-level data expected (not read in full)
+  production_use:
+    value: not-for-production
+    reason: US FDA labels describe US products; Indian pharmacy use needs Indian (CDSCO) data
+  note: Fetched from api.fda.gov by the 5.2e/5.2f staging scripts.
+- path: data/staging/openfda_full_results.jsonl
+  kind: derived-dataset
+  source:
+  - type: git
+    commit: 8a50730
+    message: '5.2f: full OpenFDA staging run for 1585 unique generics (Layer 2 raw data)'
+  - type: code
+    file: scripts/retry_failed_fetches_52e_patch2.py
+    line: 61
+    contains: openfda_full_clinical_fields.jsonl
+  licence: *id002
+  personal_data:
+    value: 'no'
+    reason: drug label text and product metadata from api.fda.gov; no patient-level data expected (not read in full)
+  production_use:
+    value: not-for-production
+    reason: US FDA labels describe US products; Indian pharmacy use needs Indian (CDSCO) data
+  note: Fetched from api.fda.gov by the 5.2e/5.2f staging scripts.
+- path: data/staging/openfda_full_results_corrected.jsonl
+  kind: derived-dataset
+  source:
+  - type: git
+    commit: 8a50730
+    message: '5.2f: full OpenFDA staging run for 1585 unique generics (Layer 2 raw data)'
+  - type: code
+    file: scripts/ingest_generics_52e.py
+    line: 19
+    contains: openfda_full_results_corrected.jsonl
+  licence: *id002
+  personal_data:
+    value: 'no'
+    reason: drug label text and product metadata from api.fda.gov; no patient-level data expected (not read in full)
+  production_use:
+    value: not-for-production
+    reason: US FDA labels describe US products; Indian pharmacy use needs Indian (CDSCO) data
+  note: Fetched from api.fda.gov by the 5.2e/5.2f staging scripts.
+- path: data/staging/openfda_test_results.json
+  kind: derived-dataset
+  source:
+  - type: git
+    commit: 4709bcb
+    message: 'fix(knowledge_base): resolve brand_name crash by referencing correct array column'
+  licence: *id002
+  personal_data:
+    value: 'no'
+    reason: drug label text and product metadata from api.fda.gov; no patient-level data expected (not read in full)
+  production_use:
+    value: not-for-production
+    reason: US FDA labels describe US products; Indian pharmacy use needs Indian (CDSCO) data
+  note: Fetched from api.fda.gov by the 5.2e/5.2f staging scripts.
+- path: data/staging/unique_generics.csv
+  kind: derived-dataset
+  source:
+  - type: git
+    commit: 6e010d4
+    message: '5.2c: stage deduplicated unique generic names from Layer 1 dataset'
+  - type: code
+    file: scripts/ingest_generics_52e.py
+    line: 24
+    contains: data/staging/unique_generics.csv
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: generic drug names and counts only
+  production_use:
+    value: not-for-production
+    reason: derived from the 70 MB product CSV, whose licence is unknown
+  note: The commit message says it was built from the Layer 1 dataset (the 70 MB CSV), so it inherits that CSV's unknown licence.
+- path: lora_accuracy_report.json
+  kind: generated-output
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  - type: code
+    file: scripts/generate_v1_report.py
+    line: 16
+    contains: lora_accuracy_report.json
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: benchmark numbers only
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: ml_accuracy_report.json
+  kind: generated-output
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  - type: code
+    file: scripts/generate_v1_report.py
+    line: 17
+    contains: ml_accuracy_report.json
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: benchmark numbers only
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: ultimate_stress_report.json
+  kind: generated-output
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  - type: code
+    file: scripts/generate_v1_report.py
+    line: 15
+    contains: ultimate_stress_report.json
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: benchmark numbers only
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: spot_check_results.json
+  kind: generated-output
+  source:
+  - type: git
+    commit: 4709bcb
+    message: 'fix(knowledge_base): resolve brand_name crash by referencing correct array column'
+  - type: code
+    file: scripts/spot_check_52g.py
+    line: 63
+    contains: spot_check_results.json
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: spot-check results about drugs; no person-level data expected (not read in full)
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: frontend/test-results/.last-run.json
+  kind: generated-output
+  source:
+  - type: git
+    commit: 09f5c81
+    message: 'chore: baseline pre-flight state and secure uncommitted files'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: Playwright run status and test ids only
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: frontend/debug-dev.png
+  kind: generated-output
+  source:
+  - type: git
+    commit: 09f5c81
+    message: 'chore: baseline pre-flight state and secure uncommitted files'
+  licence: *id001
+  personal_data:
+    value: unknown
+    reason: screenshots of the running UI; the images were not inspected
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: frontend/debug-screenshot.png
+  kind: generated-output
+  source:
+  - type: git
+    commit: 09f5c81
+    message: 'chore: baseline pre-flight state and secure uncommitted files'
+  licence: *id001
+  personal_data:
+    value: unknown
+    reason: screenshots of the running UI; the images were not inspected
+  production_use:
+    value: discard
+    reason: generated by a run; regenerate if needed, never ship
+- path: api.log
+  kind: log
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  licence: *id001
+  personal_data:
+    value: unknown
+    reason: free-text server log (UTF-16); not read in full
+  production_use:
+    value: discard
+    reason: runtime log; never ship
+- path: worker.log
+  kind: log
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  licence: *id001
+  personal_data:
+    value: unknown
+    reason: 2.7 MB free-text worker log (UTF-16); a pattern scan found no e-mail addresses and the only phone-like digit strings were parts of UUIDs, but it was not
+      read in full
+  production_use:
+    value: discard
+    reason: runtime log; never ship
+- path: diagnostics/5.3-answer-generation/h3_all_cases.log
+  kind: log
+  source:
+  - type: git
+    commit: 478cfb3
+    message: 'test: Initialize pytest configuration and mock fixtures for DB/Redis'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/h3_case1_normalized_query.log
+  kind: log
+  source:
+  - type: git
+    commit: f2c075b
+    message: 'diag(5.3-h3): add temporary logging to trace resolver ambiguity decision for exact-SKU queries — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/h3_case2_direct_normalized_string.log
+  kind: log
+  source:
+  - type: git
+    commit: f2c075b
+    message: 'diag(5.3-h3): add temporary logging to trace resolver ambiguity decision for exact-SKU queries — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/h3_case3_forced_sku_id.log
+  kind: log
+  source:
+  - type: git
+    commit: f2c075b
+    message: 'diag(5.3-h3): add temporary logging to trace resolver ambiguity decision for exact-SKU queries — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/query1_paracetamol_overdose.log
+  kind: log
+  source:
+  - type: git
+    commit: 97e2446
+    message: 'diag(5.3): add temporary logging to trace answer-generation pipeline for 3 failing query types — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/query2_augmentin_vs_amoxyclav.log
+  kind: log
+  source:
+  - type: git
+    commit: 97e2446
+    message: 'diag(5.3): add temporary logging to trace answer-generation pipeline for 3 failing query types — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: diagnostics/5.3-answer-generation/query3_nimesulide_dosage.log
+  kind: log
+  source:
+  - type: git
+    commit: 97e2446
+    message: 'diag(5.3): add temporary logging to trace answer-generation pipeline for 3 failing query types — no behavior change'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: transcript of a drug-question test run; a pattern scan found no e-mail addresses, phone numbers or patient words
+  production_use:
+    value: discard
+    reason: diagnostic transcript; never ship
+- path: app/infrastructure/init_db.sql
+  kind: schema
+  source:
+  - type: git
+    commit: ef788d0
+    message: 'release: Sentinel-Flow V1 Genesis (CI/CD Recovery & Architecture Baseline)'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: 'schema only: it contains no INSERT statements'
+  production_use:
+    value: not-for-production
+    reason: v1 schema superseded by v2 migrations; no LICENSE file is tracked in v1
+- path: docker/timescaledb/init.sql
+  kind: schema
+  source:
+  - type: git
+    commit: 90ab87a
+    message: 'feat(infra): implement pgvector, dedicated celery queue, and 768-dim ClinicalKnowledgeBase ORM for PubMedBERT'
+  licence: *id001
+  personal_data:
+    value: 'no'
+    reason: 'schema only: it contains no INSERT statements'
+  production_use:
+    value: not-for-production
+    reason: v1 schema superseded by v2 migrations; no LICENSE file is tracked in v1
+- url: https://api.fda.gov
+  kind: external-api
+  source:
+  - type: code
+    file: scripts/patch_clinical_fields_52e.py
+    line: 162
+    contains: 'https://api.fda.gov/drug/label.json?search=openfda.generic_name:'
+  - type: code
+    file: scripts/retry_failed_fetches_52e_patch2.py
+    line: 321
+    contains: 'https://api.fda.gov/drug/label.json?search=openfda.generic_name:'
+  licence: *id002
+  auth_needed: 'no'
+  personal_data:
+    value: 'no'
+    reason: drug labels
+  production_use:
+    value: not-for-production
+    reason: returns US drug labels (wrong country for an Indian pharmacy); terms themselves are public domain
+  terms_url: https://open.fda.gov/terms/
+  note: The calls in v1 send no API key.
+- url: https://api.open-meteo.com
+  kind: external-api
+  source:
+  - type: code
+    file: app/services/covariates/parsers.py
+    line: 55
+    contains: https://api.open-meteo.com/v1/forecast
+  - type: code
+    file: app/services/covariates/parsers.py
+    line: 52
+    contains: Free, No API Key
+  licence:
+    value: 'free API: non-commercial use only; data under CC-BY 4.0'
+    evidence_url: https://open-meteo.com/en/terms
+    retrieved_on: '2026-10-21'
+    quote: You may only use the free API services for non-commercial purposes.
+  auth_needed: 'no'
+  personal_data:
+    value: 'no'
+    reason: weather data for coordinates
+  production_use:
+    value: not-for-production
+    reason: the free API is non-commercial only; a pharmacy product is commercial, so a paid plan or own hosting would be needed
+  terms_url: https://open-meteo.com/en/terms
+- url: https://cdsco.gov.in
+  kind: external-api
+  source:
+  - type: code
+    file: scripts/mock_government_scraper.py
+    line: 129
+    contains: https://cdsco.gov.in/notifications.rss
+  - type: code
+    file: scripts/mock_government_scraper.py
+    line: 2
+    contains: MOCK GOVERNMENT SCRAPER
+  licence: *id001
+  auth_needed: unknown
+  personal_data:
+    value: 'no'
+    reason: regulatory notifications
+  production_use:
+    value: not-for-production
+    reason: 'never actually called in v1: the URL appears only in a comment of a mock scraper; terms not checked'
+  note: No real CDSCO data feed exists in v1.
+- url: https://graph.facebook.com
+  kind: external-api
+  source:
+  - type: code
+    file: app/workers/adherence_tasks.py
+    line: 48
+    contains: https://graph.facebook.com
+  - type: code
+    file: app/workers/adherence_tasks.py
+    line: 50
+    contains: Authorization
+  licence: *id001
+  auth_needed: 'yes'
+  personal_data:
+    value: 'yes'
+    reason: sends patient phone numbers and message text
+  production_use:
+    value: not-for-production
+    reason: WhatsApp Business API terms not checked; needs a per-pharmacy Meta token
+- url: https://accounts.google.com
+  kind: external-api
+  source:
+  - type: code
+    file: scripts/get_google_refresh_token.py
+    line: 68
+    contains: https://accounts.google.com/o/oauth2/auth
+  licence: *id001
+  auth_needed: 'yes'
+  personal_data:
+    value: 'no'
+    reason: OAuth consent screen URL only
+  production_use:
+    value: not-for-production
+    reason: Google OAuth terms not checked
+- url: https://oauth2.googleapis.com
+  kind: external-api
+  source:
+  - type: code
+    file: app/tasks/backup_tasks.py
+    line: 117
+    contains: https://oauth2.googleapis.com/token
+  licence: *id001
+  auth_needed: 'yes'
+  personal_data:
+    value: unknown
+    reason: the backup it enables contains the whole database
+  production_use:
+    value: not-for-production
+    reason: Google API terms not checked; used for the nightly Drive backup
+- url: https://www.googleapis.com
+  kind: external-api
+  source:
+  - type: code
+    file: scripts/get_google_refresh_token.py
+    line: 59
+    contains: https://www.googleapis.com/auth/drive.file
+  licence: *id001
+  auth_needed: 'yes'
+  personal_data:
+    value: 'no'
+    reason: an OAuth scope string
+  production_use:
+    value: not-for-production
+    reason: Google API terms not checked
+- library: pytrends
+  kind: external-api
+  source:
+  - type: code
+    file: requirements.txt
+    line: 115
+    contains: pytrends==4.9.2
+  - type: code
+    file: app/health_risk/infrastructure/trend_fetcher.py
+    line: 7
+    contains: pytrends
+  licence:
+    value: Apache-2.0 for the library code only (says nothing about Google Trends' own terms)
+    evidence_url: https://github.com/GeneralMills/pytrends/blob/master/LICENSE
+    retrieved_on: '2026-10-21'
+    quote: Licensed under the Apache License, Version 2.0 (the "License");
+  auth_needed: 'no'
+  terms_url: https://github.com/GeneralMills/pytrends/blob/master/LICENSE
+  personal_data:
+    value: 'no'
+    reason: search-interest numbers for keywords
+  production_use:
+    value: not-for-production
+    reason: unofficial client that reads Google Trends without an official API; Google's own terms were not checked
+  note: The pytrends README (fetched 2026-10-21) describes it as an unofficial API and says it is not an official or supported API.
