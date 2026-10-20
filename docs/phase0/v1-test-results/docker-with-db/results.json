@@ -1,0 +1,1654 @@
+{
+  "meta": {
+    "tag": "v1-final",
+    "commit": "3b121e1e14ac77e8883864136e7409bce7c983aa",
+    "run_label": "docker-with-db",
+    "timestamp_iso": "2026-10-20T17:20:30.893084+00:00",
+    "os_name": "Linux container (image v1-baseline-env) on host Windows 11",
+    "python_version": "Python 3.11.17",
+    "wall_seconds": 57.3,
+    "junit_sha256": "e7bfd9c15c4098590349c04b64ac199f393d5a740a7c70bcc12c7d7a41b3fa8e",
+    "note": "Environment installed into the container filesystem (image v1-baseline-env), warm wheel cache."
+  },
+  "summary": {
+    "total": 233,
+    "passed": 198,
+    "failed": 29,
+    "error": 6,
+    "skipped": 0,
+    "distinct_names": 228
+  },
+  "tests": [
+    {
+      "file": "integration.test_auto_po_tenant.TestAutoPOTenantAssignment",
+      "name": "test_auto_po_creates_with_correct_tenant_id",
+      "outcome": "passed",
+      "duration_seconds": 0.092,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_auto_po_tenant.TestAutoPOTenantAssignment",
+      "name": "test_auto_po_fails_cleanly_without_tenant",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_checkout_idempotency.TestCheckoutIdempotencyGuard",
+      "name": "test_duplicate_idempotency_hash_returns_409",
+      "outcome": "passed",
+      "duration_seconds": 0.026,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_checkout_idempotency.TestCheckoutFefoLockGuard",
+      "name": "test_fefo_lock_expired_returns_409",
+      "outcome": "failed",
+      "duration_seconds": 0.021,
+      "reason": "KeyError: 'verify_inventory_lock_exists'"
+    },
+    {
+      "file": "integration.test_health_risk_job_resilience.TestHealthRiskJobResilience",
+      "name": "test_job_survives_sustained_pytrends_failure",
+      "outcome": "error",
+      "duration_seconds": 0.107,
+      "reason": "failed on setup with \"sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_job_resilience.TestHealthRiskJobResilience",
+      "name": "test_job_survives_sustained_pytrends_failure",
+      "outcome": "error",
+      "duration_seconds": 0.107,
+      "reason": "failed on teardown with \"sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_success_path_all_three_diseases_scored",
+      "outcome": "failed",
+      "duration_seconds": 0.051,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_success_path_all_three_diseases_scored",
+      "outcome": "error",
+      "duration_seconds": 0.002,
+      "reason": "failed on teardown with \"sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_no_weather_no_trend_uses_fallback_neutral",
+      "outcome": "failed",
+      "duration_seconds": 0.01,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_no_weather_no_trend_uses_fallback_neutral",
+      "outcome": "error",
+      "duration_seconds": 0.017,
+      "reason": "failed on teardown with \"sqlalchemy.exc.InternalError: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_real_open_meteo_weather_used_in_scoring",
+      "outcome": "failed",
+      "duration_seconds": 0.965,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_real_open_meteo_weather_used_in_scoring",
+      "outcome": "error",
+      "duration_seconds": 0.002,
+      "reason": "failed on teardown with \"sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_trend_fetch_exception_skips_that_disease",
+      "outcome": "failed",
+      "duration_seconds": 0.009,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"exogenous_covariates\" does not exist"
+    },
+    {
+      "file": "integration.test_health_risk_pipeline.TestHealthRiskRealPipeline",
+      "name": "test_trend_fetch_exception_skips_that_disease",
+      "outcome": "error",
+      "duration_seconds": 0.003,
+      "reason": "failed on teardown with \"sqlalchemy.exc.InternalError: (psycopg2.errors.InFailedSqlTransaction) current transaction is aborted, commands ignored until end of transaction block"
+    },
+    {
+      "file": "integration.test_overdue_po_notifications",
+      "name": "test_escalation_and_duplicate_prevention",
+      "outcome": "passed",
+      "duration_seconds": 0.079,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_overdue_po_notifications",
+      "name": "test_tenant_isolation",
+      "outcome": "passed",
+      "duration_seconds": 0.045,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_procurement_vendor_scoring.TestProcurementVendorScoring",
+      "name": "test_vendor_scoring_picks_supplier_with_most_fulfilled_orders",
+      "outcome": "failed",
+      "duration_seconds": 0.045,
+      "reason": "assert 409 == 200"
+    },
+    {
+      "file": "integration.test_purchase_order_chronological_sort",
+      "name": "test_purchase_orders_sort_chronologically",
+      "outcome": "passed",
+      "duration_seconds": 0.038,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_purchase_order_chronological_sort",
+      "name": "test_purchase_order_endpoint_auto_populates_created_at",
+      "outcome": "failed",
+      "duration_seconds": 0.038,
+      "reason": "assert 400 == 200"
+    },
+    {
+      "file": "integration.test_purchase_order_ledger.TestPurchaseOrderLedger",
+      "name": "test_ledger_shows_vendor_name_and_handles_missing_supplier",
+      "outcome": "passed",
+      "duration_seconds": 0.037,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_purchase_order_ledger_values.TestLedgerValueCalculation",
+      "name": "test_ledger_values_are_correct_for_all_statuses",
+      "outcome": "passed",
+      "duration_seconds": 0.043,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_purchase_order_receive_logic",
+      "name": "test_single_full_delivery",
+      "outcome": "failed",
+      "duration_seconds": 0.053,
+      "reason": "assert 500 == 200"
+    },
+    {
+      "file": "integration.test_purchase_order_receive_logic",
+      "name": "test_two_partial_deliveries",
+      "outcome": "failed",
+      "duration_seconds": 0.047,
+      "reason": "assert 500 == 200"
+    },
+    {
+      "file": "integration.test_purchase_order_receive_logic",
+      "name": "test_over_delivery",
+      "outcome": "failed",
+      "duration_seconds": 0.034,
+      "reason": "assert 500 == 200"
+    },
+    {
+      "file": "integration.test_purchase_order_receive_logic",
+      "name": "test_auto_po_idempotency_with_submitted",
+      "outcome": "passed",
+      "duration_seconds": 0.043,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_purchase_orders_tenant_isolation.TestPurchaseOrderTenantIsolation",
+      "name": "test_tenant_can_only_see_own_orders",
+      "outcome": "passed",
+      "duration_seconds": 0.032,
+      "reason": ""
+    },
+    {
+      "file": "integration.test_purchase_orders_tenant_isolation.TestPurchaseOrderTenantIsolation",
+      "name": "test_unauthenticated_request_handled_correctly",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_log_endpoint",
+      "name": "test_audit_logs_tenant_isolation",
+      "outcome": "passed",
+      "duration_seconds": 0.042,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_log_endpoint",
+      "name": "test_audit_logs_pagination",
+      "outcome": "passed",
+      "duration_seconds": 0.049,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_log_endpoint",
+      "name": "test_audit_logs_filters",
+      "outcome": "passed",
+      "duration_seconds": 0.054,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_logging.TestAuditLoggingOnReceive",
+      "name": "test_receive_writes_audit_with_old_and_new_values",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_logging.TestAuditLoggingOnReceive",
+      "name": "test_receive_does_not_commit_separately_for_audit",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_audit_logging.TestAuditLoggingOnCreate",
+      "name": "test_create_writes_audit_with_new_value",
+      "outcome": "failed",
+      "duration_seconds": 0.008,
+      "reason": "fastapi.exceptions.HTTPException: 400: Expected delivery date cannot be in the past."
+    },
+    {
+      "file": "test_backend_resilience",
+      "name": "test_vector_a_bad_token",
+      "outcome": "failed",
+      "duration_seconds": 0.023,
+      "reason": "assert 404 in [401, 403]"
+    },
+    {
+      "file": "test_backend_resilience",
+      "name": "test_vector_b_sql_injection",
+      "outcome": "failed",
+      "duration_seconds": 0.021,
+      "reason": "assert 404 == 200"
+    },
+    {
+      "file": "test_backend_resilience",
+      "name": "test_vector_c_missing_supplier",
+      "outcome": "failed",
+      "duration_seconds": 0.023,
+      "reason": "assert 404 == 200"
+    },
+    {
+      "file": "test_backend_resilience",
+      "name": "test_vector_d_payload_fuzzing",
+      "outcome": "failed",
+      "duration_seconds": 0.021,
+      "reason": "assert 404 == 422"
+    },
+    {
+      "file": "test_checkout_and_vendor_audit",
+      "name": "test_checkout_new_patient_writes_4_audit_entries",
+      "outcome": "passed",
+      "duration_seconds": 0.057,
+      "reason": ""
+    },
+    {
+      "file": "test_checkout_and_vendor_audit",
+      "name": "test_checkout_existing_patient_writes_3_audit_entries",
+      "outcome": "passed",
+      "duration_seconds": 0.052,
+      "reason": ""
+    },
+    {
+      "file": "test_checkout_and_vendor_audit",
+      "name": "test_add_vendor_writes_1_audit_entry",
+      "outcome": "passed",
+      "duration_seconds": 0.061,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_exact_match",
+      "outcome": "passed",
+      "duration_seconds": 0.016,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_fuzzy_match_single",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_disambiguate_multiple_matches",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_no_match_gibberish",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_forced_sku_short_circuits",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_unforced_sku_retains_behavior",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_exact_match_per_token_single",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_exact_match_per_token_none",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_exact_match_per_token_multiple",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_fuzzy_tie_break_generic_wins",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_fuzzy_tie_break_two_brands_ambiguous",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_fuzzy_tie_break_three_way_ambiguous",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_pipeline_disambiguate_short_circuit",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_pipeline_no_match_short_circuit",
+      "outcome": "passed",
+      "duration_seconds": 0.014,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_pipeline_exact_regression",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_brand_match_exact",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_brand_match_fuzzy",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_rca_case_2_pn40",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_rca_case_4_punctuation",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolver",
+      "name": "test_hyphenated_vs_bare_mismatch",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestRCARegression",
+      "name": "test_rca_funnel_queries",
+      "outcome": "passed",
+      "duration_seconds": 0.065,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestRCARegression",
+      "name": "test_no_drug_no_db_call",
+      "outcome": "passed",
+      "duration_seconds": 0.015,
+      "reason": ""
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolverRealDB",
+      "name": "test_real_db_fuzzy_match_sql_syntax",
+      "outcome": "failed",
+      "duration_seconds": 0.048,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"drug_brand_aliases\" does not exist"
+    },
+    {
+      "file": "test_drug_resolver.TestDrugResolverRealDB",
+      "name": "test_real_db_spot_check_queries_resolve",
+      "outcome": "failed",
+      "duration_seconds": 0.007,
+      "reason": "sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation \"drug_brand_aliases\" does not exist"
+    },
+    {
+      "file": "test_filter_fix",
+      "name": "test_data_quality_present",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_filter_fix",
+      "name": "test_data_quality_missing_fallback_triggered",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_filter_fix",
+      "name": "test_edge_case_survives",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_filter_fix",
+      "name": "test_above_threshold_full_data",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_h3_context_dedup",
+      "name": "test_dedup_identical_records",
+      "outcome": "failed",
+      "duration_seconds": 0.007,
+      "reason": "Failed: async def functions are not natively supported."
+    },
+    {
+      "file": "test_h3_context_dedup",
+      "name": "test_dedup_different_skus",
+      "outcome": "failed",
+      "duration_seconds": 0.006,
+      "reason": "Failed: async def functions are not natively supported."
+    },
+    {
+      "file": "test_h3_context_dedup",
+      "name": "test_dedup_completeness_preference",
+      "outcome": "failed",
+      "duration_seconds": 0.008,
+      "reason": "Failed: async def functions are not natively supported."
+    },
+    {
+      "file": "test_h3_rag_guard",
+      "name": "test_rag_guard_multiple_distinct_skus",
+      "outcome": "failed",
+      "duration_seconds": 0.01,
+      "reason": "Failed: async def functions are not natively supported."
+    },
+    {
+      "file": "test_h3_rag_guard",
+      "name": "test_rag_guard_single_distinct_sku",
+      "outcome": "failed",
+      "duration_seconds": 0.007,
+      "reason": "Failed: async def functions are not natively supported."
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentEndpoint",
+      "name": "test_tenant_with_two_disease_scores_returns_both",
+      "outcome": "passed",
+      "duration_seconds": 0.046,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentEndpoint",
+      "name": "test_tenant_with_zero_scores_returns_empty_list",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentEndpoint",
+      "name": "test_tenant_with_no_pincode_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentEndpoint",
+      "name": "test_tenant_not_found_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentEndpoint",
+      "name": "test_missing_x_tenant_id_header_returns_403",
+      "outcome": "passed",
+      "duration_seconds": 0.016,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_majority_total_fallback_returns_degraded",
+      "outcome": "passed",
+      "duration_seconds": 0.026,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_weather_only_fallback_does_not_count_as_degraded",
+      "outcome": "passed",
+      "duration_seconds": 0.025,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_majority_real_data_returns_real_data",
+      "outcome": "passed",
+      "duration_seconds": 0.027,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_single_total_fallback_run_is_degraded",
+      "outcome": "passed",
+      "duration_seconds": 0.024,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_mixed_diseases_get_independent_status",
+      "outcome": "passed",
+      "duration_seconds": 0.024,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskCurrentDataStatus",
+      "name": "test_zero_scores_still_returns_empty_list",
+      "outcome": "passed",
+      "duration_seconds": 0.025,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_tenant_with_five_score_rows_across_different_days_returns_all_five_ordered_oldest_first",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_tenant_with_zero_score_rows_returns_empty_list",
+      "outcome": "passed",
+      "duration_seconds": 0.031,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_days_equals_zero_returns_400",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_days_negative_returns_400",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_days_exceeds_maximum_returns_400",
+      "outcome": "passed",
+      "duration_seconds": 0.018,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_days_omitted_defaults_to_30",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_tenant_with_no_pincode_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.022,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskHistoryEndpoint",
+      "name": "test_scores_do_not_include_data_status",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskExplainEndpoint",
+      "name": "test_score_belongs_to_calling_tenant_returns_full_breakdown",
+      "outcome": "passed",
+      "duration_seconds": 0.025,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskExplainEndpoint",
+      "name": "test_score_id_does_not_exist_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskExplainEndpoint",
+      "name": "test_score_exists_but_belongs_to_different_pincode_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskExplainEndpoint",
+      "name": "test_calling_tenant_has_no_pincode_returns_404",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_router.TestHealthRiskExplainEndpoint",
+      "name": "test_missing_x_tenant_id_header_returns_403",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_tasks.TestHealthRiskIngestionTask",
+      "name": "test_global_flag_disabled_skips_everything",
+      "outcome": "passed",
+      "duration_seconds": 0.028,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_tasks.TestHealthRiskIngestionTask",
+      "name": "test_real_success_already_enabled",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_tasks.TestHealthRiskIngestionTask",
+      "name": "test_empty_result_counts_as_failure",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_tasks.TestHealthRiskIngestionTask",
+      "name": "test_exception_does_not_stop_subsequent_tenants",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_health_risk_tasks.TestHealthRiskIngestionTask",
+      "name": "test_two_tenants_summary_mixed_results",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_inference_edge_cases",
+      "name": "test_a_happy_path",
+      "outcome": "failed",
+      "duration_seconds": 0.029,
+      "reason": "assert 404 == 200"
+    },
+    {
+      "file": "test_inference_edge_cases",
+      "name": "test_b_missing_weights_file",
+      "outcome": "passed",
+      "duration_seconds": 0.03,
+      "reason": ""
+    },
+    {
+      "file": "test_inference_edge_cases",
+      "name": "test_c_vram_oom_simulation",
+      "outcome": "passed",
+      "duration_seconds": 0.025,
+      "reason": ""
+    },
+    {
+      "file": "test_inference_edge_cases",
+      "name": "test_d_bad_payload",
+      "outcome": "failed",
+      "duration_seconds": 0.023,
+      "reason": "assert 404 == 422"
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_empty_query_no_sku_returns_no_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_drug_without_keyword_returns_ambiguous",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_objective_keyword_without_sku_returns_no_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_drug_with_objective_keyword_returns_inventory",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_neither_drug_nor_keyword_returns_no_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_garbage_input_does_not_raise",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestClassifyIntent",
+      "name": "test_sql_injection_shaped_input_treated_as_plain_text",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_intent_gate.TestNoIntentShortCircuit",
+      "name": "test_no_intent_query_never_calls_downstream_services",
+      "outcome": "passed",
+      "duration_seconds": 0.015,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestTenantIsolationStructuralValidation",
+      "name": "test_medication_batches_requires_tenant_id",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestTenantIsolationStructuralValidation",
+      "name": "test_sale_receipts_requires_tenant_id",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestTenantIsolationStructuralValidation",
+      "name": "test_sale_line_items_requires_tenant_id",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestTenantIsolationStructuralValidation",
+      "name": "test_purchase_orders_requires_tenant_id",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestClinicalMasterIndexFields",
+      "name": "test_pregnancy_category_column_exists",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestClinicalMasterIndexFields",
+      "name": "test_pediatric_age_threshold_column_exists",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestClinicalMasterIndexFields",
+      "name": "test_interaction_matrix_column_exists",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestClinicalMasterIndexFields",
+      "name": "test_is_approved_by_curator_has_server_default_false",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestRegulatoryDiffLogStructure",
+      "name": "test_regulatory_diff_log_has_required_columns",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestRegulatoryDiffLogStructure",
+      "name": "test_regulatory_diff_log_curator_id_is_nullable",
+      "outcome": "passed",
+      "duration_seconds": 0.003,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestScraperResilience",
+      "name": "test_staleness_alert_raised_on_empty_feed",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestScraperResilience",
+      "name": "test_staleness_alert_metric_log_format",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase1_isolation.TestScraperResilience",
+      "name": "test_scraper_handles_database_offline_gracefully",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestCleanDrugNames",
+      "name": "test_corrects_single_misspelling",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestCleanDrugNames",
+      "name": "test_no_change_for_correct_spelling",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestCleanDrugNames",
+      "name": "test_short_words_ignored",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestCleanDrugNames",
+      "name": "test_empty_valid_names_list",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_detects_pregnancy_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_detects_pediatric_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_detects_substitute_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_detects_objective_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_multiple_intents_can_coexist",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractIntents",
+      "name": "test_no_intents_for_irrelevant_query",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractSku",
+      "name": "test_extracts_hyphenated_sku",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractSku",
+      "name": "test_extracts_no_hyphen_sku",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractSku",
+      "name": "test_returns_none_when_no_sku_found",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractSku",
+      "name": "test_case_insensitive_matching",
+      "outcome": "passed",
+      "duration_seconds": 0.014,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestExtractSku",
+      "name": "test_sku_at_end_of_query",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestSanitizerPipeline",
+      "name": "test_full_pipeline_objective_misspelling",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestSanitizerPipeline",
+      "name": "test_full_pipeline_pregnancy",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestSanitizerPipeline",
+      "name": "test_substitute_routing_triggers",
+      "outcome": "passed",
+      "duration_seconds": 0.018,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestAskEndpointWithSanitizer",
+      "name": "test_ask_endpoint_imports_and_responds",
+      "outcome": "passed",
+      "duration_seconds": 0.054,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestAskEndpointWithSanitizer",
+      "name": "test_ask_endpoint_with_substitute_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.039,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestSanitizerStatelessness",
+      "name": "test_multiple_calls_produce_same_result",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase2_routing.TestSanitizerStatelessness",
+      "name": "test_consecutive_calls_dont_interfere",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPregnancySafety",
+      "name": "test_blocks_category_x_drug",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPregnancySafety",
+      "name": "test_blocks_category_d_drug",
+      "outcome": "passed",
+      "duration_seconds": 0.018,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPregnancySafety",
+      "name": "test_allows_category_b_drug",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPregnancySafety",
+      "name": "test_allows_when_no_pregnancy_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPregnancySafety",
+      "name": "test_allows_pregnancy_when_category_is_none",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPediatricSafety",
+      "name": "test_blocks_age_restricted_drug",
+      "outcome": "passed",
+      "duration_seconds": 0.012,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPediatricSafety",
+      "name": "test_allows_age_restricted_when_patient_is_old_enough",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPediatricSafety",
+      "name": "test_allows_when_no_age_threshold",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestPediatricSafety",
+      "name": "test_allows_when_no_pediatric_intent",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestMultipleRecords",
+      "name": "test_blocks_if_any_record_triggers_pregnancy",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestMultipleRecords",
+      "name": "test_allows_if_all_records_are_safe",
+      "outcome": "passed",
+      "duration_seconds": 0.015,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestClinicalNarrativeSchema",
+      "name": "test_valid_safe_narrative",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestClinicalNarrativeSchema",
+      "name": "test_valid_unsafe_narrative_with_lock_reason",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestClinicalNarrativeSchema",
+      "name": "test_rejects_missing_required_field",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestClinicalNarrativeSchema",
+      "name": "test_rejects_wrong_type_for_boolean",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestJudgeStatelessness",
+      "name": "test_multiple_calls_produce_same_result",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase3_safety.TestJudgeStatelessness",
+      "name": "test_consecutive_calls_dont_interfere",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_hit_returns_cached_response[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_miss_proceeds_to_gemini[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.029,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_store_on_success[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_redis_down_still_works[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestCircuitBreaker",
+      "name": "test_circuit_open_uses_degraded_mode[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.017,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestCircuitBreaker",
+      "name": "test_circuit_half_open_recovery_success[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.028,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestTimeoutFallback",
+      "name": "test_timeout_returns_degraded_with_system_fallback[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.026,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestTimeoutFallback",
+      "name": "test_timeout_does_not_crash[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestDegradedMode",
+      "name": "test_degraded_from_safe_verdict[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.022,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestDegradedMode",
+      "name": "test_degraded_from_unsafe_verdict[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.017,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestVersionInvalidation",
+      "name": "test_different_versions_produce_different_cache_keys[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.044,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestVersionInvalidation",
+      "name": "test_version_change_misses_cache[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.03,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_hit_returns_cached_response[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_miss_proceeds_to_gemini[trio]",
+      "outcome": "failed",
+      "duration_seconds": 0.025,
+      "reason": "AssertionError: assert ['SYSTEM_FALLBACK'] == ['Mocked Citation']"
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_store_on_success[trio]",
+      "outcome": "failed",
+      "duration_seconds": 0.018,
+      "reason": "AssertionError: Expected 'set' to have been called once. Called 0 times."
+    },
+    {
+      "file": "test_phase4_resilience.TestResultCache",
+      "name": "test_cache_redis_down_still_works[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.017,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestCircuitBreaker",
+      "name": "test_circuit_open_uses_degraded_mode[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.019,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestCircuitBreaker",
+      "name": "test_circuit_half_open_recovery_success[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.022,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestTimeoutFallback",
+      "name": "test_timeout_returns_degraded_with_system_fallback[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.352,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestTimeoutFallback",
+      "name": "test_timeout_does_not_crash[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.018,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestDegradedMode",
+      "name": "test_degraded_from_safe_verdict[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.023,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestDegradedMode",
+      "name": "test_degraded_from_unsafe_verdict[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestVersionInvalidation",
+      "name": "test_different_versions_produce_different_cache_keys[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.026,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestVersionInvalidation",
+      "name": "test_version_change_misses_cache[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.018,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestSynchronousCacheVersion",
+      "name": "test_sync_function_imports_and_returns_string",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase4_resilience.TestSynchronousCacheVersion",
+      "name": "test_sync_function_handles_redis_unavailable",
+      "outcome": "passed",
+      "duration_seconds": 0.013,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowHappyPath",
+      "name": "test_returns_sku_id",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowHappyPath",
+      "name": "test_apis_contains_generic_name",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowHappyPath",
+      "name": "test_supplies_safety_defaults",
+      "outcome": "passed",
+      "duration_seconds": 0.003,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowHappyPath",
+      "name": "test_preserves_clinical_text_fields",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowResilience",
+      "name": "test_handles_empty_dictionary",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowResilience",
+      "name": "test_handles_missing_sku_id",
+      "outcome": "passed",
+      "duration_seconds": 0.003,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowResilience",
+      "name": "test_handles_missing_indications",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowResilience",
+      "name": "test_handles_malformed_pediatric_age",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestTransformRowResilience",
+      "name": "test_extracts_pregnancy_category_when_provided",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestCreateSemanticChunk",
+      "name": "test_returns_string",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestCreateSemanticChunk",
+      "name": "test_contains_sku_and_brand",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestCreateSemanticChunk",
+      "name": "test_semicolons_replaced_with_commas",
+      "outcome": "passed",
+      "duration_seconds": 0.003,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestCreateSemanticChunk",
+      "name": "test_handles_minimal_data",
+      "outcome": "passed",
+      "duration_seconds": 0.005,
+      "reason": ""
+    },
+    {
+      "file": "test_phase5_etl.TestCreateSemanticChunk",
+      "name": "test_includes_price_when_present",
+      "outcome": "passed",
+      "duration_seconds": 0.004,
+      "reason": ""
+    },
+    {
+      "file": "test_pos_checkout.TestPosCheckoutSuccess",
+      "name": "test_successful_checkout_returns_200_and_receipt_id",
+      "outcome": "passed",
+      "duration_seconds": 0.03,
+      "reason": ""
+    },
+    {
+      "file": "test_pos_checkout.TestPosCheckoutIdempotency",
+      "name": "test_duplicate_idempotency_key_returns_409",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_pos_history_tenant_isolation",
+      "name": "test_pos_history_tenant_isolation",
+      "outcome": "passed",
+      "duration_seconds": 0.054,
+      "reason": ""
+    },
+    {
+      "file": "test_procurement_router_health_risk.TestProcurementHealthRiskFlag",
+      "name": "test_flag_disabled_returns_empty_list",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_procurement_router_health_risk.TestProcurementHealthRiskFlag",
+      "name": "test_flag_enabled_uses_health_risk_scores",
+      "outcome": "passed",
+      "duration_seconds": 0.028,
+      "reason": ""
+    },
+    {
+      "file": "test_procurement_router_health_risk.TestProcurementHealthRiskFlag",
+      "name": "test_no_scores_yet_returns_empty_gracefully",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_procurement_router_health_risk.TestProcurementHealthRiskFlag",
+      "name": "test_flag_enabled_no_high_risk_scores_returns_empty",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_procurement_router_health_risk.TestProcurementHealthRiskFlag",
+      "name": "test_flag_enabled_multiple_diseases_cross_threshold",
+      "outcome": "passed",
+      "duration_seconds": 0.038,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_mrp_query_returns_database_answer[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.01,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_stock_query_returns_database_answer[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_query_without_sku_id_falls_to_gemini[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingSubjective",
+      "name": "test_clinical_query_calls_gemini_rag[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingSubjective",
+      "name": "test_clinical_query_no_sku_id_still_calls_gemini[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.006,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestClinicalNarrationStockInjection",
+      "name": "test_clinical_response_includes_stock_when_available[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 1.581,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestClinicalNarrationStockInjection",
+      "name": "test_clinical_response_handles_missing_stock_gracefully[asyncio]",
+      "outcome": "passed",
+      "duration_seconds": 0.02,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_mrp_query_returns_database_answer[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.009,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_stock_query_returns_database_answer[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.011,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingObjective",
+      "name": "test_objective_query_without_sku_id_falls_to_gemini[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingSubjective",
+      "name": "test_clinical_query_calls_gemini_rag[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.007,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestAdaptiveRoutingSubjective",
+      "name": "test_clinical_query_no_sku_id_still_calls_gemini[trio]",
+      "outcome": "passed",
+      "duration_seconds": 0.008,
+      "reason": ""
+    },
+    {
+      "file": "test_rag_routing.TestClinicalNarrationStockInjection",
+      "name": "test_clinical_response_includes_stock_when_available[trio]",
+      "outcome": "failed",
+      "duration_seconds": 0.012,
+      "reason": "AssertionError: Expected 'generate_content' to have been called once. Called 0 times."
+    },
+    {
+      "file": "test_rag_routing.TestClinicalNarrationStockInjection",
+      "name": "test_clinical_response_handles_missing_stock_gracefully[trio]",
+      "outcome": "failed",
+      "duration_seconds": 0.013,
+      "reason": "AssertionError: Expected 'generate_content' to have been called once. Called 0 times."
+    },
+    {
+      "file": "test_schema_contract",
+      "name": "test_schema_contract_raw_sql_columns",
+      "outcome": "failed",
+      "duration_seconds": 0.031,
+      "reason": "sqlalchemy.exc.NoSuchTableError: clinical_knowledge_base"
+    },
+    {
+      "file": "test_supplier_api",
+      "name": "test_empty_suppliers_list",
+      "outcome": "passed",
+      "duration_seconds": 0.021,
+      "reason": ""
+    },
+    {
+      "file": "test_supplier_api",
+      "name": "test_add_and_list_supplier",
+      "outcome": "passed",
+      "duration_seconds": 0.024,
+      "reason": ""
+    },
+    {
+      "file": "test_supplier_api",
+      "name": "test_invalid_pagination_params",
+      "outcome": "passed",
+      "duration_seconds": 0.026,
+      "reason": ""
+    },
+    {
+      "file": "test_supplier_history_api",
+      "name": "test_supplier_history_endpoint",
+      "outcome": "passed",
+      "duration_seconds": 0.067,
+      "reason": ""
+    }
+  ]
+}

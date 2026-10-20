@@ -1,0 +1,783 @@
+$ /work/.venv/bin/python -m pip install -r requirements.txt
+return code: -1
+Collecting accelerate==1.13.0 (from -r requirements.txt (line 1))
+  Downloading accelerate-1.13.0-py3-none-any.whl.metadata (19 kB)
+Collecting aiohappyeyeballs==2.6.2 (from -r requirements.txt (line 2))
+  Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiohttp==3.14.1 (from -r requirements.txt (line 3))
+  Downloading aiohttp-3.14.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+Collecting aiosignal==1.4.0 (from -r requirements.txt (line 4))
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting alembic==1.18.4 (from -r requirements.txt (line 5))
+  Downloading alembic-1.18.4-py3-none-any.whl.metadata (7.2 kB)
+Collecting amqp==5.3.1 (from -r requirements.txt (line 6))
+  Downloading amqp-5.3.1-py3-none-any.whl.metadata (8.9 kB)
+Collecting annotated-types==0.7.0 (from -r requirements.txt (line 7))
+  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting anyio==4.13.0 (from -r requirements.txt (line 8))
+  Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+Collecting attrs==26.1.0 (from -r requirements.txt (line 9))
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting billiard==4.2.4 (from -r requirements.txt (line 10))
+  Downloading billiard-4.2.4-py3-none-any.whl.metadata (4.8 kB)
+Collecting celery==5.3.6 (from -r requirements.txt (line 11))
+  Downloading celery-5.3.6-py3-none-any.whl.metadata (21 kB)
+Collecting certifi==2026.5.20 (from -r requirements.txt (line 12))
+  Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+Collecting charset-normalizer==3.4.7 (from -r requirements.txt (line 13))
+  Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.9/40.9 kB 2.2 MB/s eta 0:00:00
+Collecting chronos-forecasting==2.3.1 (from -r requirements.txt (line 14))
+  Downloading chronos_forecasting-2.3.1-py3-none-any.whl.metadata (24 kB)
+Collecting trio==0.21.0 (from -r requirements.txt (line 15))
+  Downloading trio-0.21.0-py3-none-any.whl.metadata (4.5 kB)
+Collecting click==8.4.1 (from -r requirements.txt (line 16))
+  Downloading click-8.4.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting click-didyoumean==0.3.1 (from -r requirements.txt (line 17))
+  Downloading click_didyoumean-0.3.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting click-plugins==1.1.1.2 (from -r requirements.txt (line 18))
+  Downloading click_plugins-1.1.1.2-py2.py3-none-any.whl.metadata (6.5 kB)
+Collecting click-repl==0.3.0 (from -r requirements.txt (line 19))
+  Downloading click_repl-0.3.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting cuda-bindings==13.3.1 (from -r requirements.txt (line 20))
+  Downloading cuda_bindings-13.3.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.5 kB)
+Collecting cuda-pathfinder==1.5.5 (from -r requirements.txt (line 21))
+  Downloading cuda_pathfinder-1.5.5-py3-none-any.whl.metadata (1.9 kB)
+Collecting cuda-toolkit==13.0.2 (from -r requirements.txt (line 22))
+  Downloading cuda_toolkit-13.0.2-py2.py3-none-any.whl.metadata (9.4 kB)
+Collecting einops==0.8.2 (from -r requirements.txt (line 23))
+  Downloading einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+Collecting fastapi==0.109.2 (from -r requirements.txt (line 24))
+  Downloading fastapi-0.109.2-py3-none-any.whl.metadata (25 kB)
+Collecting filelock==3.29.3 (from -r requirements.txt (line 25))
+  Downloading filelock-3.29.3-py3-none-any.whl.metadata (2.0 kB)
+Collecting frozenlist==1.8.0 (from -r requirements.txt (line 26))
+  Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Collecting fsspec==2026.4.0 (from -r requirements.txt (line 27))
+  Downloading fsspec-2026.4.0-py3-none-any.whl.metadata (10 kB)
+Collecting greenlet==3.5.1 (from -r requirements.txt (line 28))
+  Downloading greenlet-3.5.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Collecting h11==0.16.0 (from -r requirements.txt (line 29))
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting hf-xet==1.5.1 (from -r requirements.txt (line 30))
+  Downloading hf_xet-1.5.1-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting huggingface_hub==0.36.2 (from -r requirements.txt (line 31))
+  Downloading huggingface_hub-0.36.2-py3-none-any.whl.metadata (15 kB)
+Collecting idna==3.18 (from -r requirements.txt (line 32))
+  Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+Collecting Jinja2==3.1.6 (from -r requirements.txt (line 33))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting joblib==1.5.3 (from -r requirements.txt (line 34))
+  Downloading joblib-1.5.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting kombu==5.6.2 (from -r requirements.txt (line 35))
+  Downloading kombu-5.6.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting Mako==1.3.12 (from -r requirements.txt (line 36))
+  Downloading mako-1.3.12-py3-none-any.whl.metadata (2.9 kB)
+Collecting MarkupSafe==3.0.3 (from -r requirements.txt (line 37))
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting mpmath==1.3.0 (from -r requirements.txt (line 38))
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting multidict==6.7.1 (from -r requirements.txt (line 39))
+  Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting narwhals==2.22.1 (from -r requirements.txt (line 40))
+  Downloading narwhals-2.22.1-py3-none-any.whl.metadata (15 kB)
+Collecting numpy (from -r requirements.txt (line 41))
+  Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting nvidia-cublas==13.1.1.3 (from -r requirements.txt (line 42))
+  Downloading nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cuda-cupti==13.0.85 (from -r requirements.txt (line 43))
+  Downloading nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-nvrtc==13.0.88 (from -r requirements.txt (line 44))
+  Downloading nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime==13.0.96 (from -r requirements.txt (line 45))
+  Downloading nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cudnn-cu13==9.20.0.48 (from -r requirements.txt (line 46))
+  Downloading nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_x86_64.whl.metadata (1.9 kB)
+Collecting nvidia-cufft==12.0.0.61 (from -r requirements.txt (line 47))
+  Downloading nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cufile==1.15.1.6 (from -r requirements.txt (line 48))
+  Downloading nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-curand==10.4.0.35 (from -r requirements.txt (line 49))
+  Downloading nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cusolver==12.0.4.66 (from -r requirements.txt (line 50))
+  Downloading nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparse==12.6.3.3 (from -r requirements.txt (line 51))
+  Downloading nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparselt-cu13==0.8.1 (from -r requirements.txt (line 52))
+  Downloading nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting nvidia-nccl-cu13==2.29.7 (from -r requirements.txt (line 53))
+  Downloading nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_x86_64.whl.metadata (2.1 kB)
+Collecting nvidia-nvjitlink==13.0.88 (from -r requirements.txt (line 54))
+  Downloading nvidia_nvjitlink-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-nvshmem-cu13==3.4.5 (from -r requirements.txt (line 55))
+  Downloading nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.1 kB)
+Collecting nvidia-nvtx==13.0.85 (from -r requirements.txt (line 56))
+  Downloading nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl.metadata (1.8 kB)
+Collecting packaging==26.2 (from -r requirements.txt (line 57))
+  Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting peft==0.19.1 (from -r requirements.txt (line 58))
+  Downloading peft-0.19.1-py3-none-any.whl.metadata (15 kB)
+Collecting prometheus_client==0.25.0 (from -r requirements.txt (line 59))
+  Downloading prometheus_client-0.25.0-py3-none-any.whl.metadata (2.1 kB)
+Collecting prompt_toolkit==3.0.52 (from -r requirements.txt (line 60))
+  Downloading prompt_toolkit-3.0.52-py3-none-any.whl.metadata (6.4 kB)
+Collecting propcache==0.5.2 (from -r requirements.txt (line 61))
+  Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+Collecting psutil==7.2.2 (from -r requirements.txt (line 62))
+  Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+Collecting psycopg2-binary==2.9.9 (from -r requirements.txt (line 63))
+  Downloading psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+Collecting pydantic==2.6.1 (from -r requirements.txt (line 64))
+  Downloading pydantic-2.6.1-py3-none-any.whl.metadata (83 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 83.5/83.5 kB 2.5 MB/s eta 0:00:00
+Collecting pydantic-settings==2.1.0 (from -r requirements.txt (line 65))
+  Downloading pydantic_settings-2.1.0-py3-none-any.whl.metadata (2.9 kB)
+Collecting pydantic_core==2.16.2 (from -r requirements.txt (line 66))
+  Downloading pydantic_core-2.16.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+Collecting python-dateutil==2.9.0.post0 (from -r requirements.txt (line 67))
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting python-dotenv==1.2.2 (from -r requirements.txt (line 68))
+  Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Collecting PyYAML==6.0.3 (from -r requirements.txt (line 69))
+  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Collecting redis==5.0.1 (from -r requirements.txt (line 70))
+  Downloading redis-5.0.1-py3-none-any.whl.metadata (8.9 kB)
+Collecting regex==2026.5.9 (from -r requirements.txt (line 71))
+  Downloading regex-2026.5.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.4/40.4 kB 2.0 MB/s eta 0:00:00
+Collecting requests==2.34.2 (from -r requirements.txt (line 72))
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting safetensors==0.8.0 (from -r requirements.txt (line 73))
+  Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Collecting scikit-learn==1.9.0 (from -r requirements.txt (line 74))
+  Downloading scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (11 kB)
+Collecting scipy==1.17.1 (from -r requirements.txt (line 75))
+  Downloading scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.1/62.1 kB 1.8 MB/s eta 0:00:00
+Collecting six==1.17.0 (from -r requirements.txt (line 76))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting SQLAlchemy==2.0.25 (from -r requirements.txt (line 77))
+  Downloading SQLAlchemy-2.0.25-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.6 kB)
+Collecting starlette==0.36.3 (from -r requirements.txt (line 78))
+  Downloading starlette-0.36.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting sympy==1.14.0 (from -r requirements.txt (line 79))
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting threadpoolctl==3.6.0 (from -r requirements.txt (line 80))
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting tokenizers==0.22.2 (from -r requirements.txt (line 81))
+  Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Collecting torch==2.12.0 (from -r requirements.txt (line 82))
+  Downloading torch-2.12.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (31 kB)
+Collecting tenacity==9.0.0 (from -r requirements.txt (line 83))
+  Downloading tenacity-9.0.0-py3-none-any.whl.metadata (1.2 kB)
+Collecting tqdm==4.68.2 (from -r requirements.txt (line 84))
+  Downloading tqdm-4.68.2-py3-none-any.whl.metadata (58 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.7/58.7 kB 1.5 MB/s eta 0:00:00
+Collecting transformers==4.57.6 (from -r requirements.txt (line 85))
+  Downloading transformers-4.57.6-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 kB 1.2 MB/s eta 0:00:00
+Collecting triton==3.7.0 (from -r requirements.txt (line 86))
+  Downloading triton-3.7.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Collecting typing_extensions==4.15.0 (from -r requirements.txt (line 87))
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting tzdata==2026.2 (from -r requirements.txt (line 88))
+  Downloading tzdata-2026.2-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting urllib3==2.7.0 (from -r requirements.txt (line 89))
+  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting uvicorn==0.27.1 (from -r requirements.txt (line 90))
+  Downloading uvicorn-0.27.1-py3-none-any.whl.metadata (6.3 kB)
+Collecting vine==5.1.0 (from -r requirements.txt (line 91))
+  Downloading vine-5.1.0-py3-none-any.whl.metadata (2.7 kB)
+Collecting wcwidth==0.8.1 (from -r requirements.txt (line 92))
+  Downloading wcwidth-0.8.1-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 3.0 MB/s eta 0:00:00
+Collecting yarl==1.24.2 (from -r requirements.txt (line 93))
+  Downloading yarl-1.24.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (94 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 94.2/94.2 kB 3.4 MB/s eta 0:00:00
+Collecting aiokafka==0.10.0 (from -r requirements.txt (line 95))
+  Downloading aiokafka-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (17 kB)
+Collecting pandas (from -r requirements.txt (line 97))
+  Downloading pandas-3.0.6-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (79 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 79.5/79.5 kB 2.7 MB/s eta 0:00:00
+Collecting python-multipart==0.0.9 (from -r requirements.txt (line 98))
+  Downloading python_multipart-0.0.9-py3-none-any.whl.metadata (2.5 kB)
+Collecting networkx==3.2.1 (from -r requirements.txt (line 99))
+  Downloading networkx-3.2.1-py3-none-any.whl.metadata (5.2 kB)
+Collecting pgvector==0.2.5 (from -r requirements.txt (line 100))
+  Downloading pgvector-0.2.5-py2.py3-none-any.whl.metadata (9.9 kB)
+Collecting sentence-transformers==2.5.1 (from -r requirements.txt (line 101))
+  Downloading sentence_transformers-2.5.1-py3-none-any.whl.metadata (11 kB)
+Collecting optimum==1.17.1 (from optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading optimum-1.17.1-py3-none-any.whl.metadata (18 kB)
+Collecting google-genai>=1.0.0 (from -r requirements.txt (line 104))
+  Downloading google_genai-2.31.0-py3-none-any.whl.metadata (58 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.6/58.6 kB 937.6 kB/s eta 0:00:00
+Collecting google-api-python-client>=2.100.0 (from -r requirements.txt (line 107))
+  Downloading google_api_python_client-2.201.0-py3-none-any.whl.metadata (6.8 kB)
+Collecting google-auth>=2.23.0 (from -r requirements.txt (line 108))
+  Downloading google_auth-2.62.0-py3-none-any.whl.metadata (6.0 kB)
+Collecting google-auth-oauthlib>=1.1.0 (from -r requirements.txt (line 109))
+  Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting httpx==0.27.2 (from -r requirements.txt (line 111))
+  Downloading httpx-0.27.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting geopy (from -r requirements.txt (line 112))
+  Downloading geopy-2.5.0-py3-none-any.whl.metadata (7.1 kB)
+Collecting pytrends==4.9.2 (from -r requirements.txt (line 115))
+  Downloading pytrends-4.9.2-py3-none-any.whl.metadata (13 kB)
+Collecting sortedcontainers (from trio==0.21.0->-r requirements.txt (line 15))
+  Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+Collecting async-generator>=1.9 (from trio==0.21.0->-r requirements.txt (line 15))
+  Downloading async_generator-1.10-py3-none-any.whl.metadata (4.9 kB)
+Collecting outcome (from trio==0.21.0->-r requirements.txt (line 15))
+  Downloading outcome-1.3.0.post0-py2.py3-none-any.whl.metadata (2.6 kB)
+Collecting sniffio (from trio==0.21.0->-r requirements.txt (line 15))
+  Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: setuptools<82 in ./.venv/lib/python3.11/site-packages (from torch==2.12.0->-r requirements.txt (line 82)) (79.0.1)
+Collecting async-timeout (from aiokafka==0.10.0->-r requirements.txt (line 95))
+  Downloading async_timeout-5.0.1-py3-none-any.whl.metadata (5.1 kB)
+Collecting Pillow (from sentence-transformers==2.5.1->-r requirements.txt (line 101))
+  Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting coloredlogs (from optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading coloredlogs-15.0.1-py2.py3-none-any.whl.metadata (12 kB)
+Collecting datasets (from optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading datasets-5.1.0-py3-none-any.whl.metadata (24 kB)
+Collecting httpcore==1.* (from httpx==0.27.2->-r requirements.txt (line 111))
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting lxml (from pytrends==4.9.2->-r requirements.txt (line 115))
+  Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+Collecting onnx (from optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading onnx-1.23.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.7 kB)
+Collecting onnxruntime>=1.11.0 (from optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading onnxruntime-1.31.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.7 kB)
+Collecting evaluate (from optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading evaluate-0.4.6-py3-none-any.whl.metadata (9.5 kB)
+Collecting protobuf>=3.20.1 (from optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+INFO: pip is looking at multiple versions of google-genai to determine which version is compatible with other requirements. This could take a while.
+Collecting google-genai>=1.0.0 (from -r requirements.txt (line 104))
+  Downloading google_genai-2.30.1-py3-none-any.whl.metadata (58 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.6/58.6 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-2.30.0-py3-none-any.whl.metadata (58 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.6/58.6 kB 1.7 MB/s eta 0:00:00
+  Downloading google_genai-2.29.0-py3-none-any.whl.metadata (57 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.3/57.3 kB 2.8 MB/s eta 0:00:00
+  Downloading google_genai-2.28.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-2.27.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 kB 2.8 MB/s eta 0:00:00
+  Downloading google_genai-2.26.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 kB 1.1 MB/s eta 0:00:00
+  Downloading google_genai-2.25.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 kB 3.5 MB/s eta 0:00:00
+INFO: pip is still looking at multiple versions of google-genai to determine which version is compatible with other requirements. This could take a while.
+  Downloading google_genai-2.24.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 kB 4.1 MB/s eta 0:00:00
+  Downloading google_genai-2.23.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-2.22.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-2.21.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 2.7 MB/s eta 0:00:00
+  Downloading google_genai-2.20.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 1.7 MB/s eta 0:00:00
+INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+  Downloading google_genai-2.19.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-2.18.1-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 2.3 MB/s eta 0:00:00
+  Downloading google_genai-2.18.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 3.6 MB/s eta 0:00:00
+  Downloading google_genai-2.17.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.5/56.5 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-2.16.0-py3-none-any.whl.metadata (56 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.4/56.4 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-2.15.0-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 1.6 MB/s eta 0:00:00
+  Downloading google_genai-2.14.0-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 1.6 MB/s eta 0:00:00
+  Downloading google_genai-2.13.0-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 1.9 MB/s eta 0:00:00
+  Downloading google_genai-2.12.1-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 3.0 MB/s eta 0:00:00
+Collecting google-auth>=2.23.0 (from -r requirements.txt (line 108))
+  Downloading google_auth-2.55.2-py3-none-any.whl.metadata (5.2 kB)
+Collecting google-genai>=1.0.0 (from -r requirements.txt (line 104))
+  Downloading google_genai-2.12.0-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 2.3 MB/s eta 0:00:00
+  Downloading google_genai-2.11.0-py3-none-any.whl.metadata (55 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55.8/55.8 kB 1.7 MB/s eta 0:00:00
+  Downloading google_genai-2.10.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.5/53.5 kB 2.0 MB/s eta 0:00:00
+  Downloading google_genai-2.9.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.5/53.5 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-2.8.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.0/53.0 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-2.7.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-2.6.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 2.3 MB/s eta 0:00:00
+  Downloading google_genai-2.5.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 2.5 MB/s eta 0:00:00
+  Downloading google_genai-2.4.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-2.3.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-2.2.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.6/52.6 kB 3.3 MB/s eta 0:00:00
+  Downloading google_genai-2.1.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.6/52.6 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-2.0.1-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.6/52.6 kB 2.5 MB/s eta 0:00:00
+  Downloading google_genai-2.0.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.6/52.6 kB 2.8 MB/s eta 0:00:00
+  Downloading google_genai-1.75.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.74.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.7/52.7 kB 2.7 MB/s eta 0:00:00
+  Downloading google_genai-1.73.1-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-1.73.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.72.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 3.1 MB/s eta 0:00:00
+  Downloading google_genai-1.71.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.70.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 1.8 MB/s eta 0:00:00
+  Downloading google_genai-1.69.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.4/52.4 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-1.68.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.3/52.3 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.67.0-py3-none-any.whl.metadata (52 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.3/52.3 kB 1.1 MB/s eta 0:00:00
+  Downloading google_genai-1.66.0-py3-none-any.whl.metadata (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.0/52.0 kB 3.8 MB/s eta 0:00:00
+  Downloading google_genai-1.65.0-py3-none-any.whl.metadata (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 52.0/52.0 kB 1.9 MB/s eta 0:00:00
+  Downloading google_genai-1.64.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.2/53.2 kB 2.9 MB/s eta 0:00:00
+  Downloading google_genai-1.63.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 4.2 MB/s eta 0:00:00
+  Downloading google_genai-1.62.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 1.4 MB/s eta 0:00:00
+  Downloading google_genai-1.61.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.60.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.59.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 2.3 MB/s eta 0:00:00
+  Downloading google_genai-1.58.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.1/53.1 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.57.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.3/53.3 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.56.0-py3-none-any.whl.metadata (53 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.3/53.3 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.55.0-py3-none-any.whl.metadata (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.9/47.9 kB 3.3 MB/s eta 0:00:00
+  Downloading google_genai-1.54.0-py3-none-any.whl.metadata (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.8/47.8 kB 3.1 MB/s eta 0:00:00
+  Downloading google_genai-1.53.0-py3-none-any.whl.metadata (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.7/47.7 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-1.52.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.8/46.8 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-1.51.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.8/46.8 kB 1.6 MB/s eta 0:00:00
+  Downloading google_genai-1.50.1-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.7/46.7 kB 2.8 MB/s eta 0:00:00
+  Downloading google_genai-1.50.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.7/46.7 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-1.49.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.7/46.7 kB 2.6 MB/s eta 0:00:00
+  Downloading google_genai-1.48.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.7/46.7 kB 969.8 kB/s eta 0:00:00
+  Downloading google_genai-1.47.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.8/46.8 kB 2.4 MB/s eta 0:00:00
+  Downloading google_genai-1.46.0-py3-none-any.whl.metadata (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.2/46.2 kB 3.2 MB/s eta 0:00:00
+  Downloading google_genai-1.45.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.8/45.8 kB 3.7 MB/s eta 0:00:00
+  Downloading google_genai-1.44.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.3/45.3 kB 3.2 MB/s eta 0:00:00
+  Downloading google_genai-1.43.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.3/45.3 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-1.42.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.3/45.3 kB 1.7 MB/s eta 0:00:00
+  Downloading google_genai-1.41.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 kB 2.8 MB/s eta 0:00:00
+  Downloading google_genai-1.40.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 kB 2.4 MB/s eta 0:00:00
+  Downloading google_genai-1.39.1-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 kB 969.4 kB/s eta 0:00:00
+  Downloading google_genai-1.39.0-py3-none-any.whl.metadata (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.4/45.4 kB 2.7 MB/s eta 0:00:00
+  Downloading google_genai-1.38.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 kB 1.5 MB/s eta 0:00:00
+  Downloading google_genai-1.37.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 kB 1.1 MB/s eta 0:00:00
+  Downloading google_genai-1.36.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 kB 1.6 MB/s eta 0:00:00
+  Downloading google_genai-1.35.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.34.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.6/43.6 kB 2.6 MB/s eta 0:00:00
+  Downloading google_genai-1.33.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 1.3 MB/s eta 0:00:00
+  Downloading google_genai-1.32.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 852.8 kB/s eta 0:00:00
+  Downloading google_genai-1.31.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 1.7 MB/s eta 0:00:00
+  Downloading google_genai-1.30.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.29.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 2.4 MB/s eta 0:00:00
+  Downloading google_genai-1.28.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.27.0-py3-none-any.whl.metadata (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.1/43.1 kB 1.8 MB/s eta 0:00:00
+  Downloading google_genai-1.26.0-py3-none-any.whl.metadata (42 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.4/42.4 kB 1.2 MB/s eta 0:00:00
+  Downloading google_genai-1.25.0-py3-none-any.whl.metadata (41 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 41.6/41.6 kB 809.2 kB/s eta 0:00:00
+  Downloading google_genai-1.24.0-py3-none-any.whl.metadata (40 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.5/40.5 kB 1.1 MB/s eta 0:00:00
+  Downloading google_genai-1.23.0-py3-none-any.whl.metadata (38 kB)
+  Downloading google_genai-1.22.0-py3-none-any.whl.metadata (37 kB)
+  Downloading google_genai-1.21.1-py3-none-any.whl.metadata (37 kB)
+  Downloading google_genai-1.21.0-py3-none-any.whl.metadata (37 kB)
+  Downloading google_genai-1.20.0-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.19.0-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.18.0-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.17.0-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.16.1-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.15.0-py3-none-any.whl.metadata (35 kB)
+  Downloading google_genai-1.14.0-py3-none-any.whl.metadata (33 kB)
+  Downloading google_genai-1.13.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.12.1-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.11.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.10.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.9.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.8.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.7.0-py3-none-any.whl.metadata (32 kB)
+  Downloading google_genai-1.5.0-py3-none-any.whl.metadata (29 kB)
+  Downloading google_genai-1.4.0-py3-none-any.whl.metadata (29 kB)
+  Downloading google_genai-1.3.0-py3-none-any.whl.metadata (28 kB)
+  Downloading google_genai-1.2.0-py3-none-any.whl.metadata (26 kB)
+Collecting websockets<15.0dev,>=13.0 (from google-genai>=1.0.0->-r requirements.txt (line 104))
+  Downloading websockets-14.2-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Collecting httplib2<1.0.0,>=0.19.0 (from google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading httplib2-0.32.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting google-auth-httplib2<1.0.0,>=0.2.0 (from google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading google_auth_httplib2-0.4.4-py3-none-any.whl.metadata (3.0 kB)
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5 (from google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading google_api_core-2.42.0-py3-none-any.whl.metadata (3.2 kB)
+Collecting uritemplate<5,>=3.0.1 (from google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading uritemplate-4.2.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth>=2.23.0->-r requirements.txt (line 108))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting cryptography>=38.0.3 (from google-auth>=2.23.0->-r requirements.txt (line 108))
+  Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+Collecting requests-oauthlib>=0.7.0 (from google-auth-oauthlib>=1.1.0->-r requirements.txt (line 109))
+  Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+Collecting geographiclib<3,>=1.52 (from geopy->-r requirements.txt (line 112))
+  Downloading geographiclib-2.1-py3-none-any.whl.metadata (1.6 kB)
+Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth>=2.23.0->-r requirements.txt (line 108))
+  Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+Collecting pyarrow>=24.0.0 (from datasets->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading pyarrow-26.0.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Collecting dill<0.4.2,>=0.3.0 (from datasets->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading dill-0.4.1-py3-none-any.whl.metadata (10 kB)
+Collecting xxhash (from datasets->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading xxhash-4.0.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (17 kB)
+Collecting multiprocess<0.70.20 (from datasets->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading multiprocess-0.70.19-py311-none-any.whl.metadata (7.5 kB)
+INFO: pip is looking at multiple versions of datasets to determine which version is compatible with other requirements. This could take a while.
+Collecting datasets (from optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading datasets-5.0.1-py3-none-any.whl.metadata (23 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.69.2 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading googleapis_common_protos-1.75.5-py3-none-any.whl.metadata (8.5 kB)
+Collecting proto-plus<2.0.0,>=1.26.1 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading proto_plus-1.29.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting opentelemetry-api<2.0.0,>=1.44.0 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading opentelemetry_api-1.45.1-py3-none-any.whl.metadata (1.4 kB)
+Collecting pyparsing<4,>=3.1 (from httplib2<1.0.0,>=0.19.0->google-api-python-client>=2.100.0->-r requirements.txt (line 107))
+  Downloading pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting flatbuffers (from onnxruntime>=1.11.0->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth>=2.23.0->-r requirements.txt (line 108))
+  Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+Collecting oauthlib>=3.0.0 (from requests-oauthlib>=0.7.0->google-auth-oauthlib>=1.1.0->-r requirements.txt (line 109))
+  Downloading oauthlib-4.0.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting sentencepiece!=0.1.92,>=0.1.91 (from transformers[sentencepiece]>=4.26.0->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading sentencepiece-0.2.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (33 kB)
+Collecting humanfriendly>=9.1 (from coloredlogs->optimum==1.17.1->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading humanfriendly-10.0-py2.py3-none-any.whl.metadata (9.2 kB)
+Collecting ml_dtypes>=0.5.4 (from onnx->optimum[onnxruntime]==1.17.1->-r requirements.txt (line 102))
+  Downloading ml_dtypes-0.6.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth>=2.23.0->-r requirements.txt (line 108))
+  Downloading pycparser-3.11-py3-none-any.whl.metadata (8.2 kB)
+Downloading accelerate-1.13.0-py3-none-any.whl (383 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 383.7/383.7 kB 6.9 MB/s eta 0:00:00
+Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl (15 kB)
+Downloading aiohttp-3.14.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 6.7 MB/s eta 0:00:00
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading alembic-1.18.4-py3-none-any.whl (263 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 263.9/263.9 kB 6.7 MB/s eta 0:00:00
+Downloading amqp-5.3.1-py3-none-any.whl (50 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.9/50.9 kB 3.8 MB/s eta 0:00:00
+Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 114.4/114.4 kB 4.1 MB/s eta 0:00:00
+Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.5/67.5 kB 3.8 MB/s eta 0:00:00
+Downloading billiard-4.2.4-py3-none-any.whl (87 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 87.1/87.1 kB 2.9 MB/s eta 0:00:00
+Downloading celery-5.3.6-py3-none-any.whl (422 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 422.0/422.0 kB 10.5 MB/s eta 0:00:00
+Downloading certifi-2026.5.20-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.1/134.1 kB 5.4 MB/s eta 0:00:00
+Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 214.1/214.1 kB 4.8 MB/s eta 0:00:00
+Downloading chronos_forecasting-2.3.1-py3-none-any.whl (80 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.6/80.6 kB 2.3 MB/s eta 0:00:00
+Downloading trio-0.21.0-py3-none-any.whl (358 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 359.0/359.0 kB 9.1 MB/s eta 0:00:00
+Downloading click-8.4.1-py3-none-any.whl (116 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 116.6/116.6 kB 4.1 MB/s eta 0:00:00
+Downloading click_didyoumean-0.3.1-py3-none-any.whl (3.6 kB)
+Downloading click_plugins-1.1.1.2-py2.py3-none-any.whl (11 kB)
+Downloading click_repl-0.3.0-py3-none-any.whl (10 kB)
+Downloading cuda_bindings-13.3.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (6.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.7/6.7 MB 10.3 MB/s eta 0:00:00
+Downloading cuda_pathfinder-1.5.5-py3-none-any.whl (51 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 51.7/51.7 kB 1.8 MB/s eta 0:00:00
+Downloading cuda_toolkit-13.0.2-py2.py3-none-any.whl (2.4 kB)
+Downloading einops-0.8.2-py3-none-any.whl (65 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.6/65.6 kB 2.1 MB/s eta 0:00:00
+Downloading fastapi-0.109.2-py3-none-any.whl (92 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 92.1/92.1 kB 4.0 MB/s eta 0:00:00
+Downloading filelock-3.29.3-py3-none-any.whl (42 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.3/42.3 kB 2.7 MB/s eta 0:00:00
+Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 231.1/231.1 kB 7.7 MB/s eta 0:00:00
+Downloading fsspec-2026.4.0-py3-none-any.whl (203 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 203.4/203.4 kB 6.5 MB/s eta 0:00:00
+Downloading greenlet-3.5.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (614 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 614.8/614.8 kB 8.8 MB/s eta 0:00:00
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading hf_xet-1.5.1-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 11.5 MB/s eta 0:00:00
+Downloading huggingface_hub-0.36.2-py3-none-any.whl (566 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 566.4/566.4 kB 10.0 MB/s eta 0:00:00
+Downloading idna-3.18-py3-none-any.whl (65 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.5/65.5 kB 2.4 MB/s eta 0:00:00
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 4.3 MB/s eta 0:00:00
+Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 309.1/309.1 kB 5.1 MB/s eta 0:00:00
+Downloading kombu-5.6.2-py3-none-any.whl (214 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 214.2/214.2 kB 3.7 MB/s eta 0:00:00
+Downloading mako-1.3.12-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.5/78.5 kB 3.1 MB/s eta 0:00:00
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 5.9 MB/s eta 0:00:00
+Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 246.3/246.3 kB 4.6 MB/s eta 0:00:00
+Downloading narwhals-2.22.1-py3-none-any.whl (454 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 454.8/454.8 kB 4.3 MB/s eta 0:00:00
+Downloading nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_x86_64.whl (423.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 423.1/423.1 MB 376.6 kB/s eta 0:00:00
+Downloading nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl (10.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.7/10.7 MB 10.3 MB/s eta 0:00:00
+Downloading nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (90.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 90.2/90.2 MB 4.9 MB/s eta 0:00:00
+Downloading nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 10.7 MB/s eta 0:00:00
+Downloading nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_x86_64.whl (366.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 366.2/366.2 MB 512.4 kB/s eta 0:00:00
+Downloading nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (214.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 214.1/214.1 MB 623.7 kB/s eta 0:00:00
+Downloading nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 7.3 MB/s eta 0:00:00
+Downloading nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl (59.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 59.5/59.5 MB 8.7 MB/s eta 0:00:00
+Downloading nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl (200.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 200.9/200.9 MB 569.5 kB/s eta 0:00:00
+Downloading nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (145.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 145.9/145.9 MB 1.7 MB/s eta 0:00:00
+Downloading nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_x86_64.whl (170.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 170.1/170.1 MB 490.0 kB/s eta 0:00:00
+Downloading nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_x86_64.whl (206.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 206.0/206.0 MB 838.5 kB/s eta 0:00:00
+Downloading nvidia_nvjitlink-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (40.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.7/40.7 MB 7.4 MB/s eta 0:00:00
+Downloading nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (60.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.4/60.4 MB 4.7 MB/s eta 0:00:00
+Downloading nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl (148 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 148.0/148.0 kB 6.4 MB/s eta 0:00:00
+Downloading packaging-26.2-py3-none-any.whl (100 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.2/100.2 kB 4.0 MB/s eta 0:00:00
+Downloading peft-0.19.1-py3-none-any.whl (680 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 680.7/680.7 kB 6.0 MB/s eta 0:00:00
+Downloading prometheus_client-0.25.0-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.2/64.2 kB 2.7 MB/s eta 0:00:00
+Downloading prompt_toolkit-3.0.52-py3-none-any.whl (391 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 391.4/391.4 kB 7.4 MB/s eta 0:00:00
+Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (58 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.9/58.9 kB 3.0 MB/s eta 0:00:00
+Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 155.6/155.6 kB 5.1 MB/s eta 0:00:00
+Downloading psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 9.6 MB/s eta 0:00:00
+Downloading pydantic-2.6.1-py3-none-any.whl (394 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 394.8/394.8 kB 6.7 MB/s eta 0:00:00
+Downloading pydantic_settings-2.1.0-py3-none-any.whl (11 kB)
+Downloading pydantic_core-2.16.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 4.0 MB/s eta 0:00:00
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 229.9/229.9 kB 6.6 MB/s eta 0:00:00
+Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 9.1 MB/s eta 0:00:00
+Downloading redis-5.0.1-py3-none-any.whl (250 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 250.3/250.3 kB 7.5 MB/s eta 0:00:00
+Downloading regex-2026.5.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (799 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 799.8/799.8 kB 7.8 MB/s eta 0:00:00
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.1/73.1 kB 3.0 MB/s eta 0:00:00
+Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 516.0/516.0 kB 6.9 MB/s eta 0:00:00
+Downloading scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (9.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.3/9.3 MB 11.0 MB/s eta 0:00:00
+Downloading scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 5.2 MB/s eta 0:00:00
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading SQLAlchemy-2.0.25-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 6.8 MB/s eta 0:00:00
+Downloading starlette-0.36.3-py3-none-any.whl (71 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.5/71.5 kB 2.8 MB/s eta 0:00:00
+Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 10.4 MB/s eta 0:00:00
+Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 10.7 MB/s eta 0:00:00
+Downloading torch-2.12.0-cp311-cp311-manylinux_2_28_x86_64.whl (532.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 532.2/532.2 MB 380.9 kB/s eta 0:00:00
+Downloading tenacity-9.0.0-py3-none-any.whl (28 kB)
+Downloading tqdm-4.68.2-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.6/78.6 kB 1.6 MB/s eta 0:00:00
+Downloading transformers-4.57.6-py3-none-any.whl (12.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.0/12.0 MB 7.6 MB/s eta 0:00:00
+Downloading triton-3.7.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (201.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 201.4/201.4 MB 1.5 MB/s eta 0:00:00
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.6/44.6 kB 1.2 MB/s eta 0:00:00
+Downloading tzdata-2026.2-py2.py3-none-any.whl (349 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 349.3/349.3 kB 660.0 kB/s eta 0:00:00
+Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 3.4 MB/s eta 0:00:00
+Downloading uvicorn-0.27.1-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.8/60.8 kB 1.9 MB/s eta 0:00:00
+Downloading vine-5.1.0-py3-none-any.whl (9.6 kB)
+Downloading wcwidth-0.8.1-py3-none-any.whl (323 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 323.1/323.1 kB 4.6 MB/s eta 0:00:00
+Downloading yarl-1.24.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (106 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 106.4/106.4 kB 4.8 MB/s eta 0:00:00
+Downloading aiokafka-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 10.7 MB/s eta 0:00:00
+Downloading python_multipart-0.0.9-py3-none-any.whl (22 kB)
+Downloading networkx-3.2.1-py3-none-any.whl (1.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 11.1 MB/s eta 0:00:00
+Downloading pgvector-0.2.5-py2.py3-none-any.whl (9.6 kB)
+Downloading sentence_transformers-2.5.1-py3-none-any.whl (156 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 156.5/156.5 kB 2.1 MB/s eta 0:00:00
+Downloading optimum-1.17.1-py3-none-any.whl (407 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 407.1/407.1 kB 5.4 MB/s eta 0:00:00
+Downloading httpx-0.27.2-py3-none-any.whl (76 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.4/76.4 kB 1.4 MB/s eta 0:00:00
+Downloading pytrends-4.9.2-py3-none-any.whl (15 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 1.8 MB/s eta 0:00:00
+Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 10.7 MB/s eta 0:00:00
+Downloading pandas-3.0.6-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.1/11.1 MB 8.3 MB/s eta 0:00:00
+Downloading google_genai-1.2.0-py3-none-any.whl (130 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.7/130.7 kB 5.1 MB/s eta 0:00:00
+Downloading google_api_python_client-2.201.0-py3-none-any.whl (16.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 12.0 MB/s eta 0:00:00
+Downloading google_auth-2.62.0-py3-none-any.whl (267 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 267.9/267.9 kB 350.9 kB/s eta 0:00:00
+Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl (20 kB)
+Downloading geopy-2.5.0-py3-none-any.whl (114 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 114.6/114.6 kB 3.6 MB/s eta 0:00:00
+Downloading async_generator-1.10-py3-none-any.whl (18 kB)
+Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 10.4 MB/s eta 0:00:00
+Downloading datasets-5.0.1-py3-none-any.whl (559 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 559.1/559.1 kB 8.2 MB/s eta 0:00:00
+Downloading geographiclib-2.1-py3-none-any.whl (40 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.7/40.7 kB 1.7 MB/s eta 0:00:00
+Downloading google_api_core-2.42.0-py3-none-any.whl (221 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 221.4/221.4 kB 6.8 MB/s eta 0:00:00
+Downloading google_auth_httplib2-0.4.4-py3-none-any.whl (9.5 kB)
+Downloading httplib2-0.32.0-py3-none-any.whl (93 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 93.1/93.1 kB 4.1 MB/s eta 0:00:00
+Downloading onnxruntime-1.31.0-cp311-cp311-manylinux_2_28_x86_64.whl (23.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.8/23.8 MB 5.0 MB/s eta 0:00:00
+Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 343.2/343.2 kB 6.2 MB/s eta 0:00:00
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 181.3/181.3 kB 5.5 MB/s eta 0:00:00
+Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+Downloading uritemplate-4.2.0-py3-none-any.whl (11 kB)
+Downloading websockets-14.2-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (169 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 169.9/169.9 kB 6.6 MB/s eta 0:00:00
+Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+Downloading coloredlogs-15.0.1-py2.py3-none-any.whl (46 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.0/46.0 kB 2.1 MB/s eta 0:00:00
+Downloading evaluate-0.4.6-py3-none-any.whl (84 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.1/84.1 kB 2.5 MB/s eta 0:00:00
+Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 10.3 MB/s eta 0:00:00
+Downloading onnx-1.23.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (8.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.9/8.9 MB 10.2 MB/s eta 0:00:00
+Downloading outcome-1.3.0.post0-py2.py3-none-any.whl (10 kB)
+Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 7.9 MB/s eta 0:00:00
+Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 217.8/217.8 kB 5.5 MB/s eta 0:00:00
+Downloading dill-0.4.1-py3-none-any.whl (120 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 120.0/120.0 kB 2.5 MB/s eta 0:00:00
+Downloading googleapis_common_protos-1.75.5-py3-none-any.whl (307 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 307.7/307.7 kB 10.0 MB/s eta 0:00:00
+Downloading humanfriendly-10.0-py2.py3-none-any.whl (86 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 86.8/86.8 kB 2.4 MB/s eta 0:00:00
+Downloading ml_dtypes-0.6.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (412 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 412.0/412.0 kB 7.0 MB/s eta 0:00:00
+Downloading multiprocess-0.70.19-py311-none-any.whl (144 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 144.5/144.5 kB 129.6 kB/s eta 0:00:00
+Downloading oauthlib-4.0.0-py3-none-any.whl (159 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 159.7/159.7 kB 168.7 kB/s eta 0:00:00
+Downloading opentelemetry_api-1.45.1-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.3/60.3 kB 53.6 kB/s eta 0:00:00
+Downloading proto_plus-1.29.0-py3-none-any.whl (50 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.8/50.8 kB 48.5 kB/s eta 0:00:00
+Downloading pyarrow-26.0.0-cp311-cp311-manylinux_2_28_x86_64.whl (53.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.9/53.9 MB 3.6 MB/s eta 0:00:00
+Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.4/84.4 kB 2.2 MB/s eta 0:00:00
+Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 126.4/126.4 kB 5.4 MB/s eta 0:00:00
+Downloading sentencepiece-0.2.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 6.9 MB/s eta 0:00:00
+Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+Downloading xxhash-4.0.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (260 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 261.0/261.0 kB 464.9 kB/s eta 0:00:00
+Downloading pycparser-3.11-py3-none-any.whl (51 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 51.2/51.2 kB 1.4 MB/s eta 0:00:00
+Installing collected packages: sortedcontainers, nvidia-cusparselt-cu13, mpmath, flatbuffers, cuda-toolkit, xxhash, websockets, wcwidth, vine, urllib3, uritemplate, tzdata, typing_extensions, triton, tqdm, threadpoolctl, tenacity, sympy, sniffio, six, sentencepiece, safetensors, regex, redis, PyYAML, python-multipart, python-dotenv, pyparsing, pycparser, pyasn1, pyarrow, psycopg2-binary, psutil, protobuf, propcache, prometheus_client, Pillow, packaging, oauthlib, nvidia-nvtx, nvidia-nvshmem-cu13, nvidia-nvjitlink, nvidia-nccl-cu13, nvidia-curand, nvidia-cufile, nvidia-cuda-runtime, nvidia-cuda-nvrtc, nvidia-cuda-cupti, numpy, networkx, narwhals, multidict, MarkupSafe, lxml, joblib, idna, humanfriendly, hf-xet, h11, greenlet, geographiclib, fsspec, frozenlist, filelock, einops, dill, cuda-pathfinder, click, charset-normalizer, certifi, billiard, attrs, async-timeout, async-generator, annotated-types, aiohappyeyeballs, yarl, uvicorn, SQLAlchemy, scipy, requests, python-dateutil, pydantic_core, pyasn1-modules, proto-plus, prompt_toolkit, pgvector, outcome, opentelemetry-api, onnxruntime, nvidia-cusparse, nvidia-cufft, nvidia-cublas, multiprocess, ml_dtypes, Mako, Jinja2, httplib2, httpcore, googleapis-common-protos, geopy, cuda-bindings, coloredlogs, click-plugins, click-didyoumean, cffi, anyio, amqp, aiosignal, aiokafka, trio, starlette, scikit-learn, requests-oauthlib, pydantic, pandas, onnx, nvidia-cusolver, nvidia-cudnn-cu13, kombu, huggingface_hub, httpx, cryptography, click-repl, alembic, aiohttp, tokenizers, pytrends, pydantic-settings, google-auth, fastapi, celery, transformers, torch, google-genai, google-auth-oauthlib, google-auth-httplib2, google-api-core, datasets, sentence-transformers, google-api-python-client, evaluate, accelerate, peft, optimum, chronos-forecasting
+

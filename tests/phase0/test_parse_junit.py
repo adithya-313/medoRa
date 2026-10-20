@@ -4,11 +4,13 @@
 """Unit tests for parse_junit and summarise. No network, no cloning, no subprocesses."""
 from __future__ import annotations
 
+import json
+import shutil
 from pathlib import Path
 
 import pytest
 
-from tools.phase0.run_v1_suite import JunitParseError, TestRow, parse_junit, summarise
+from tools.phase0.run_v1_suite import JunitParseError, RunMeta, TestRow, parse_junit, reparse_results, sha256_of_file, summarise
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -142,6 +144,53 @@ def test_malformed_xml_raises_clear_error() -> None:
         parse_junit(FIXTURE_DIR / "malformed.xml")
 
 
+def test_every_result_of_one_test_is_kept() -> None:
+    """WHAT: A test case with two <error> children (setup and teardown) gives two error rows.
+    WHY: Keeping only the first would make the error count disagree with pytest's own summary.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        one testcase with errors="2" -> 2 rows named test_two_errors, reasons "setup failed" and "teardown failed"
+    """
+    rows = parse_junit(FIXTURE_DIR / "multi_result.xml")
+    assert [row.outcome for row in rows] == ["error", "error"]
+    assert [row.reason for row in rows] == ["setup failed", "teardown failed"]
+    assert summarise(rows).distinct_names == 1
+
+
+def test_totals_mismatch_raises() -> None:
+    """WHAT: A file whose <testsuite> says failures="0" but contains a <failure> raises JunitParseError.
+    WHY: A disagreement between rows and pytest's own totals means the parse cannot be trusted.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        failures="0" with 1 failed row -> JunitParseError("... failed rows 1 != 0")
+    """
+    with pytest.raises(JunitParseError, match="failed rows 1 != 0"):
+        parse_junit(FIXTURE_DIR / "totals_mismatch.xml")
+
+
+def test_missing_totals_raise() -> None:
+    """WHAT: A <testsuite> without tests/failures/errors/skipped attributes raises JunitParseError.
+    WHY: Without totals there is nothing to reconcile against, so the file is not accepted silently.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        <testsuite name="pytest"> with no counts -> JunitParseError("lacks a numeric 'tests' attribute")
+    """
+    with pytest.raises(JunitParseError, match="lacks a numeric"):
+        parse_junit(FIXTURE_DIR / "no_totals.xml")
+
+
 def test_summarise_counts_match_rows() -> None:
     """WHAT: Builds rows from all single-case fixtures and checks every count.
     WHY: Totals must come from the rows, so the summary can never disagree with the table.
@@ -174,3 +223,25 @@ def test_summarise_rejects_unknown_outcome() -> None:
     bad_row = TestRow("f", "n", "weird", 0.0, "")
     with pytest.raises(ValueError):
         summarise([bad_row])
+
+
+def test_reparse_results_rewrites_summary_from_saved_junit(tmp_path: Path) -> None:
+    """WHAT: Copies a junit fixture and an out-of-date results.json into a temp folder, then checks
+    reparse_results rewrites the summary from the junit file and keeps the saved meta.
+    WHY: Old results must be fixable from the original evidence, and only if that evidence is unchanged (SHA-256).
+
+    Args:
+        tmp_path: pytest's temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        stale summary error=1, junit with errors="2" -> results.json afterwards has error=2
+    """
+    shutil.copy(FIXTURE_DIR / "multi_result.xml", tmp_path / "junit.xml")
+    meta = RunMeta("t", "c", "label", "now", "os", "py", 1.0, sha256_of_file(tmp_path / "junit.xml"), "")
+    stale = {"meta": meta.__dict__, "summary": {"error": 1}, "tests": []}
+    (tmp_path / "results.json").write_text(json.dumps(stale), encoding="utf-8")
+    new_summary = reparse_results(tmp_path)
+    saved = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
+    assert new_summary.error == 2 == saved["summary"]["error"]
+    assert saved["meta"]["commit"] == "c"
