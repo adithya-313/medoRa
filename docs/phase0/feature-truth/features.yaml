@@ -671,6 +671,20 @@ features:
   evidence:
   - {type: code, file: frontend/src/app/admin/settings/page.tsx, line: 7, contains: "SettingsDashboard"}
 
+- id: ui-authentication
+  name: Sign-in and tenant identity for the web app
+  area: admin
+  entry_points: []
+  status: missing
+  note: "There is no sign-in. The browser sends the fixed tenant id PHARM-001 in an X-Tenant-ID header on every call, and the backend dependency defaults a missing header to system_admin (the all-tenants view). The v1 evaluation report calls this 'Cryptographic Multi-Tenancy', but the header is chosen by the client."
+  evidence:
+  - {type: doc, file: docs/V1_EVALUATION_REPORT.md, contains: "Cryptographic Multi-Tenancy enforced via"}
+  - {type: code, file: frontend/src/services/api.ts, line: 100, contains: 'const DEFAULT_TENANT = "PHARM-001"'}
+  - {type: code, file: app/api/dependencies.py, line: 42, contains: 'Header("system_admin"'}
+  findings:
+  - {category: security, title: "A missing X-Tenant-ID header becomes system_admin, the all-tenants view", file: app/api/dependencies.py, line: 42, contains: 'Header("system_admin"'}
+  - {category: security, title: "The tenant is a constant the browser sends; no sign-in proves who the user is", file: frontend/src/services/api.ts, line: 100, contains: 'const DEFAULT_TENANT = "PHARM-001"'}
+
 - id: adapter-registry-and-stats
   name: LoRA adapter list and system statistics
   area: admin

@@ -9,7 +9,7 @@ working = passes on SQLite in tests; v1 production uses Postgres 15
 - working: 12
 - mocked: 5
 - broken: 5
-- missing: 2
+- missing: 3
 - untested: 39
 
 ## billing
@@ -126,6 +126,7 @@ working = passes on SQLite in tests; v1 production uses Postgres 15
 |---|---|---|---|---|
 | tenant-settings | Tenant settings (UPI id, WhatsApp credentials) | untested | Real code; no test. | [app/api/v1/settings.py:10](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/v1/settings.py#L10)<br>[app/api/v1/settings.py:28](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/v1/settings.py#L28) |
 | ui-admin-settings-page | Admin settings screen | untested | UI e2e not run (needs full stack). | [frontend/src/app/admin/settings/page.tsx:7](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/frontend/src/app/admin/settings/page.tsx#L7) |
+| ui-authentication | Sign-in and tenant identity for the web app | missing | There is no sign-in. The browser sends the fixed tenant id PHARM-001 in an X-Tenant-ID header on every call, and the backend dependency defaults a missing header to system_admin (the all-tenants view). The v1 evaluation report calls this 'Cryptographic Multi-Tenancy', but the header is chosen by the client. | [docs/V1_EVALUATION_REPORT.md](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/docs/V1_EVALUATION_REPORT.md)<br>[frontend/src/services/api.ts:100](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/frontend/src/services/api.ts#L100)<br>[app/api/dependencies.py:42](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/dependencies.py#L42) |
 | adapter-registry-and-stats | LoRA adapter list and system statistics | untested | Real queries; no test. The stats endpoint returns the model name as a fixed string. | [app/main.py:548](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/main.py#L548)<br>[app/api/v1/stats.py:48](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/v1/stats.py#L48) |
 
 ## infra
@@ -140,3 +141,5 @@ working = passes on SQLite in tests; v1 production uses Postgres 15
 - **inventory-stock-projection**: No tenant filter: the stock total sums the SKU's batches across all tenants ([app/api/v1/inventory.py:80](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/v1/inventory.py#L80))
 - **inventory-triage**: No tenant filter: loads every tenant's batches and returns their value and expiry totals ([app/api/v1/triage.py:51](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/v1/triage.py#L51))
 - **supplier-scorecard**: No tenant filter: the scorecard mixes every shop's orders for a supplier (flaw F4) ([app/services/supplier_scorecard_service.py:27](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/services/supplier_scorecard_service.py#L27))
+- **ui-authentication**: A missing X-Tenant-ID header becomes system_admin, the all-tenants view ([app/api/dependencies.py:42](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/app/api/dependencies.py#L42))
+- **ui-authentication**: The tenant is a constant the browser sends; no sign-in proves who the user is ([frontend/src/services/api.ts:100](https://github.com/adithya-313/prv3/blob/v1-final/sentinel_flow_mvp/frontend/src/services/api.ts#L100))
