@@ -1,0 +1,27 @@
+phases:
+  - {number: 0,  name: "Freeze and audit v1"}
+  - {number: 1,  name: "Foundation, harness, flags and experiments"}
+  - {number: 2,  name: "Data model, ledger, audit chain, full-store catalogue"}
+  - {number: 3,  name: "Identity, roles, three-app permissions"}
+  - {number: 4,  name: "Master data pipeline"}
+  - {number: 5,  name: "Billing core"}
+  - {number: 6,  name: "Compliance, H2 QR verification, recall inbox"}
+  - {number: 7,  name: "Design system and counter app"}
+  - {number: 8,  name: "Offline sync and multi-counter"}
+  - {number: 9,  name: "Operations, vendor intelligence v2, distributor integration"}
+  - {number: 10, name: "Owner app (desktop + phone)"}
+  - {number: 11, name: "Admin console"}
+  - {number: 12, name: "MLOps foundation"}
+  - {number: 13, name: "Recommendations with explanation cards"}
+  - {number: 14, name: "RAG v2"}
+  - {number: 15, name: "LLM gateway"}
+  - {number: 16, name: "Agent platform"}
+  - {number: 17, name: "Forecasting and reorder"}
+  - {number: 18, name: "Patient engagement: refills, pickup, delivery"}
+  - {number: 19, name: "Retention and behavioural layer"}
+  - {number: 20, name: "Observability and reliability"}
+  - {number: 21, name: "Expiry exchange network"}
+  - {number: 22, name: "Government layer"}
+  - {number: 23, name: "Business agents in production"}
+  - {number: 24, name: "Privacy, security, release"}
+  - {number: 25, name: "Pilot pharmacy"}
