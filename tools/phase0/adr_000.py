@@ -580,7 +580,7 @@ def render_context(artifacts: Artifacts, owner_decisions: list[dict]) -> list[st
              f"{n['status_missing']} missing, {n['status_untested']} untested. {n['security_findings']} security findings are recorded.",
              f"- Tests (docker-with-db baseline): {n['docker-with-db_passed']} passed, {n['docker-with-db_failed']} failed, "
              f"{n['docker-with-db_error']} errors, {n['docker-with-db_skipped']} skipped. The health_risk suite adds {n['docker-with-db-health-risk_passed']} passed.",
-             f"- Vendor scorecard: {n['flaws_failed_as_designed']} designed flaw tests fail on v1 as intended; the positive control ({n['flaw_controls_passed']}) passes.",
+             f"- Vendor scorecard: {n['flaws_failed_as_designed']} designed flaw tests fail on v1 as intended; {n['flaw_controls_passed']} positive control passes.",
              f"- Data: {n['data_items']} items audited; {n['data_allowed']} allowed for production, {n['data_test-fixture-only']} test-fixture-only, "
              f"{n['data_not-for-production']} not-for-production, {n['data_discard']} to discard.",
              f"- Screens: {n['pages']} pages; {n['must_keep_actions']} actions to keep, {n['rebuild_actions']} to rebuild properly; "
