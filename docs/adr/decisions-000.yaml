@@ -1,0 +1,1470 @@
+# Carry-over decisions for ADR-000. Every v1 feature, data item, screen action, module and service has exactly one.
+# tools/phase0/adr_000.py checks coverage, rules and every evidence reference, then renders the ADR.
+adr_date: '2026-10-22'
+owner_decisions:
+- text: v2 gets a new UI design; v1's look is not carried over.
+  date: 2026-10-20/21
+- text: Drug interactions are reference information only (possible SaMD).
+  date: 2026-10-20/21
+- text: Tauri v2 is the desktop shell.
+  date: 2026-10-20/21
+- text: v1's 254k-row product CSV is a test fixture only.
+  date: 2026-10-20/21
+- text: Prescription reading and the Malayalam voice assistant move to v3 (neither exists in v1, so no v1 item is deferred).
+  date: 2026-10-20/21
+- text: 'Planned drops in the owner''s plan: the Kafka producer with Redpanda, the SGWA service with the federated API, and the compute hypervisor.'
+  date: 2026-10-20/21
+decisions:
+- item: pos-checkout
+  kind: feature
+  decision: keep
+  reason: The core sale is proven against a real database (stock deducted, receipt and audit entries); its behaviour and tests become the billing specification.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: pos-checkout
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_checkout_and_vendor_audit::test_checkout_new_patient_writes_4_audit_entries
+- item: pos-sale-event
+  kind: feature
+  decision: drop
+  reason: The sale is already saved by checkout; this extra Kafka event is untested, no screen calls it, and the owner's plan drops the Kafka producer and Redpanda.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: pos-sale-event
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: Kafka producer and Redpanda are planned drops'
+- item: pos-history
+  kind: feature
+  decision: keep
+  reason: Receipt history per tenant is tested against a real database; the behaviour carries into the billing core.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: pos-history
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_pos_history_tenant_isolation::test_pos_history_tenant_isolation
+- item: pos-patient-lookup
+  kind: feature
+  decision: rebuild
+  reason: Counter patient lookup is real but untested, so v2 rebuilds it test-first inside billing.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: pos-patient-lookup
+- item: pos-recommendations
+  kind: feature
+  decision: rebuild
+  reason: Cross-sell and generic suggestions are real but untested; v2 rebuilds them with explanation cards.
+  v2_phase: 13
+  evidence:
+  - artifact: features.yaml
+    id: pos-recommendations
+- item: erp-legacy-csv-upload
+  kind: feature
+  decision: rebuild
+  reason: v1 parses the CSV but never stores it; importing a pharmacy's past sales is a data-onboarding job, so v2 builds it properly in the master-data pipeline.
+  v2_phase: 4
+  evidence:
+  - artifact: features.yaml
+    id: erp-legacy-csv-upload
+  confirm: Closest phase is 4 (master data pipeline); it could also belong to 17 (forecasting needs the sales history). Please confirm.
+- item: ui-pos-page
+  kind: feature
+  decision: rebuild
+  reason: The counter screen is rebuilt in the new design and the Tauri v2 shell; only its functions carry over (see the screen-action decisions).
+  v2_phase: 7
+  evidence:
+  - artifact: features.yaml
+    id: ui-pos-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design; Tauri v2 desktop shell
+- item: ui-history-page
+  kind: feature
+  decision: rebuild
+  reason: The history screen is rebuilt in the new design; its function carries over.
+  v2_phase: 7
+  evidence:
+  - artifact: features.yaml
+    id: ui-history-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: pos-fefo-routing
+  kind: feature
+  decision: rebuild
+  reason: First-expire-first-out batch picking is real but only ever patched out in tests; v2 needs it in billing and proves it with tests.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: pos-fefo-routing
+- item: inventory-search
+  kind: feature
+  decision: rebuild
+  reason: Counter medicine search is real but untested; v2 rebuilds it with the billing core.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: inventory-search
+- item: inventory-stock-projection
+  kind: feature
+  decision: rebuild
+  reason: The stock total is real but has no tenant filter and no test; v2 rebuilds it with tenant isolation.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: inventory-stock-projection
+  - artifact: features.yaml
+    id: inventory-stock-projection
+    finding: 'No tenant filter: the stock total sums the SKU''s batches across all tenants'
+  security_phase: 3
+- item: inventory-triage
+  kind: feature
+  decision: rebuild
+  reason: The expiry and capital-at-risk overview suits the owner app; v1's query has no tenant filter and no test, so it is rebuilt.
+  v2_phase: 10
+  evidence:
+  - artifact: features.yaml
+    id: inventory-triage
+  - artifact: features.yaml
+    id: inventory-triage
+    finding: 'No tenant filter: loads every tenant''s batches and returns their value and expiry totals'
+  security_phase: 3
+  confirm: Placed in Phase 10 (owner app); it could also sit with the counter app (7). Please confirm.
+- item: po-list
+  kind: feature
+  decision: keep
+  reason: The purchase-order ledger is tested against a real database; its behaviour carries into operations.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-list
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: integration.test_purchase_order_ledger.TestPurchaseOrderLedger::test_ledger_shows_vendor_name_and_handles_missing_supplier
+- item: po-detail
+  kind: feature
+  decision: rebuild
+  reason: Order detail is real but untested; rebuilt with operations.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-detail
+- item: po-catalog-search
+  kind: feature
+  decision: rebuild
+  reason: Catalogue search for the order form is real but untested; rebuilt with operations.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-catalog-search
+- item: po-create
+  kind: feature
+  decision: rebuild
+  reason: v1's order-creation tests fail, so the feature is unproven; v2 rebuilds it test-first.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-create
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_audit_logging.TestAuditLoggingOnCreate::test_create_writes_audit_with_new_value
+- item: po-receive
+  kind: feature
+  decision: rebuild
+  reason: v1's delivery-receipt tests fail (HTTP 500), so the feature is unproven; v2 rebuilds it test-first.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-receive
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: integration.test_purchase_order_receive_logic::test_single_full_delivery
+- item: po-overdue-notifications
+  kind: feature
+  decision: keep
+  reason: The daily overdue-order check is tested against a real database (escalation, duplicate prevention, tenant isolation); its behaviour carries over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: po-overdue-notifications
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: integration.test_overdue_po_notifications::test_escalation_and_duplicate_prevention
+- item: disease-wave-alerts
+  kind: feature
+  decision: rebuild
+  reason: v1 hard-codes the alert's probability (0.89) and volume (500); v2 builds disease-wave reorder alerts on real forecasts.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: disease-wave-alerts
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_procurement_router_health_risk.TestProcurementHealthRiskFlag::test_flag_enabled_uses_health_risk_scores
+- item: auto-po
+  kind: feature
+  decision: rebuild
+  reason: v1 creates every automatic order at a made-up cost of 10.0; v2 builds automatic ordering on real prices and forecasts.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: auto-po
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: integration.test_auto_po_tenant.TestAutoPOTenantAssignment::test_auto_po_creates_with_correct_tenant_id
+- item: optimize-procurement
+  kind: feature
+  decision: rebuild
+  reason: The reorder optimiser is real but untested and unused by any screen; it belongs with forecasting and reorder.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: optimize-procurement
+- item: ui-orders-page
+  kind: feature
+  decision: rebuild
+  reason: The orders screen is rebuilt in the new design; its functions carry over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: ui-orders-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: supplier-list
+  kind: feature
+  decision: keep
+  reason: The paged vendor list is tested (with a mocked database session); its behaviour carries over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: supplier-list
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_supplier_api::test_add_and_list_supplier
+- item: supplier-create
+  kind: feature
+  decision: keep
+  reason: Adding a vendor is tested against a real database; its behaviour carries over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: supplier-create
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_checkout_and_vendor_audit::test_add_vendor_writes_1_audit_entry
+- item: supplier-orders
+  kind: feature
+  decision: keep
+  reason: A vendor's order history is tested against a real database; its behaviour carries over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: supplier-orders
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_supplier_history_api::test_supplier_history_endpoint
+- item: supplier-scorecard
+  kind: feature
+  decision: rebuild
+  reason: Pharmacists want the scorecard, but v1's formula has 8 proven flaws (no tenant filter among them); v2 designs a new formula in vendor intelligence v2.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: supplier-scorecard
+  - artifact: scorecard-flaws
+    test_id: test_scorecard_flaws::test_positive_control
+  - artifact: features.yaml
+    id: supplier-scorecard
+    finding: 'No tenant filter: the scorecard mixes every shop''s orders for a supplier (flaw F4)'
+  security_phase: 3
+- item: supplier-id-list-main
+  kind: feature
+  decision: drop
+  reason: A second definition of the same URL as the router's vendor list; it is probably never reached and has no test.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: supplier-id-list-main
+- item: ui-suppliers-page
+  kind: feature
+  decision: rebuild
+  reason: The vendor screen is rebuilt in the new design; its functions carry over.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: ui-suppliers-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: predict-async
+  kind: feature
+  decision: rebuild
+  reason: v1's prediction endpoint is broken or unproven (its tests expect the old synchronous reply); forecasting is rebuilt on benchmarked models.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: predict-async
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_inference_edge_cases::test_a_happy_path
+- item: demand-forecast-module
+  kind: feature
+  decision: rebuild
+  reason: Real model code, but untested and tied to a heavy CUDA stack; the forecasting phase chooses and benchmarks the model.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: demand-forecast-module
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_inference_edge_cases::test_b_missing_weights_file
+- item: stockout-prediction-module
+  kind: feature
+  decision: rebuild
+  reason: Real model code, but untested; rebuilt with forecasting and reorder.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: stockout-prediction-module
+- item: compute-hypervisor
+  kind: feature
+  decision: drop
+  reason: Budget-based routing between models; untested, and the owner's plan drops it.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: compute-hypervisor
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: compute hypervisor is a planned drop'
+- item: telemetry-batch-ingestion
+  kind: feature
+  decision: rebuild
+  reason: v1's predictions come from a random-number stand-in; v2 predicts stockouts from its own sales ledger.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: telemetry-batch-ingestion
+  confirm: v1 ingested hardware-supplier telemetry (an earlier product domain). It could be dropped instead of rebuilt; closest phase is 17. Please confirm.
+- item: ingestion-health
+  kind: feature
+  decision: drop
+  reason: A health check for the telemetry intake; v2 gets health checks from the observability phase.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: ingestion-health
+- item: stream-telemetry
+  kind: feature
+  decision: drop
+  reason: v1's stream consumer discards what it receives, so nothing is stored; there is nothing to carry over.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: stream-telemetry
+- item: drift-analysis
+  kind: feature
+  decision: rebuild
+  reason: The PSI drift check is real but untested; model monitoring belongs to the MLOps foundation.
+  v2_phase: 12
+  evidence:
+  - artifact: features.yaml
+    id: drift-analysis
+- item: lora-training
+  kind: feature
+  decision: drop
+  reason: LoRA fine-tuning is untested and needs the CUDA stack and the old hardware-supplier data.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: lora-training
+  confirm: Not in the owner's plan. Dropped because of the CUDA stack and hardware-supplier data; confirm, or move to a later MLOps phase.
+- item: federated-aggregation
+  kind: feature
+  decision: drop
+  reason: Untested, no screen uses it, and the owner's plan drops it.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: federated-aggregation
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: SGWA service and federated API are planned drops'
+- item: isolation-forest-anomaly
+  kind: feature
+  decision: drop
+  reason: Exists only as an offline script; v1 itself dropped its results table.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: isolation-forest-anomaly
+  confirm: Not in the owner's plan. Fraud or anomaly detection may be wanted later (it was claimed in v1 docs); confirm the drop.
+- item: risk-dashboard
+  kind: feature
+  decision: drop
+  reason: Reads telemetry made by a random-number stand-in and no screen reaches it.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: risk-dashboard
+- item: velocity-rate-limiter
+  kind: feature
+  decision: drop
+  reason: A rate limiter that nothing in v1 imports.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: velocity-rate-limiter
+- item: kb-ingest
+  kind: feature
+  decision: rebuild
+  reason: Clinical knowledge ingestion with embeddings is real but untested; rebuilt in RAG v2.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: kb-ingest
+- item: kb-search
+  kind: feature
+  decision: rebuild
+  reason: Semantic search is only partly tested against a mocked database; rebuilt in RAG v2.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: kb-search
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_filter_fix::test_above_threshold_full_data
+- item: kb-routing
+  kind: feature
+  decision: keep
+  reason: Question routing, caching, timeouts and degraded mode are tested; the behaviour carries into RAG v2.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: kb-routing
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_rag_routing.TestAdaptiveRoutingObjective::test_objective_mrp_query_returns_database_answer[asyncio]
+- item: kb-answer
+  kind: feature
+  decision: rebuild
+  reason: Answer generation was only ever run with Gemini, search and FEFO mocked; rebuilt in RAG v2 behind the LLM gateway.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: kb-answer
+- item: clinical-safety-judge
+  kind: feature
+  decision: keep
+  reason: The pregnancy and paediatric rules are tested pure logic and carry over as clinical rules.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: clinical-safety-judge
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_phase3_safety.TestPregnancySafety::test_blocks_category_x_drug
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: drug interactions are reference information only (possible SaMD)
+  confirm: v1 uses this to LOCK checkout (with an override). The owner decided drug interactions are reference information only (possible SaMD). Confirm whether v2 shows these
+    rules as warnings only or keeps a hard lock.
+- item: query-sanitizer
+  kind: feature
+  decision: keep
+  reason: Query clean-up, intent and SKU extraction are tested pure logic and carry over.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: query-sanitizer
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_phase2_routing.TestExtractSku::test_extracts_hyphenated_sku
+- item: kb-substitute
+  kind: feature
+  decision: rebuild
+  reason: Substitute search by embeddings is real but untested; rebuilt in RAG v2.
+  v2_phase: 14
+  evidence:
+  - artifact: features.yaml
+    id: kb-substitute
+- item: health-risk-api
+  kind: feature
+  decision: keep
+  reason: The current, history and explain endpoints are tested (with a mocked database session); the behaviour carries over.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: health-risk-api
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_health_risk_router.TestHealthRiskCurrentEndpoint::test_tenant_with_two_disease_scores_returns_both
+  confirm: Placed in Phase 17 (demand signal for forecasting); the explain view also resembles explanation cards (13). Please confirm.
+- item: health-risk-ingestion-job
+  kind: feature
+  decision: rebuild
+  reason: v1's end-to-end tests fail (missing table); the unit pieces pass, so v2 rebuilds the job on a real schema.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: health-risk-ingestion-job
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: integration.test_health_risk_pipeline.TestHealthRiskRealPipeline::test_success_path_all_three_diseases_scored
+- item: covariates-fetch
+  kind: feature
+  decision: drop
+  reason: The older parser returns simulated trend scores; the health-risk module's own fetcher already replaces it.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: covariates-fetch
+- item: ui-health-risk-radar-page
+  kind: feature
+  decision: rebuild
+  reason: The radar screen is rebuilt in the new design for the owner app.
+  v2_phase: 10
+  evidence:
+  - artifact: features.yaml
+    id: ui-health-risk-radar-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: patient-registration
+  kind: feature
+  decision: rebuild
+  reason: Patient registration is real but untested; rebuilt with the billing core.
+  v2_phase: 5
+  evidence:
+  - artifact: features.yaml
+    id: patient-registration
+- item: treatment-plan
+  kind: feature
+  decision: rebuild
+  reason: Treatment plans and depletion dates are real but untested; rebuilt with refills.
+  v2_phase: 18
+  evidence:
+  - artifact: features.yaml
+    id: treatment-plan
+- item: crm-dashboard-counts
+  kind: feature
+  decision: rebuild
+  reason: Refill and treatment counts are real but untested; rebuilt with patient engagement.
+  v2_phase: 18
+  evidence:
+  - artifact: features.yaml
+    id: crm-dashboard-counts
+- item: adherence-reminders
+  kind: feature
+  decision: rebuild
+  reason: Refill reminders are real but untested, and fall back to a log line when no WhatsApp keys exist; rebuilt with patient engagement.
+  v2_phase: 18
+  evidence:
+  - artifact: features.yaml
+    id: adherence-reminders
+- item: notifications-api
+  kind: feature
+  decision: rebuild
+  reason: The notification endpoints are real but untested; rebuilt with operations alerts.
+  v2_phase: 9
+  evidence:
+  - artifact: features.yaml
+    id: notifications-api
+- item: audit-log-api
+  kind: feature
+  decision: keep
+  reason: The audit log with tenant isolation, filters and paging is tested against a real database; its behaviour carries into the audit chain.
+  v2_phase: 2
+  evidence:
+  - artifact: features.yaml
+    id: audit-log-api
+  - artifact: v1-test-results
+    run: docker-with-db
+    test_id: test_audit_log_endpoint::test_audit_logs_tenant_isolation
+- item: ui-audit-log-page
+  kind: feature
+  decision: rebuild
+  reason: The audit-log screen is rebuilt in the new design for the admin console.
+  v2_phase: 11
+  evidence:
+  - artifact: features.yaml
+    id: ui-audit-log-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: tenant-settings
+  kind: feature
+  decision: rebuild
+  reason: Per-pharmacy WhatsApp and UPI settings are real but untested; rebuilt in the admin console.
+  v2_phase: 11
+  evidence:
+  - artifact: features.yaml
+    id: tenant-settings
+- item: ui-admin-settings-page
+  kind: feature
+  decision: rebuild
+  reason: The settings screen is rebuilt in the new design.
+  v2_phase: 11
+  evidence:
+  - artifact: features.yaml
+    id: ui-admin-settings-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: ui-authentication
+  kind: feature
+  decision: rebuild
+  reason: 'v1 has no sign-in: the browser sends a fixed tenant and the backend defaults a missing tenant to system_admin; v2 builds real identity first.'
+  v2_phase: 3
+  evidence:
+  - artifact: features.yaml
+    id: ui-authentication
+  - artifact: features.yaml
+    id: ui-authentication
+    finding: A missing X-Tenant-ID header becomes system_admin, the all-tenants view
+  - artifact: features.yaml
+    id: ui-authentication
+    finding: The tenant is a constant the browser sends; no sign-in proves who the user is
+  security_phase: 3
+- item: adapter-registry-and-stats
+  kind: feature
+  decision: drop
+  reason: Lists LoRA adapters and telemetry counts for the dropped ML stack; untested, and no screen uses it.
+  v2_phase: null
+  evidence:
+  - artifact: features.yaml
+    id: adapter-registry-and-stats
+- item: nightly-backup
+  kind: feature
+  decision: rebuild
+  reason: The nightly Drive backup is real but untested; reliability is rebuilt in the observability and reliability phase.
+  v2_phase: 20
+  evidence:
+  - artifact: features.yaml
+    id: nightly-backup
+  confirm: Closest phase is 20; backup could also be part of privacy and release (24). Please confirm.
+- item: data/indian_pharmaceutical_products_clean.csv
+  kind: data
+  decision: rebuild
+  reason: The owner decided this 254k-row CSV is a test fixture only. Real master data comes from the Phase 4 pipeline.
+  v2_phase: 4
+  evidence:
+  - artifact: provenance.yaml
+    key: data/indian_pharmaceutical_products_clean.csv
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: v1's 254k CSV is a test fixture only
+  confirm: Licence unknown, so check it before the CSV (or a slice of it) is committed to medoRa as a test fixture.
+- item: data/indian_essential_meds.csv
+  kind: data
+  decision: rebuild
+  reason: Ten hand-typed-looking rows with unverified prices and an unknown licence; real data comes from the master-data pipeline.
+  v2_phase: 4
+  evidence:
+  - artifact: provenance.yaml
+    key: data/indian_essential_meds.csv
+- item: data/sample_essential_meds.csv
+  kind: data
+  decision: rebuild
+  reason: Licence unknown, so v2's harness writes its own small fixtures instead of copying this sample.
+  v2_phase: 1
+  evidence:
+  - artifact: provenance.yaml
+    key: data/sample_essential_meds.csv
+- item: data/staging/openfda_full_clinical_fields.jsonl
+  kind: data
+  decision: drop
+  reason: US drug-label data for US products, marked not-for-production in the data audit.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: data/staging/openfda_full_clinical_fields.jsonl
+- item: data/staging/openfda_full_results.jsonl
+  kind: data
+  decision: drop
+  reason: US drug-label data for US products, marked not-for-production in the data audit.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: data/staging/openfda_full_results.jsonl
+  confirm: Phase 4 might still want some openFDA text for reference; the files themselves are dropped.
+- item: data/staging/openfda_full_results_corrected.jsonl
+  kind: data
+  decision: drop
+  reason: US drug-label data for US products, marked not-for-production in the data audit.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: data/staging/openfda_full_results_corrected.jsonl
+- item: data/staging/openfda_test_results.json
+  kind: data
+  decision: drop
+  reason: US drug-label data for US products, marked not-for-production in the data audit.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: data/staging/openfda_test_results.json
+- item: data/staging/unique_generics.csv
+  kind: data
+  decision: drop
+  reason: Derived from the 70 MB CSV whose licence is unknown.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: data/staging/unique_generics.csv
+- item: lora_accuracy_report.json
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: lora_accuracy_report.json
+- item: ml_accuracy_report.json
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: ml_accuracy_report.json
+- item: ultimate_stress_report.json
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: ultimate_stress_report.json
+- item: spot_check_results.json
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: spot_check_results.json
+- item: frontend/test-results/.last-run.json
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: frontend/test-results/.last-run.json
+- item: frontend/debug-dev.png
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: frontend/debug-dev.png
+- item: frontend/debug-screenshot.png
+  kind: data
+  decision: drop
+  reason: A generated report or screenshot from a past run; regenerate if needed, never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: frontend/debug-screenshot.png
+- item: api.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: api.log
+- item: worker.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: worker.log
+- item: diagnostics/5.3-answer-generation/h3_all_cases.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/h3_all_cases.log
+- item: diagnostics/5.3-answer-generation/h3_case1_normalized_query.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/h3_case1_normalized_query.log
+- item: diagnostics/5.3-answer-generation/h3_case2_direct_normalized_string.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/h3_case2_direct_normalized_string.log
+- item: diagnostics/5.3-answer-generation/h3_case3_forced_sku_id.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/h3_case3_forced_sku_id.log
+- item: diagnostics/5.3-answer-generation/query1_paracetamol_overdose.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/query1_paracetamol_overdose.log
+- item: diagnostics/5.3-answer-generation/query2_augmentin_vs_amoxyclav.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/query2_augmentin_vs_amoxyclav.log
+- item: diagnostics/5.3-answer-generation/query3_nimesulide_dosage.log
+  kind: data
+  decision: drop
+  reason: A runtime or diagnostic log; never ship.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: diagnostics/5.3-answer-generation/query3_nimesulide_dosage.log
+- item: app/infrastructure/init_db.sql
+  kind: data
+  decision: drop
+  reason: v1's schema is superseded by v2's own data model (Phase 2).
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: app/infrastructure/init_db.sql
+- item: docker/timescaledb/init.sql
+  kind: data
+  decision: drop
+  reason: v1's schema is superseded by v2's own data model (Phase 2).
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: docker/timescaledb/init.sql
+- item: api.fda.gov
+  kind: service
+  decision: drop
+  reason: Its data is US-only (wrong country); the terms themselves are public domain.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: api.fda.gov
+- item: api.open-meteo.com
+  kind: service
+  decision: rebuild
+  reason: Weather is a real demand signal, but the free API is non-commercial only; v2 needs a paid plan or its own hosting.
+  v2_phase: 17
+  evidence:
+  - artifact: provenance.yaml
+    key: api.open-meteo.com
+  confirm: Confirm whether weather data is wanted at all, and which provider (decided in the forecasting phase).
+- item: cdsco.gov.in
+  kind: service
+  decision: rebuild
+  reason: v1 never calls CDSCO (the URL sits in a mock scraper's comment); a real regulatory feed belongs to the government layer.
+  v2_phase: 22
+  evidence:
+  - artifact: provenance.yaml
+    key: cdsco.gov.in
+- item: graph.facebook.com
+  kind: service
+  decision: rebuild
+  reason: WhatsApp is how refill reminders reach patients; terms were not checked and need a per-pharmacy token, so v2 rebuilds it in patient engagement.
+  v2_phase: 18
+  evidence:
+  - artifact: provenance.yaml
+    key: graph.facebook.com
+- item: accounts.google.com
+  kind: service
+  decision: drop
+  reason: Used only for v1's Google Drive backup; terms were not checked, and v2 chooses its backup route in the reliability phase.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: accounts.google.com
+- item: oauth2.googleapis.com
+  kind: service
+  decision: drop
+  reason: Used only for v1's Google Drive backup; terms were not checked, and v2 chooses its backup route in the reliability phase.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: oauth2.googleapis.com
+- item: www.googleapis.com
+  kind: service
+  decision: drop
+  reason: Used only for v1's Google Drive backup; terms were not checked, and v2 chooses its backup route in the reliability phase.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: www.googleapis.com
+- item: library:pytrends
+  kind: service
+  decision: drop
+  reason: An unofficial Google Trends client; v2 chooses its search-signal source in the forecasting phase.
+  v2_phase: null
+  evidence:
+  - artifact: provenance.yaml
+    key: library:pytrends
+- item: '/pos: Search medicines by name or SKU (2+ characters, 300 ms debounce)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. The counter cannot sell without finding stock; v1 never tested this path.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Search medicines by name or SKU (2+ characters, 300 ms debounce)
+  - artifact: features.yaml
+    id: inventory-search
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Add, reduce or remove cart items'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Cart editing is client-side logic in the POS page that v2's counter screen needs.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Add, reduce or remove cart items
+  - artifact: features.yaml
+    id: ui-pos-page
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Look up the patient by a 10-digit phone number'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Known patients are filled in automatically at checkout; untested in v1.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Look up the patient by a 10-digit phone number
+  - artifact: features.yaml
+    id: pos-patient-lookup
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: See clinical cross-sell and cheaper generic suggestions for the last item added'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Margin and clinical value at the counter; untested in v1.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: See clinical cross-sell and cheaper generic suggestions for the last item added
+  - artifact: features.yaml
+    id: pos-recommendations
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Pay with cash, UPI or card (submits the cart)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. The core sale; tested against a real database (stock deducted, audit entries).
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Pay with cash, UPI or card (submits the cart)
+  - artifact: features.yaml
+    id: pos-checkout
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Ask the clinical copilot a question (with the cart as context)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Question routing, caching and degraded mode are tested; answer quality is not (see kb-answer).
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Ask the clinical copilot a question (with the cart as context)
+  - artifact: features.yaml
+    id: kb-routing
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Checkout is locked when the copilot says a drug is unsafe; override the lock'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. The safety rules are tested logic that blocks dangerous sales; keep the lock and an auditable override.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Checkout is locked when the copilot says a drug is unsafe; override the lock
+  - artifact: features.yaml
+    id: clinical-safety-judge
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Open the inventory triage dashboard'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Expiry and capital-at-risk overview; untested, and v1's query has no tenant filter.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Open the inventory triage dashboard
+  - artifact: features.yaml
+    id: inventory-triage
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: Read notifications and open one (marks it read, then goes to /orders or /health-risk-radar)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Surfaces overdue orders and disease warnings; untested endpoints.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: Read notifications and open one (marks it read, then goes to /orders or /health-risk-radar)
+  - artifact: features.yaml
+    id: notifications-api
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/pos: See and expand the health-risk warning banner'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Real scores with an explain view; tested against mocked database results.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /pos
+    action: See and expand the health-risk warning banner
+  - artifact: features.yaml
+    id: health-risk-api
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/history: Open the page and load the transaction history'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Receipt history per tenant; tested.
+  v2_phase: 7
+  evidence:
+  - artifact: screens.yaml
+    page: /history
+    action: Open the page and load the transaction history
+  - artifact: features.yaml
+    id: pos-history
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/audit-log: Load the audit log page (50 entries at a time)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Audit trail with tenant isolation; tested.
+  v2_phase: 11
+  evidence:
+  - artifact: screens.yaml
+    page: /audit-log
+    action: Load the audit log page (50 entries at a time)
+  - artifact: features.yaml
+    id: audit-log-api
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/audit-log: Expand an entry to see the before and after values'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. The before/after diff is what makes the log useful.
+  v2_phase: 11
+  evidence:
+  - artifact: screens.yaml
+    page: /audit-log
+    action: Expand an entry to see the before and after values
+  - artifact: features.yaml
+    id: audit-log-api
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/health-risk-radar: Open the radar (loads current scores and 30 days of history)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Current and history views are tested; the scoring job behind them is broken in v1 (health-risk-ingestion-job).
+  v2_phase: 10
+  evidence:
+  - artifact: screens.yaml
+    page: /health-risk-radar
+    action: Open the radar (loads current scores and 30 days of history)
+  - artifact: features.yaml
+    id: health-risk-api
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/orders: Open the ledger and load all purchase orders'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Order ledger; tested.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /orders
+    action: Open the ledger and load all purchase orders
+  - artifact: features.yaml
+    id: po-list
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/orders: Record a delivery (date and received quantity per item)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Needed to close orders; v1's tests of this path FAIL, so v2 must build it with working tests.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /orders
+    action: Record a delivery (date and received quantity per item)
+  - artifact: features.yaml
+    id: po-receive
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/suppliers: Open the page and load the vendor list'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Vendor list with paging; tested with a mocked database session.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /suppliers
+    action: Open the page and load the vendor list
+  - artifact: features.yaml
+    id: supplier-list
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/suppliers: Add a vendor (name and contact e-mail)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Tested with a real database.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /suppliers
+    action: Add a vendor (name and contact e-mail)
+  - artifact: features.yaml
+    id: supplier-create
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/suppliers: See a vendor''s scorecard (trust score, delivery rate, financial loss)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Wanted by pharmacists, but v1's formula has 8 proven flaws; keep the screen, redesign the calculation.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /suppliers
+    action: See a vendor's scorecard (trust score, delivery rate, financial loss)
+  - artifact: features.yaml
+    id: supplier-scorecard
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/suppliers: Search the catalogue and order stock from a vendor'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Needed to buy stock; v1's order-creation tests FAIL, so rebuild with tests.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /suppliers
+    action: Search the catalogue and order stock from a vendor
+  - artifact: features.yaml
+    id: po-create
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/suppliers: View a vendor''s order history (can sort delayed first)'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Tested with a real database.
+  v2_phase: 9
+  evidence:
+  - artifact: screens.yaml
+    page: /suppliers
+    action: View a vendor's order history (can sort delayed first)
+  - artifact: features.yaml
+    id: supplier-orders
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: '/admin/settings: Save the settings'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. Pharmacy-level WhatsApp/UPI configuration; untested in v1.
+  v2_phase: 11
+  evidence:
+  - artifact: screens.yaml
+    page: /admin/settings
+    action: Save the settings
+  - artifact: features.yaml
+    id: tenant-settings
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design
+- item: 'all pages: Every screen acts as the fixed tenant PHARM-001 (no login or tenant choice)'
+  kind: screen-action
+  decision: rebuild
+  reason: 'Function kept, screen rebuilt in the new design. v1 has no real sign-in: the browser sends a constant tenant id and the backend defaults a missing one to system_admin.'
+  v2_phase: 3
+  evidence:
+  - artifact: features.yaml
+    id: ui-authentication
+- item: 'none: Disease-wave stock alert with a one-click automatic purchase order'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. No v1 screen calls it; v1's alert uses hard-coded probability 0.89 and volume 500.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: disease-wave-alerts
+- item: 'none: One-click automatic purchase order'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. No v1 screen calls it; every order is created at a made-up cost of 10.0.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: auto-po
+- item: 'none: Upload legacy ERP sales CSV for model training'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. No v1 screen calls it; the upload is parsed but never stored.
+  v2_phase: 4
+  evidence:
+  - artifact: features.yaml
+    id: erp-legacy-csv-upload
+- item: 'none: Batch telemetry with stockout predictions'
+  kind: screen-action
+  decision: rebuild
+  reason: Function kept, screen rebuilt in the new design. No v1 screen calls it; predictions come from a random-number stand-in.
+  v2_phase: 17
+  evidence:
+  - artifact: features.yaml
+    id: telemetry-batch-ingestion
+- item: app/services/kafka_producer.py
+  kind: module
+  decision: drop
+  reason: The Kafka sale-event publisher; the owner's plan drops it. Note v1's pos_router.py (home of checkout) and main.py import it, so v2's checkout must not depend on it.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: Kafka producer and Redpanda are planned drops'
+  - type: code
+    file: app/services/kafka_producer.py
+    line: 43
+    contains: Event dropped.
+  - type: code
+    file: app/api/pos_router.py
+    line: 4
+    contains: from app.services.kafka_producer import publish_medication_sold
+  - artifact: features.yaml
+    id: pos-sale-event
+- item: redpanda
+  kind: service
+  decision: drop
+  reason: The Redpanda broker only serves the dropped Kafka event mesh.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: Kafka producer and Redpanda are planned drops'
+  - type: code
+    file: docker-compose.yml
+    line: 3
+    contains: 'image: docker.redpanda.com/redpandadata/redpanda:latest'
+  confirm: The compose service kafka-consumer and app/workers/kafka_consumer.py depend on Redpanda and are not in the plan; confirm they are dropped with it.
+- item: app/services/sgwa_service.py
+  kind: module
+  decision: drop
+  reason: Federated weight aggregation; untested, no screen uses it, and the owner's plan drops it.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: SGWA service and federated API are planned drops'
+  - type: code
+    file: app/services/sgwa_service.py
+    line: 36
+    contains: class SGWAService
+  - artifact: features.yaml
+    id: federated-aggregation
+- item: app/api/v1/federated.py
+  kind: module
+  decision: drop
+  reason: The only caller of the SGWA service; dropped with it.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: SGWA service and federated API are planned drops'
+  - type: code
+    file: app/api/v1/federated.py
+    line: 28
+    contains: '@router.post('
+- item: app/services/compute_hypervisor.py
+  kind: module
+  decision: drop
+  reason: Budget-based model routing; the owner's plan drops it. It is imported by the prediction orchestrator, but no must_keep action depends on it.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: 'owner''s plan: compute hypervisor is a planned drop'
+  - type: code
+    file: app/services/compute_hypervisor.py
+    line: 29
+    contains: class ComputeHypervisor
+  - artifact: features.yaml
+    id: compute-hypervisor
+- item: app/services/lora_training_worker.py
+  kind: module
+  decision: drop
+  reason: LoRA training code tied to the CUDA stack and the old hardware-supplier data; untested.
+  v2_phase: null
+  evidence:
+  - type: code
+    file: app/services/lora_training_worker.py
+    line: 157
+    contains: def train_lora_adapter
+  - artifact: features.yaml
+    id: lora-training
+  confirm: Not in the owner's plan; dropped with the CUDA stack. Confirm, or move it to a later MLOps phase.
+- item: app/services/drift_service.py
+  kind: module
+  decision: rebuild
+  reason: The PSI drift maths is a useful idea but untested; model monitoring is rebuilt in the MLOps foundation.
+  v2_phase: 12
+  evidence:
+  - type: code
+    file: app/services/drift_service.py
+    line: 57
+    contains: def calculate_psi
+  - artifact: features.yaml
+    id: drift-analysis
+- item: app/services/regional_router.py
+  kind: module
+  decision: rebuild
+  reason: Region-specific PII redaction; v1 only uses it on the telemetry intake and never tests it. Privacy rules are rebuilt in the privacy phase.
+  v2_phase: 24
+  evidence:
+  - type: code
+    file: app/services/regional_router.py
+    line: 17
+    contains: class RegionalComplianceRouter
+  confirm: Not in the owner's plan. Closest phase is 24 (privacy); it could also be dropped with the telemetry intake. Please confirm.
+- item: app/services/aegis_service.py
+  kind: module
+  decision: drop
+  reason: A thin schema check on the mocked prediction pipeline; v2 validates model outputs with its own contracts.
+  v2_phase: null
+  evidence:
+  - type: code
+    file: app/services/aegis_service.py
+    line: 16
+    contains: def validate_and_enforce_prediction_schema
+  - artifact: features.yaml
+    id: telemetry-batch-ingestion
+  confirm: Not in the owner's plan; dropped because it only serves the mocked pipeline. Confirm, or move it into the MLOps phase (12).
+- item: app/services/velocity_service.py
+  kind: module
+  decision: drop
+  reason: A Redis rate limiter that nothing in v1 imports.
+  v2_phase: null
+  evidence:
+  - type: code
+    file: app/services/velocity_service.py
+    line: 23
+    contains: class VelocityRateLimiter
+  - artifact: features.yaml
+    id: velocity-rate-limiter
+- item: worker
+  kind: service
+  decision: rebuild
+  reason: A Celery worker container; v2 picks its background-job runtime in the foundation phase's ADRs, so Celery is not assumed.
+  v2_phase: 1
+  evidence:
+  - type: code
+    file: docker-compose.yml
+    line: 76
+    contains: 'worker:'
+  confirm: Not in the owner's plan; the job-runtime choice belongs to ADR-001 onward. Please confirm.
+- item: celery-beat
+  kind: service
+  decision: rebuild
+  reason: The Celery scheduler container; scheduling is decided with the job runtime in the foundation phase.
+  v2_phase: 1
+  evidence:
+  - type: code
+    file: docker-compose.yml
+    line: 113
+    contains: 'celery-beat:'
+  confirm: Not in the owner's plan; decided together with the worker runtime. Please confirm.
+- item: frontend
+  kind: service
+  decision: drop
+  reason: v1's Next.js frontend container; v2 has a new UI design and a Tauri v2 desktop shell instead.
+  v2_phase: null
+  evidence:
+  - type: owner-decision
+    date: 2026-10-20/21
+    note: new UI design; Tauri v2 desktop shell
+  - type: code
+    file: docker-compose.yml
+    line: 140
+    contains: 'frontend:'
+- item: requirements.txt:nvidia-*
+  kind: module
+  decision: drop
+  reason: The 15 pinned nvidia-* CUDA packages make the install multi-gigabyte and fail on Windows (nvidia-cufile has no matching distribution).
+  v2_phase: null
+  evidence:
+  - type: code
+    file: requirements.txt
+    line: 48
+    contains: nvidia-cufile==1.15.1.6
+  - artifact: v1-test-results
+    run: no-services
+    file: pip.log
+    contains: nvidia-cufile==1.15.1.6
+  - artifact: v1-test-results
+    run: docker-no-services
+    file: meta.json
+    contains: pip_cached_bytes
+  confirm: 'Interpretation - owner to confirm: the plan''s ''NVIDIA data'' was read as these 15 nvidia-* CUDA packages (the brief said 10), because no NVIDIA dataset was found
+    in v1.'
