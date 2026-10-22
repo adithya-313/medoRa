@@ -19,6 +19,8 @@ from tools.phase0.adr_000 import (
     check_evidence,
     check_rules,
     compute_headline,
+    load_adr_field,
+    load_decisions,
     parse_decision,
     render_adr,
     required_items,
@@ -292,3 +294,113 @@ def test_render_headline_numbers_match_the_fixture_counts() -> None:
     assert "5 - Billing core" in text and "- f1: unclear which phase" in text
     for heading in ("## Status", "## Date", "## Context", "## Decision", "## Consequences", "## Alternatives considered", "## Why no benchmark", "## Owner to confirm"):
         assert heading in text
+
+
+def write_decisions_file(tmp_path: Path, text: str) -> Path:
+    """WHAT: Writes text to a decisions-000.yaml file inside the temp folder.
+    WHY: The malformed-input tests must go through the real file loader.
+
+    Args:
+        tmp_path: pytest temporary folder.
+        text: the YAML text.
+    Returns:
+        The file path.
+    Example:
+        write_decisions_file(tmp_path, "") -> tmp_path/decisions-000.yaml (empty)
+    """
+    path = tmp_path / "decisions-000.yaml"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_empty_file_and_missing_lists_raise_clear_errors(tmp_path: Path) -> None:
+    """WHAT: An empty decisions file, a file without 'decisions', and a file without 'owner_decisions' each make the
+    real loader raise AdrError naming the file; the date and status loaders also raise AdrError (not a crash) on
+    an empty file, and reject an unknown status.
+    WHY: Malformed input must stop with a clear message, never pass silently or crash with a Python error.
+
+    Args:
+        tmp_path: pytest temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        an empty file -> AdrError("...decisions-000.yaml: expected 'owner_decisions' and 'decisions' lists")
+    """
+    empty = write_decisions_file(tmp_path, "")
+    with pytest.raises(AdrError, match="decisions-000.yaml"):
+        load_decisions(empty, PHASES)
+    with pytest.raises(AdrError, match="missing adr_date"):
+        load_adr_field(empty, "adr_date")
+    no_decisions = write_decisions_file(tmp_path, "owner_decisions: []" + chr(10))
+    with pytest.raises(AdrError, match="decisions-000.yaml"):
+        load_decisions(no_decisions, PHASES)
+    no_owner = write_decisions_file(tmp_path, "decisions: []" + chr(10))
+    with pytest.raises(AdrError, match="decisions-000.yaml"):
+        load_decisions(no_owner, PHASES)
+    bad_status = write_decisions_file(tmp_path, "adr_status: Maybe" + chr(10))
+    with pytest.raises(AdrError, match="adr_status must be one of"):
+        load_adr_field(bad_status, "adr_status")
+
+
+def valid_raw_decision() -> dict:
+    """WHAT: Returns a valid raw decision mapping as it would come from the YAML.
+    WHY: Each malformed-input test breaks exactly one field of it.
+
+    Args:
+        none.
+    Returns:
+        A dict that parse_decision accepts.
+    Example:
+        valid_raw_decision()["item"] -> "x"
+    """
+    return {"item": "x", "kind": "feature", "decision": "rebuild", "reason": "r", "v2_phase": 5,
+            "evidence": [{"artifact": "features.yaml", "id": "x"}]}
+
+
+def test_missing_fields_wrong_types_and_unknown_values_name_the_item() -> None:
+    """WHAT: Each of these breaks one field of a valid decision and must raise AdrError that names item "x" (or
+    describes the bad item when it has no usable name): missing kind, reason or evidence; an unknown decision
+    value; v2_phase as a string, a float or a bool; security_phase as a string; a non-text reason; an evidence
+    list that is a string; a non-text item.
+    WHY: A wrong type (for example the bool True, which Python treats as phase 1) must never pass silently.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        v2_phase "5" -> AdrError("x: v2_phase '5' is not in the phase map (or is phase 0)")
+    """
+    assert parse_decision(valid_raw_decision(), PHASES).item == "x"
+    breaks = [{"kind": None}, {"reason": None}, {"evidence": None}, {"decision": "maybe"}, {"v2_phase": "5"}, {"v2_phase": 5.0},
+              {"v2_phase": True}, {"security_phase": "3"}, {"reason": ["r"]}, {"evidence": "features.yaml"}, {"confirm": 7}]
+    for change in breaks:
+        raw = {**valid_raw_decision(), **change}
+        with pytest.raises(AdrError, match="x:"):
+            parse_decision(raw, PHASES)
+    for bad_item in (None, 5, "", ["x"]):
+        with pytest.raises(AdrError, match="decision without a text item"):
+            parse_decision({**valid_raw_decision(), "item": bad_item}, PHASES)
+    without_item = {key: value for key, value in valid_raw_decision().items() if key != "item"}
+    with pytest.raises(AdrError, match="decision without a text item"):
+        parse_decision(without_item, PHASES)
+
+
+def test_decision_for_a_nonexistent_item_is_reported_by_name(tmp_path: Path) -> None:
+    """WHAT: A decisions file that decides an item no artifact has is loaded with the real loader, and the real
+    coverage check reports that item by name (and the required item it displaced as undecided).
+    WHY: A typo in an item id must not hide a missing decision.
+
+    Args:
+        tmp_path: pytest temporary folder.
+    Returns:
+        Nothing.
+    Example:
+        decision for "f-typo" -> "decision for an unknown item: f-typo"
+    """
+    text = ("owner_decisions: []" + chr(10) + "decisions:" + chr(10) + "- item: f-typo" + chr(10) + "  kind: feature" + chr(10)
+            + "  decision: drop" + chr(10) + "  reason: r" + chr(10) + "  evidence:" + chr(10) + "  - {artifact: features.yaml, id: f1}" + chr(10))
+    decisions, _ = load_decisions(write_decisions_file(tmp_path, text), PHASES)
+    problems = check_coverage(decisions, make_artifacts([make_feature("f1", "working")]))
+    assert "decision for an unknown item: f-typo" in problems
+    assert "no decision for feature: f1" in problems

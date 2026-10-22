@@ -39,6 +39,9 @@ KINDS = ["feature", "data", "module", "service", "screen-action"]
 REFERENCE_ARTIFACTS = ["features.yaml", "provenance.yaml", "screens.yaml", "v1-test-results", "scorecard-flaws"]
 # policy: the owner gave these decisions on 2026-10-20/21; the exact day of each was not recorded.
 OWNER_DECISION_DATE = "2026-10-20/21"
+# policy: the owner also gave rulings on 2026-10-22 (the clinical safety judge and the accepted proposals).
+OWNER_DECISION_DATES = [OWNER_DECISION_DATE, "2026-10-22"]
+ADR_STATUSES = ["Proposed", "Accepted"]
 # policy: "early" means built before the first user-facing app: identity and tenancy are Phase 3.
 EARLY_PHASE_MAX = 3
 # sourced: items that must have a decision besides features, data and screen actions. Each is a module path,
@@ -76,6 +79,7 @@ class Decision:
     evidence: list[Reference]
     security_phase: int | None = None
     confirm: str = ""
+    ruling: str = ""
 
 
 @dataclasses.dataclass
@@ -132,8 +136,8 @@ def parse_reference(raw: object, item: str) -> Reference:
     if not isinstance(raw, dict):
         raise AdrError(f"{item}: evidence entry is not a mapping: {raw!r}")
     if raw.get("type") == "owner-decision":
-        if raw.get("date") != OWNER_DECISION_DATE or not raw.get("note"):
-            raise AdrError(f"{item}: owner-decision needs date {OWNER_DECISION_DATE} and a note")
+        if raw.get("date") not in OWNER_DECISION_DATES or not raw.get("note"):
+            raise AdrError(f"{item}: owner-decision needs a date in {OWNER_DECISION_DATES} and a note")
         return Reference("owner-decision", raw)
     if raw.get("type") == "code":
         try:
@@ -146,11 +150,25 @@ def parse_reference(raw: object, item: str) -> Reference:
     return Reference("artifact", raw)
 
 
+def is_whole_number(value: object) -> bool:
+    """WHAT: True for an int that is not a bool.
+    WHY: In Python True == 1, so a bool would silently pass as phase 1.
+
+    Args:
+        value: any value.
+    Returns:
+        True only for real integers.
+    Example:
+        5 -> True; True -> False; "5" -> False
+    """
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def parse_decision(raw: object, phases: dict[int, str]) -> Decision:
     """WHAT: Validates one decision mapping against the phase map and the decision rules that need no other file:
-    kind and decision values, a reason, an evidence list, and v2_phase (a phase number for keep/rebuild at
-    phase 1 or later; null for drop and defer-v3).
-    WHY: Bad input stops here, naming the item.
+    text item, reason, kind and decision values, a non-empty evidence list, text confirm/ruling, and v2_phase
+    (a whole phase number from the map, 1 or later, for keep/rebuild; null for drop and defer-v3).
+    WHY: Bad input stops here, naming the item, and a wrong type never passes silently.
 
     Args:
         raw: the YAML value.
@@ -160,26 +178,30 @@ def parse_decision(raw: object, phases: dict[int, str]) -> Decision:
     Raises:
         AdrError: naming the item.
     Example:
-        {"item": "x", "decision": "keep", "v2_phase": 99, ...} -> AdrError("x: v2_phase 99 is not in the phase map")
+        {"item": "x", "decision": "keep", "v2_phase": "5", ...} -> AdrError("x: v2_phase '5' is not in the phase map (or is phase 0)")
     """
-    if not isinstance(raw, dict) or not raw.get("item"):
-        raise AdrError(f"decision without an item: {raw!r}")
-    item = str(raw["item"])
+    if not isinstance(raw, dict) or not isinstance(raw.get("item"), str) or not raw["item"]:
+        raise AdrError(f"decision without a text item: {raw!r}")
+    item = raw["item"]
     if raw.get("kind") not in KINDS or raw.get("decision") not in DECISIONS:
         raise AdrError(f"{item}: kind must be in {KINDS} and decision in {DECISIONS}")
-    if not raw.get("reason") or not isinstance(raw.get("evidence"), list) or not raw["evidence"]:
-        raise AdrError(f"{item}: needs a reason and a non-empty evidence list")
+    if not isinstance(raw.get("reason"), str) or not raw["reason"] or not isinstance(raw.get("evidence"), list) or not raw["evidence"]:
+        raise AdrError(f"{item}: needs a text reason and a non-empty evidence list")
+    for text_field in ("confirm", "ruling"):
+        if raw.get(text_field) is not None and not isinstance(raw[text_field], str):
+            raise AdrError(f"{item}: {text_field} must be text")
     phase = raw.get("v2_phase")
     builds = raw["decision"] in ("keep", "rebuild")
-    if builds and (phase not in phases or phase == 0):
-        raise AdrError(f"{item}: v2_phase {phase} is not in the phase map (or is phase 0)")
+    if builds and (not is_whole_number(phase) or phase not in phases or phase == 0):
+        raise AdrError(f"{item}: v2_phase {phase!r} is not in the phase map (or is phase 0)")
     if not builds and phase is not None:
         raise AdrError(f"{item}: v2_phase must be null for {raw['decision']}")
     security = raw.get("security_phase")
-    if security is not None and security not in phases:
-        raise AdrError(f"{item}: security_phase {security} is not in the phase map")
+    if security is not None and (not is_whole_number(security) or security not in phases):
+        raise AdrError(f"{item}: security_phase {security!r} is not in the phase map")
     references = [parse_reference(entry, item) for entry in raw["evidence"]]
-    return Decision(item, raw["kind"], raw["decision"], str(raw["reason"]), phase, references, security, str(raw.get("confirm") or ""))
+    return Decision(item, raw["kind"], raw["decision"], raw["reason"], phase, references, security,
+                    raw.get("confirm") or "", raw.get("ruling") or "")
 
 
 def load_decisions(path: Path, phases: dict[int, str]) -> tuple[list[Decision], list[dict]]:
@@ -202,23 +224,28 @@ def load_decisions(path: Path, phases: dict[int, str]) -> tuple[list[Decision], 
     return [parse_decision(raw, phases) for raw in document["decisions"]], document["owner_decisions"]
 
 
-def load_adr_date(path: Path) -> str:
-    """WHAT: Reads the ADR date (key adr_date) from decisions-000.yaml.
-    WHY: The date is a recorded fact of the decision file, not something the renderer guesses.
+def load_adr_field(path: Path, key: str) -> str:
+    """WHAT: Reads one required top-level text field (adr_date or adr_status) from decisions-000.yaml.
+    WHY: These are recorded facts of the decision file, not something the renderer guesses; an empty or
+    malformed file must give a clear error, not a crash.
 
     Args:
         path: the YAML file.
+        key: "adr_date" or "adr_status".
     Returns:
-        The date text.
+        The value as text.
     Raises:
-        AdrError: if adr_date is missing.
+        AdrError: if the file is not a mapping or the key is missing; for adr_status also if the value is unknown.
     Example:
-        adr_date: 2026-10-22 -> "2026-10-22"
+        adr_status: Accepted -> "Accepted"
     """
-    date = yaml.safe_load(path.read_text(encoding="utf-8")).get("adr_date")
-    if not date:
-        raise AdrError(f"{path}: missing adr_date")
-    return str(date)
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(document, dict) or not document.get(key):
+        raise AdrError(f"{path}: missing {key}")
+    value = str(document[key])
+    if key == "adr_status" and value not in ADR_STATUSES:
+        raise AdrError(f"{path}: adr_status must be one of {ADR_STATUSES}")
+    return value
 
 
 def screen_items(screens: dict) -> dict[str, str]:
@@ -318,7 +345,11 @@ def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     Example:
         keep on a mocked feature -> ["auto-po: a mocked feature cannot be 'keep'"]
     """
-    feature = next((candidate for candidate in artifacts.features if candidate.id == decision.item), None)
+    feature = None
+    for candidate in artifacts.features:
+        if candidate.id == decision.item:
+            feature = candidate
+            break
     if feature is None:
         return []
     problems: list[str] = []
@@ -327,9 +358,13 @@ def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     if feature.findings:
         if decision.decision != "rebuild" or decision.security_phase is None or decision.security_phase > EARLY_PHASE_MAX:
             problems.append(f"{decision.item}: has security findings, so it needs decision rebuild and security_phase <= {EARLY_PHASE_MAX}")
-        cited = {reference.data.get("finding") for reference in decision.evidence if reference.kind == "artifact" and reference.data.get("id") == decision.item}
+        cited_titles: list[str] = []
+        for reference in decision.evidence:
+            is_own_artifact_reference = reference.kind == "artifact" and reference.data.get("id") == decision.item
+            if is_own_artifact_reference and reference.data.get("finding"):
+                cited_titles.append(reference.data["finding"])
         for finding in feature.findings:
-            if finding.title not in cited:
+            if finding.title not in cited_titles:
                 problems.append(f"{decision.item}: security finding not cited: {finding.title}")
     return problems
 
@@ -643,7 +678,7 @@ def render_alternatives(artifacts: Artifacts) -> list[str]:
             "or dropped, so nothing is copied across unexamined."]
 
 
-def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts: Artifacts, adr_date: str) -> str:
+def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts: Artifacts, adr_date: str, status: str = "Proposed") -> str:
     """WHAT: Renders ADR-000 in standard ADR form: Title, Status (Proposed), Context, Decision (tables), Consequences,
     Alternatives considered, Why no benchmark, and the Owner to confirm list.
     WHY: The final, human-readable record; generated, never edited by hand.
@@ -653,13 +688,14 @@ def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts
         owner_decisions: the given owner decisions.
         artifacts: the loaded artifacts.
         adr_date: the date written under "Date" (from decisions-000.yaml).
+        status: "Proposed" or "Accepted" (from decisions-000.yaml).
     Returns:
         Markdown text.
     Example:
         decisions plus artifacts -> text starting "# ADR-000: What v2 carries over from v1"
     """
     lines = ["# ADR-000: What v2 carries over from v1", "", "_Generated by tools/phase0/adr_000.py from docs/adr/decisions-000.yaml. Do not edit by hand._",
-             "", "## Status", "", "Proposed", "", "## Date", "", adr_date, ""]
+             "", "## Status", "", status, "", "## Date", "", adr_date, ""]
     lines += render_context(artifacts, owner_decisions)
     lines += ["", "## Decision", "", "Meaning: **keep** = v2 carries the behaviour and the tests that prove it (only for working features); "
               "**rebuild** = v2 builds it again, test-first, in the stated phase; **drop** = v2 does not have it; **defer-v3** = postponed by the owner."]
@@ -667,8 +703,10 @@ def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts
         lines += render_decision_table(decisions, which, artifacts.phases)
     lines += [""] + render_consequences(decisions, artifacts) + [""] + render_alternatives(artifacts)
     lines += ["", "## Why no benchmark", "", "This ADR is a scope decision (what to carry over), not a technology choice, so there is nothing to benchmark. "
-              "The benchmark-before-choosing rule applies from ADR-001 onward.", "", "## Owner to confirm", ""]
-    lines += [f"- {decision.item}: {decision.confirm}" for decision in decisions if decision.confirm]
+              "The benchmark-before-choosing rule applies from ADR-001 onward.", "", "## Owner rulings", ""]
+    lines += [f"- {decision.item}: {decision.ruling}" for decision in decisions if decision.ruling] or ["None."]
+    lines += ["", "## Owner to confirm", ""]
+    lines += [f"- {decision.item}: {decision.confirm}" for decision in decisions if decision.confirm and not decision.ruling] or ["None outstanding."]
     return chr(10).join(lines) + chr(10)
 
 
@@ -718,8 +756,10 @@ def audit(root: Path, v1_dir: Path) -> int:
         print("PROBLEM:", problem)
     if problems:
         return 1
-    adr_date = load_adr_date(root / "docs/adr/decisions-000.yaml")
-    (root / "docs/adr/ADR-000-v1-carry-over.md").write_text(render_adr(decisions, owner_decisions, artifacts, adr_date), encoding="utf-8")
+    adr_date = load_adr_field(root / "docs/adr/decisions-000.yaml", "adr_date")
+    adr_status = load_adr_field(root / "docs/adr/decisions-000.yaml", "adr_status")
+    adr_text = render_adr(decisions, owner_decisions, artifacts, adr_date, adr_status)
+    (root / "docs/adr/ADR-000-v1-carry-over.md").write_text(adr_text, encoding="utf-8")
     print(f"OK: {len(decisions)} decisions cover every feature, data item, screen action, module and service; all evidence verified")
     return 0
 
