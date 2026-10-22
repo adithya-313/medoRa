@@ -734,17 +734,18 @@ def load_artifacts(root: Path) -> Artifacts:
                      load_phase_map(docs / "plan/phase-map.yaml"), summaries, flaws)
 
 
-def audit(root: Path, v1_dir: Path) -> int:
+def audit(root: Path, v1_dir: Path, out_directory: Path) -> int:
     """WHAT: Loads everything, runs coverage, rule and evidence checks, and (only if all pass) renders the ADR.
     WHY: Separates the audit from cloning.
 
     Args:
         root: the medoRa repo root.
         v1_dir: the sentinel_flow_mvp folder of a fresh v1-final clone.
+        out_directory: folder that receives ADR-000-v1-carry-over.md (inputs are read only from root/docs).
     Returns:
         0 when everything holds, otherwise 1.
     Side effects:
-        Writes docs/adr/ADR-000-v1-carry-over.md when all checks pass.
+        Writes ADR-000-v1-carry-over.md into out_directory when all checks pass.
     Example:
         a consistent decisions file -> prints "OK: ..." and returns 0
     """
@@ -759,7 +760,8 @@ def audit(root: Path, v1_dir: Path) -> int:
     adr_date = load_adr_field(root / "docs/adr/decisions-000.yaml", "adr_date")
     adr_status = load_adr_field(root / "docs/adr/decisions-000.yaml", "adr_status")
     adr_text = render_adr(decisions, owner_decisions, artifacts, adr_date, adr_status)
-    (root / "docs/adr/ADR-000-v1-carry-over.md").write_text(adr_text, encoding="utf-8")
+    out_directory.mkdir(parents=True, exist_ok=True)
+    (out_directory / "ADR-000-v1-carry-over.md").write_text(adr_text, encoding="utf-8")
     print(f"OK: {len(decisions)} decisions cover every feature, data item, screen action, module and service; all evidence verified")
     return 0
 
@@ -778,11 +780,14 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description="Check and render ADR-000.")
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
+    parser.add_argument("--out", default=None, help="folder to render the ADR into (default: docs/adr); inputs are always read from docs/")
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="adr_000_"))
     try:
         v1_dir = clone_exact(args.tag, work_root / "v1", shallow=True) / "sentinel_flow_mvp"
-        return audit(Path.cwd(), v1_dir)
+        root = Path.cwd()
+        out_directory = Path(args.out) if args.out else root / "docs/adr"
+        return audit(root, v1_dir, out_directory)
     finally:
         shutil.rmtree(work_root, onerror=make_writable_and_retry)
 

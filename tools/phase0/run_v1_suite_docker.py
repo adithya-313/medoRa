@@ -974,7 +974,8 @@ def main(argv: list[str]) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     work_root = Path(tempfile.mkdtemp(prefix="v1_suite_docker_"))
     try:
-        executor = execute_env_run if args.run_label.startswith("docker-with-db") else execute_container_run
+        use_saved_image = args.run_label.startswith("docker-with-db") or bool(args.reuse_env_from)
+        executor = execute_env_run if use_saved_image else execute_container_run
         return executor(args, work_root, out_dir)
     finally:
         remove_clone_in_container(work_root)
