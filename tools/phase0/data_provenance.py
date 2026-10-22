@@ -708,24 +708,27 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Audit v1's data files and external services.")
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/data-provenance")
+    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="data_provenance_"))
     try:
         v1_dir = clone_exact(args.tag, work_root / "v1", shallow=True) / "sentinel_flow_mvp"
         history_dir = clone_history(work_root / "history")
-        return audit(v1_dir, history_dir, Path(args.dir))
+        out_directory = Path(args.out) if args.out else Path(args.dir)
+        return audit(v1_dir, history_dir, Path(args.dir), out_directory)
     finally:
         shutil.rmtree(work_root, onerror=make_writable_and_retry)
 
 
-def audit(v1_dir: Path, history_dir: Path, directory: Path) -> int:
+def audit(v1_dir: Path, history_dir: Path, directory: Path, out_directory: Path) -> int:
     """WHAT: Runs discovery, measurement, validation, both checks and rendering for already-cloned v1.
     WHY: Separates the audit from the cloning so it is easier to read.
 
     Args:
         v1_dir: the sentinel_flow_mvp folder of the v1-final clone.
         history_dir: full-history clone of v1-legacy.
-        directory: folder holding provenance.yaml and receiving the outputs.
+        directory: folder holding provenance.yaml (inputs are read only from here).
+        out_directory: folder that receives provenance.md and measurements.json.
     Returns:
         0 when all checks pass, otherwise 1.
     Raises:
@@ -742,9 +745,10 @@ def audit(v1_dir: Path, history_dir: Path, directory: Path) -> int:
     if problems:
         return 1
     measurements = {path: measure_file(v1_dir / path) for path in files}
-    (directory / "provenance.md").write_text(render_provenance(entries, measurements, hits), encoding="utf-8")
+    out_directory.mkdir(parents=True, exist_ok=True)
+    (out_directory / "provenance.md").write_text(render_provenance(entries, measurements, hits), encoding="utf-8")
     serializable = {path: dataclasses.asdict(measurement) for path, measurement in measurements.items()}
-    (directory / "measurements.json").write_text(json.dumps(serializable, indent=2), encoding="utf-8")
+    (out_directory / "measurements.json").write_text(json.dumps(serializable, indent=2), encoding="utf-8")
     print(f"OK: {len(files)} files and {len(hits)} hosts/libraries covered, all evidence verified")
     return 0
 

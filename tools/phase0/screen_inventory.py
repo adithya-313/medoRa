@@ -883,15 +883,16 @@ def render_lists(document: dict, feature_status: dict[str, str]) -> list[str]:
     return lines
 
 
-def audit(v1_dir: Path, directory: Path, features_path: Path) -> int:
+def audit(v1_dir: Path, directory: Path, features_path: Path, out_directory: Path) -> int:
     """WHAT: Runs discovery, the call/route match, coverage and evidence checks, and (only if all pass) renders
     screens.md. Prints every problem.
     WHY: Separates the audit from cloning.
 
     Args:
         v1_dir: the sentinel_flow_mvp folder of the clone.
-        directory: folder holding screens.yaml and receiving screens.md.
+        directory: folder holding screens.yaml (inputs are read only from here).
         features_path: docs/phase0/feature-truth/features.yaml.
+        out_directory: folder that receives screens.md.
     Returns:
         0 when everything holds, otherwise 1.
     Raises:
@@ -910,7 +911,8 @@ def audit(v1_dir: Path, directory: Path, features_path: Path) -> int:
         print("PROBLEM:", problem)
     if problems:
         return 1
-    (directory / "screens.md").write_text(render_screens(document, matches, any_group, non_literal, feature_status), encoding="utf-8")
+    out_directory.mkdir(parents=True, exist_ok=True)
+    (out_directory / "screens.md").write_text(render_screens(document, matches, any_group, non_literal, feature_status), encoding="utf-8")
     print(f"OK: {len(pages)} pages, {len({c.path for c in calls})} distinct call paths, "
           f"{sum(1 for m in matches if m.status == 'dead')} dead call(s), all evidence verified")
     return 0
@@ -934,11 +936,13 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/screens")
     parser.add_argument("--features", default="docs/phase0/feature-truth/features.yaml")
+    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="screen_inventory_"))
     try:
         v1_dir = clone_exact(args.tag, work_root / "v1", shallow=True) / "sentinel_flow_mvp"
-        return audit(v1_dir, Path(args.dir), Path(args.features))
+        out_directory = Path(args.out) if args.out else Path(args.dir)
+        return audit(v1_dir, Path(args.dir), Path(args.features), out_directory)
     finally:
         shutil.rmtree(work_root, onerror=make_writable_and_retry)
 

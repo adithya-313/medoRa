@@ -789,7 +789,7 @@ def main(argv: list[str]) -> int:
     Returns:
         0 when everything holds, 1 when there are problems.
     Side effects:
-        Writes feature-truth.md (only when all checks pass).
+        Writes feature-truth.md into --out (default: --dir), only when all checks pass.
     Example:
         main([]) with a consistent table -> prints "OK: 57 features ..." and returns 0
     """
@@ -797,6 +797,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/feature-truth")
     parser.add_argument("--results-dir", default="docs/phase0/v1-test-results")
+    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="feature_truth_"))
     try:
@@ -807,7 +808,11 @@ def main(argv: list[str]) -> int:
             print("PROBLEM:", problem)
         if problems:
             return 1
-        (directory / "feature-truth.md").write_text(render_table(features), encoding="utf-8")
+        out_directory = directory
+        if args.out:
+            out_directory = Path(args.out)
+        out_directory.mkdir(parents=True, exist_ok=True)
+        (out_directory / "feature-truth.md").write_text(render_table(features), encoding="utf-8")
         print(f"OK: {len(features)} features, all items covered, all evidence verified")
         return 0
     finally:
