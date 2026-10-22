@@ -1,6 +1,7 @@
 # Carry-over decisions for ADR-000. Every v1 feature, data item, screen action, module and service has exactly one.
 # tools/phase0/adr_000.py checks coverage, rules and every evidence reference, then renders the ADR.
 adr_date: '2026-10-22'
+adr_status: Accepted
 owner_decisions:
 - text: v2 gets a new UI design; v1's look is not carried over.
   date: 2026-10-20/21
@@ -14,6 +15,10 @@ owner_decisions:
   date: 2026-10-20/21
 - text: 'Planned drops in the owner''s plan: the Kafka producer with Redpanda, the SGWA service with the federated API, and the compute hypervisor.'
   date: 2026-10-20/21
+- text: 'Clinical safety judge: rebuild as warn-only (the pharmacist confirms with a reason, which is logged); no hard checkout lock; Phase 6.'
+  date: '2026-10-22'
+- text: 'Every other item that was listed as ''Owner to confirm'': the proposed choice is accepted.'
+  date: '2026-10-22'
 decisions:
 - item: pos-checkout
   kind: feature
@@ -72,7 +77,11 @@ decisions:
   evidence:
   - artifact: features.yaml
     id: erp-legacy-csv-upload
-  confirm: Closest phase is 4 (master data pipeline); it could also belong to 17 (forecasting needs the sales history). Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 4) on 2026-10-22. Question was: Closest phase is 4 (master data pipeline); it could also belong to 17 (forecasting
+    needs the sales history). Please confirm.'
 - item: ui-pos-page
   kind: feature
   decision: rebuild
@@ -134,8 +143,12 @@ decisions:
   - artifact: features.yaml
     id: inventory-triage
     finding: 'No tenant filter: loads every tenant''s batches and returns their value and expiry totals'
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
   security_phase: 3
-  confirm: Placed in Phase 10 (owner app); it could also sit with the counter app (7). Please confirm.
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 10) on 2026-10-22. Question was: Placed in Phase 10 (owner app); it could also sit with the counter app
+    (7). Please confirm.'
 - item: po-list
   kind: feature
   decision: keep
@@ -352,7 +365,11 @@ decisions:
   evidence:
   - artifact: features.yaml
     id: telemetry-batch-ingestion
-  confirm: v1 ingested hardware-supplier telemetry (an earlier product domain). It could be dropped instead of rebuilt; closest phase is 17. Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 17) on 2026-10-22. Question was: v1 ingested hardware-supplier telemetry (an earlier product domain). It
+    could be dropped instead of rebuilt; closest phase is 17. Please confirm.'
 - item: ingestion-health
   kind: feature
   decision: drop
@@ -385,7 +402,11 @@ decisions:
   evidence:
   - artifact: features.yaml
     id: lora-training
-  confirm: Not in the owner's plan. Dropped because of the CUDA stack and hardware-supplier data; confirm, or move to a later MLOps phase.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Not in the owner''s plan. Dropped because of the CUDA stack and hardware-supplier data;
+    confirm, or move to a later MLOps phase.'
 - item: federated-aggregation
   kind: feature
   decision: drop
@@ -405,7 +426,11 @@ decisions:
   evidence:
   - artifact: features.yaml
     id: isolation-forest-anomaly
-  confirm: Not in the owner's plan. Fraud or anomaly detection may be wanted later (it was claimed in v1 docs); confirm the drop.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Not in the owner''s plan. Fraud or anomaly detection may be wanted later (it was claimed
+    in v1 docs); confirm the drop.'
 - item: risk-dashboard
   kind: feature
   decision: drop
@@ -462,9 +487,10 @@ decisions:
     id: kb-answer
 - item: clinical-safety-judge
   kind: feature
-  decision: keep
-  reason: The pregnancy and paediatric rules are tested pure logic and carry over as clinical rules.
-  v2_phase: 14
+  decision: rebuild
+  reason: 'Rebuilt as WARN-ONLY: the pharmacist confirms with a reason, which is logged. There is no hard checkout lock (drug information is reference only; possible SaMD).
+    The tested pregnancy and paediatric rules carry over as the warning logic.'
+  v2_phase: 6
   evidence:
   - artifact: features.yaml
     id: clinical-safety-judge
@@ -474,8 +500,13 @@ decisions:
   - type: owner-decision
     date: 2026-10-20/21
     note: drug interactions are reference information only (possible SaMD)
-  confirm: v1 uses this to LOCK checkout (with an override). The owner decided drug interactions are reference information only (possible SaMD). Confirm whether v2 shows these
-    rules as warnings only or keeps a hard lock.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  - type: owner-decision
+    date: '2026-10-22'
+    note: clinical safety judge becomes warn-only (pharmacist confirms with a logged reason); no hard checkout lock; Phase 6
+  ruling: 'Owner ruling 2026-10-22: warn-only with a logged confirmation reason; no hard checkout lock; Phase 6.'
 - item: query-sanitizer
   kind: feature
   decision: keep
@@ -506,7 +537,11 @@ decisions:
   - artifact: v1-test-results
     run: docker-with-db
     test_id: test_health_risk_router.TestHealthRiskCurrentEndpoint::test_tenant_with_two_disease_scores_returns_both
-  confirm: Placed in Phase 17 (demand signal for forecasting); the explain view also resembles explanation cards (13). Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (keep in phase 17) on 2026-10-22. Question was: Placed in Phase 17 (demand signal for forecasting); the explain view also
+    resembles explanation cards (13). Please confirm.'
 - item: health-risk-ingestion-job
   kind: feature
   decision: rebuild
@@ -649,7 +684,11 @@ decisions:
   evidence:
   - artifact: features.yaml
     id: nightly-backup
-  confirm: Closest phase is 20; backup could also be part of privacy and release (24). Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 20) on 2026-10-22. Question was: Closest phase is 20; backup could also be part of privacy and release (24).
+    Please confirm.'
 - item: data/indian_pharmaceutical_products_clean.csv
   kind: data
   decision: rebuild
@@ -661,7 +700,11 @@ decisions:
   - type: owner-decision
     date: 2026-10-20/21
     note: v1's 254k CSV is a test fixture only
-  confirm: Licence unknown, so check it before the CSV (or a slice of it) is committed to medoRa as a test fixture.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 4) on 2026-10-22. Question was: Licence unknown, so check it before the CSV (or a slice of it) is committed
+    to medoRa as a test fixture.'
 - item: data/indian_essential_meds.csv
   kind: data
   decision: rebuild
@@ -694,7 +737,10 @@ decisions:
   evidence:
   - artifact: provenance.yaml
     key: data/staging/openfda_full_results.jsonl
-  confirm: Phase 4 might still want some openFDA text for reference; the files themselves are dropped.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Phase 4 might still want some openFDA text for reference; the files themselves are dropped.'
 - item: data/staging/openfda_full_results_corrected.jsonl
   kind: data
   decision: drop
@@ -879,7 +925,11 @@ decisions:
   evidence:
   - artifact: provenance.yaml
     key: api.open-meteo.com
-  confirm: Confirm whether weather data is wanted at all, and which provider (decided in the forecasting phase).
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 17) on 2026-10-22. Question was: Confirm whether weather data is wanted at all, and which provider (decided
+    in the forecasting phase).'
 - item: cdsco.gov.in
   kind: service
   decision: rebuild
@@ -1015,7 +1065,8 @@ decisions:
 - item: '/pos: Checkout is locked when the copilot says a drug is unsafe; override the lock'
   kind: screen-action
   decision: rebuild
-  reason: Function kept, screen rebuilt in the new design. The safety rules are tested logic that blocks dangerous sales; keep the lock and an auditable override.
+  reason: 'Function changes: the lock becomes a warning that the pharmacist confirms with a reason, which is logged (owner ruling 2026-10-22); the screen is rebuilt in the
+    new design.'
   v2_phase: 7
   evidence:
   - artifact: screens.yaml
@@ -1026,6 +1077,9 @@ decisions:
   - type: owner-decision
     date: 2026-10-20/21
     note: new UI design
+  - type: owner-decision
+    date: '2026-10-22'
+    note: warn-only with a logged confirmation reason; no hard checkout lock
 - item: '/pos: Open the inventory triage dashboard'
   kind: screen-action
   decision: rebuild
@@ -1308,7 +1362,11 @@ decisions:
     file: docker-compose.yml
     line: 3
     contains: 'image: docker.redpanda.com/redpandadata/redpanda:latest'
-  confirm: The compose service kafka-consumer and app/workers/kafka_consumer.py depend on Redpanda and are not in the plan; confirm they are dropped with it.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: The compose service kafka-consumer and app/workers/kafka_consumer.py depend on Redpanda
+    and are not in the plan; confirm they are dropped with it.'
 - item: app/services/sgwa_service.py
   kind: module
   decision: drop
@@ -1364,7 +1422,11 @@ decisions:
     contains: def train_lora_adapter
   - artifact: features.yaml
     id: lora-training
-  confirm: Not in the owner's plan; dropped with the CUDA stack. Confirm, or move it to a later MLOps phase.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Not in the owner''s plan; dropped with the CUDA stack. Confirm, or move it to a later
+    MLOps phase.'
 - item: app/services/drift_service.py
   kind: module
   decision: rebuild
@@ -1387,7 +1449,11 @@ decisions:
     file: app/services/regional_router.py
     line: 17
     contains: class RegionalComplianceRouter
-  confirm: Not in the owner's plan. Closest phase is 24 (privacy); it could also be dropped with the telemetry intake. Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 24) on 2026-10-22. Question was: Not in the owner''s plan. Closest phase is 24 (privacy); it could also
+    be dropped with the telemetry intake. Please confirm.'
 - item: app/services/aegis_service.py
   kind: module
   decision: drop
@@ -1400,7 +1466,11 @@ decisions:
     contains: def validate_and_enforce_prediction_schema
   - artifact: features.yaml
     id: telemetry-batch-ingestion
-  confirm: Not in the owner's plan; dropped because it only serves the mocked pipeline. Confirm, or move it into the MLOps phase (12).
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Not in the owner''s plan; dropped because it only serves the mocked pipeline. Confirm,
+    or move it into the MLOps phase (12).'
 - item: app/services/velocity_service.py
   kind: module
   decision: drop
@@ -1423,7 +1493,11 @@ decisions:
     file: docker-compose.yml
     line: 76
     contains: 'worker:'
-  confirm: Not in the owner's plan; the job-runtime choice belongs to ADR-001 onward. Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 1) on 2026-10-22. Question was: Not in the owner''s plan; the job-runtime choice belongs to ADR-001 onward.
+    Please confirm.'
 - item: celery-beat
   kind: service
   decision: rebuild
@@ -1434,7 +1508,11 @@ decisions:
     file: docker-compose.yml
     line: 113
     contains: 'celery-beat:'
-  confirm: Not in the owner's plan; decided together with the worker runtime. Please confirm.
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (rebuild in phase 1) on 2026-10-22. Question was: Not in the owner''s plan; decided together with the worker runtime. Please
+    confirm.'
 - item: frontend
   kind: service
   decision: drop
@@ -1466,5 +1544,8 @@ decisions:
     run: docker-no-services
     file: meta.json
     contains: pip_cached_bytes
-  confirm: 'Interpretation - owner to confirm: the plan''s ''NVIDIA data'' was read as these 15 nvidia-* CUDA packages (the brief said 10), because no NVIDIA dataset was found
-    in v1.'
+  - type: owner-decision
+    date: '2026-10-22'
+    note: accepted the proposed choice for this item
+  ruling: 'The owner accepted the proposed choice (drop) on 2026-10-22. Question was: Interpretation - owner to confirm: the plan''s ''NVIDIA data'' was read as these 15 nvidia-*
+    CUDA packages (the brief said 10), because no NVIDIA dataset was found in v1.'
