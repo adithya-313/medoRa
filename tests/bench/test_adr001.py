@@ -492,3 +492,69 @@ def test_upgrade_results_raises_on_unknown_entry() -> None:
     }
     with pytest.raises(ValueError, match="Unrecognised cold_install entry in corrupt"):
         upgrade_results_data(bad_data)
+
+
+def test_upgrade_results_preserves_real_cold_failure() -> None:
+    """WHAT: Verifies upgrade_results_data leaves real cold install failures untouched.
+    WHY: Protects against incorrectly converting real errors into not_measured.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_upgrade_results_preserves_real_cold_failure() -> None
+    """
+    mock_data: dict[str, Any] = {
+        "metadata": {"tool_versions": {"uv": "0.13.7", "pip-tools": "7.6.2"}},
+        "tools": {
+            "uv": {
+                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": True}, "H4": {"passed": True}},
+                "summary": {"median_warm_install_seconds": 1.0, "median_cold_install_seconds": 5.0},
+                "runs": [{
+                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    "cold_install": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
+                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                }],
+            },
+            "pip-tools": {
+                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": True}, "H4": {"passed": True}},
+                "summary": {},
+                "runs": [{
+                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    "cold_install": {"seconds": 5.0, "exit_code": 1, "status": "failed", "tail": "ERROR: network unreachable"},
+                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                }],
+            },
+        },
+    }
+    upgraded = upgrade_results_data(mock_data)
+    cold = upgraded["tools"]["pip-tools"]["runs"][0]["cold_install"]
+    assert cold["status"] == "failed"
+    assert cold["exit_code"] == 1
+    assert upgraded["tools"]["pip-tools"]["hard_rules"]["H3"]["passed"] is False
+    assert "cold_install rep 1 (exit 1)" in upgraded["tools"]["pip-tools"]["hard_rules"]["H3"]["detail"]
+
+
+def test_failed_step_without_exit_code_fails_h3() -> None:
+    """WHAT: Verifies evaluate_h3_status fails when status is failed even if exit_code is None.
+    WHY: Prevents steps that failed due to timeout or crash from skipping H3.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_failed_step_without_exit_code_fails_h3() -> None
+    """
+    failed_runs: list[dict[str, Any]] = [
+        {
+            "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok", "tail": ""},
+            "cold_install": {"seconds": 300.0, "exit_code": None, "status": "failed", "tail": "Timed out after 300s"},
+            "warm_install": {"seconds": 0.5, "exit_code": 0, "status": "ok", "tail": ""},
+        }
+    ]
+    passed, detail = evaluate_h3_status(failed_runs)
+    assert passed is False
+    assert "cold_install rep 1" in detail
+    assert "exit None" in detail

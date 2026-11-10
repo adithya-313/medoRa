@@ -1091,10 +1091,13 @@ def evaluate_h3_status(rep_results: list[dict[str, Any]]) -> tuple[bool, str]:
     for rep_idx, run in enumerate(rep_results):
         for step_name in ("lock", "cold_install", "warm_install"):
             step = run[step_name]
-            if step.get("status") == "not_measured" or step.get("exit_code") is None:
+            status = step.get("status")
+            code = step.get("exit_code")
+            if status == "not_measured":
                 has_not_measured = True
-            elif step.get("exit_code") != 0:
-                failed_steps.append(f"{step_name} rep {rep_idx + 1} (exit {step.get('exit_code')})")
+            elif status == "failed" or code != 0:
+                code_str = str(code) if code is not None else "None"
+                failed_steps.append(f"{step_name} rep {rep_idx + 1} (exit {code_str})")
     if failed_steps:
         detail = f"One or more runs failed: {', '.join(failed_steps)}"
         if has_not_measured:
