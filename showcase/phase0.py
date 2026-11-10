@@ -354,7 +354,11 @@ def run_unit_suite(runner: Runner, temp_dir: Path) -> CheckResult:
             notes.append(f"the junit file could not be reconciled: {error}")
         else:
             numbers = {"passed": str(summary.passed), "failed": str(summary.failed), "error": str(summary.error), "skipped": str(summary.skipped)}
-            status = PASS if result.exit_code == 0 and summary.failed == 0 and summary.error == 0 else FAIL
+            suite_passed = result.exit_code == 0 and summary.failed == 0 and summary.error == 0
+            if suite_passed:
+                status = PASS
+            else:
+                status = FAIL
     else:
         notes.append("pytest wrote no junit file")
     return CheckResult("suite", "medoRa unit suite", "medoRa's own tests pass right now.", " ".join(command), result.exit_code, status,
@@ -412,7 +416,8 @@ def evaluate_flaw_rows(rows: list[TestRow]) -> tuple[bool, dict[str, str], list[
         if flaw_id_of(row.name) in FLAWS and row.outcome == "failed" and row.reason.startswith("AssertionError"):
             failed_with_assertion += 1
     control_passed = any(row.name == CONTROL_TEST_NAME and row.outcome == "passed" for row in rows)
-    numbers = {"flaws failed with AssertionError": str(failed_with_assertion), "positive control passed": "yes" if control_passed else "no"}
+    control_text = "yes" if control_passed else "no"
+    numbers = {"flaws failed with AssertionError": str(failed_with_assertion), "positive control passed": control_text}
     return (not problems and failed_with_assertion == len(FLAWS) and control_passed), numbers, problems
 
 
@@ -509,10 +514,21 @@ def rerun_v1_suite(runner: Runner, repo_root: Path, temp_dir: Path) -> CheckResu
     result = runner(command, V1_RERUN_TIMEOUT_SECONDS)
     live_path = out_root / "docker-no-services" / "results.json"
     if result.exit_code != 0 or not live_path.is_file():
-        return CheckResult("v1_rerun", title, claim, " ".join(command), result.exit_code, FAIL, result.output, {}, ["the rerun did not produce results"], [], result.seconds)
+        return CheckResult(
+            check_id="v1_rerun",
+            title=title,
+            claim=claim,
+            command=" ".join(command),
+            exit_code=result.exit_code,
+            status=FAIL,
+            output=result.output,
+            numbers={},
+            notes=["the rerun did not produce results"],
+            drifts=[],
+            seconds=result.seconds,
+        )
     live, baseline = read_counts(live_path), read_counts(repo_root / BASELINE_RESULTS)
-    numbers = {f"live {name}": str(live[name]) for name in live}
-    numbers.update({f"baseline {name} (committed docker-no-services)": str(baseline[name]) for name in baseline})
+    numbers = {f"live {name}": str(live[name]) for name in live} | {f"baseline {name} (committed docker-no-services)": str(baseline[name]) for name in baseline}
     status = PASS if live == baseline else FAIL
     return CheckResult("v1_rerun", title, claim, " ".join(command), result.exit_code, status, result.output, numbers, [], [], result.seconds)
 
@@ -548,18 +564,41 @@ def compute_gates(checks: dict[str, CheckResult]) -> list[Gate]:
     Example:
         every check PASS and no drift -> six gates all passed
     """
+    ft_ok = exited_zero(checks, "feature_truth")
+    if ft_ok:
+        ft_status = PASS
+    else:
+        ft_status = FAIL
+    g1 = Gate("G1", "Every feature has a status and verified evidence", ft_ok, ft_status, f"feature_truth exit {checks['feature_truth'].exit_code}")
+
+    dp_ok = exited_zero(checks, "data_provenance")
+    if dp_ok:
+        dp_status = PASS
+    else:
+        dp_status = FAIL
+    g2 = Gate("G2", "Every data file has a provenance row", dp_ok, dp_status, f"data_provenance exit {checks['data_provenance'].exit_code}")
+
+    g3_parts: list[str] = []
+    for k, v in checks["scorecard_flaws"].numbers.items():
+        g3_parts.append(f"{k}: {v}")
+    g3_detail = "; ".join(g3_parts)
+    g3 = Gate("G3", "Scorecard flaws fail on v1 as expected and the positive control passes", checks["scorecard_flaws"].status == PASS, checks["scorecard_flaws"].status, g3_detail)
+
+    adr_ok = exited_zero(checks, "adr_000")
+    if adr_ok:
+        adr_status = PASS
+    else:
+        adr_status = FAIL
+    g4 = Gate("G4", "ADR-000 covers every item", adr_ok, adr_status, f"adr_000 exit {checks['adr_000'].exit_code}")
+
+    g5_detail = "; ".join(checks["v1_rerun"].notes) or "see the v1 rerun section"
+    g5 = Gate("G5", "Live v1 counts equal the committed baseline", checks["v1_rerun"].status == PASS, checks["v1_rerun"].status, g5_detail)
+
     drift_names = drifted_files(checks)
-    g6_parts = [f"suite {checks['suite'].status}", f"screen_inventory exit {checks['screen_inventory'].exit_code}", f"drifted files: {len(drift_names)}"]
     g6_passed = checks["suite"].status == PASS and exited_zero(checks, "screen_inventory") and not drift_names
-    v1 = checks["v1_rerun"]
-    return [
-        Gate("G1", "Every feature has a status and verified evidence", exited_zero(checks, "feature_truth"), PASS if exited_zero(checks, "feature_truth") else FAIL, f"feature_truth exit {checks['feature_truth'].exit_code}"),
-        Gate("G2", "Every data file has a provenance row", exited_zero(checks, "data_provenance"), PASS if exited_zero(checks, "data_provenance") else FAIL, f"data_provenance exit {checks['data_provenance'].exit_code}"),
-        Gate("G3", "Scorecard flaws fail on v1 as expected and the positive control passes", checks["scorecard_flaws"].status == PASS, checks["scorecard_flaws"].status, "; ".join(f"{k}: {v}" for k, v in checks["scorecard_flaws"].numbers.items())),
-        Gate("G4", "ADR-000 covers every item", exited_zero(checks, "adr_000"), PASS if exited_zero(checks, "adr_000") else FAIL, f"adr_000 exit {checks['adr_000'].exit_code}"),
-        Gate("G5", "Live v1 counts equal the committed baseline", v1.status == PASS, v1.status, "; ".join(v1.notes) or "see the v1 rerun section"),
-        Gate("G6", "medoRa's own suite passes and no checker render drifted", g6_passed, PASS if g6_passed else FAIL, ", ".join(g6_parts)),
-    ]
+    g6 = Gate("G6", "medoRa's own suite passes and no checker render drifted", g6_passed, PASS if g6_passed else FAIL, f"suite {checks['suite'].status}, screen_inventory exit {checks['screen_inventory'].exit_code}, drifted files: {len(drift_names)}")
+
+    return [g1, g2, g3, g4, g5, g6]
 
 
 def exit_code_for(gates: list[Gate]) -> int:
