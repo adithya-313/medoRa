@@ -13,9 +13,12 @@ from bench.adr001.run_benchmark import (
     compute_median,
     delete_project_lockfile,
     evaluate_decision,
+    evaluate_h3_status,
     execute_cold_install,
     is_cache_clean,
+    render_results_table,
     summarize_tool_runs,
+    upgrade_results_data,
     verify_h1_reproducible,
     verify_h2_hashes,
 )
@@ -203,24 +206,26 @@ def test_failed_step_is_reported_not_dropped() -> None:
     assert "One or more runs failed" in rules["H3"]["detail"]
 
 
-def test_failing_clean_marks_cold_step_failed(tmp_path: Path) -> None:
-    """WHAT: Verifies that an unverified cache clean causes the cold step to fail.
-    WHY: Enforces that uncleaned caches are never counted as cold installs.
+def test_failing_clean_marks_cold_step_not_measured(tmp_path: Path) -> None:
+    """WHAT: Verifies that an unverified cache clean causes the cold step to be not_measured.
+    WHY: Enforces that uncleaned caches are never counted as cold installs or real exit codes.
 
     Args:
         tmp_path: Pytest temporary directory fixture.
     Returns:
         Nothing.
     Example:
-        test_failing_clean_marks_cold_step_failed(tmp_path) -> None
+        test_failing_clean_marks_cold_step_not_measured(tmp_path) -> None
     """
     res = execute_cold_install(
         "tool_x", tmp_path, tmp_path / "venv", tmp_path,
         clean_ok=False, clean_msg="exit code 1", b_before=100, b_after=100
     )
-    assert res["status"] == "failed"
-    assert res["exit_code"] == 1
+    assert res["status"] == "not_measured"
+    assert res["exit_code"] is None
+    assert res["seconds"] is None
     assert "Cache clean unverified" in res["tail"]
+    assert "Cache clean unverified: exit code 1" in res["reason"]
     assert res["bytes_before"] == 100
     assert res["bytes_after"] == 100
 
@@ -288,3 +293,202 @@ def test_cold_near_warm_warning_emitted_for_divergence() -> None:
     assert len(warnings) == 1
     assert "uv" in warnings[0]
     assert "poetry" not in warnings[0]
+
+
+def test_not_measured_step_does_not_fail_h3() -> None:
+    """WHAT: Verifies that a not_measured step does not fail H3 while real exit 1 does.
+    WHY: Enforces H3 counting only executed tool runs per ADR-001 review specification.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_not_measured_step_does_not_fail_h3() -> None
+    """
+    unmeasured_runs: list[dict[str, Any]] = [
+        {
+            "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok", "tail": ""},
+            "cold_install": {"seconds": None, "exit_code": None, "status": "not_measured", "tail": ""},
+            "warm_install": {"seconds": 0.5, "exit_code": 0, "status": "ok", "tail": ""},
+        }
+    ]
+    passed, detail = evaluate_h3_status(unmeasured_runs)
+    assert passed is True
+    assert "cold install was not measured" in detail
+
+    real_fail_runs: list[dict[str, Any]] = [
+        {
+            "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok", "tail": ""},
+            "cold_install": {"seconds": 2.0, "exit_code": 1, "status": "failed", "tail": "Error"},
+            "warm_install": {"seconds": 0.5, "exit_code": 0, "status": "ok", "tail": ""},
+        }
+    ]
+    failed_pass, failed_detail = evaluate_h3_status(real_fail_runs)
+    assert failed_pass is False
+    assert "One or more runs failed" in failed_detail
+    assert "exit 1" in failed_detail
+
+
+def test_medians_ignore_not_measured() -> None:
+    """WHAT: Verifies that medians ignore not_measured steps and return None if all unmeasured.
+    WHY: Prevents synthetic zeros or omitted runs from distorting timing statistics.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_medians_ignore_not_measured() -> None
+    """
+    runs: list[dict[str, Any]] = [
+        {
+            "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+            "cold_install": {"seconds": 10.0, "exit_code": 0, "status": "ok"},
+            "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+        },
+        {
+            "lock": {"seconds": 1.2, "exit_code": 0, "status": "ok"},
+            "cold_install": {"seconds": None, "exit_code": None, "status": "not_measured"},
+            "warm_install": {"seconds": 1.2, "exit_code": 0, "status": "ok"},
+        },
+        {
+            "lock": {"seconds": 1.1, "exit_code": 0, "status": "ok"},
+            "cold_install": {"seconds": 14.0, "exit_code": 0, "status": "ok"},
+            "warm_install": {"seconds": 1.1, "exit_code": 0, "status": "ok"},
+        },
+    ]
+    summary = summarize_tool_runs("tool_x", runs)
+    assert summary["median_cold_install_seconds"] == 12.0
+    all_unmeasured: list[dict[str, Any]] = [
+        {
+            "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+            "cold_install": {"seconds": None, "exit_code": None, "status": "not_measured"},
+            "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+        }
+    ]
+    summary_none = summarize_tool_runs("tool_x", all_unmeasured)
+    assert summary_none["median_cold_install_seconds"] is None
+
+
+def test_table_renders_not_measured_not_zero() -> None:
+    """WHAT: Verifies that render_results_table prints 'not measured' instead of 0.00.
+    WHY: Enforces ADR formatting rules when candidate cold install was unmeasured.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_table_renders_not_measured_not_zero() -> None
+    """
+    data = {
+        "metadata": {"tool_versions": {"poetry": "1.8.0"}},
+        "tools": {
+            "poetry": {
+                "hard_rules": {
+                    "H1": {"passed": True}, "H2": {"passed": True},
+                    "H3": {"passed": True}, "H4": {"passed": True},
+                },
+                "summary": {
+                    "median_lock_seconds": 5.0,
+                    "median_cold_install_seconds": None,
+                    "median_warm_install_seconds": 2.0,
+                },
+                "runs": [],
+            }
+        },
+    }
+    table = render_results_table(data)
+    assert "not measured" in table
+    assert "0.00" not in table
+
+
+def build_unupgraded_mock_results() -> dict[str, Any]:
+    """WHAT: Builds synthetic unupgraded benchmark results for migration testing.
+    WHY: Modular helper ensuring test functions remain within 30 real lines.
+
+    Args:
+        none.
+    Returns:
+        Mock results dictionary.
+    Example:
+        build_unupgraded_mock_results() -> {...}
+    """
+    return {
+        "metadata": {"candidate_versions": {"poetry": "1.8.0", "pip-tools": "7.4.0"}},
+        "tools": {
+            "poetry": {
+                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": False}, "H4": {"passed": True}},
+                "summary": {},
+                "runs": [{
+                    "lock": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
+                    "cold_install": {"seconds": 0.0, "exit_code": 1, "status": "failed", "tail": "Cache clean unverified: 37 files"},
+                    "warm_install": {"seconds": 2.0, "exit_code": 0, "status": "ok"},
+                }],
+            },
+            "pip-tools": {
+                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": False}, "H4": {"passed": True}},
+                "summary": {},
+                "runs": [{
+                    "lock": {"seconds": 10.0, "exit_code": 0, "status": "ok"},
+                    "cold_install": {"seconds": 15.0, "exit_code": 0, "status": "ok"},
+                    "warm_install": {"seconds": 5.0, "exit_code": 1, "status": "failed", "tail": "Traceback: error"},
+                }],
+            },
+        },
+    }
+
+
+def test_upgrade_results_converts_poetry_preserves_real_failure() -> None:
+    """WHAT: Verifies upgrade_results_data converts unverified cleans and keeps real failures.
+    WHY: Validates idempotent data migration without requiring benchmark rerun.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_upgrade_results_converts_poetry_preserves_real_failure() -> None
+    """
+    mock_data = build_unupgraded_mock_results()
+    upgraded = upgrade_results_data(mock_data)
+    poetry_cold = upgraded["tools"]["poetry"]["runs"][0]["cold_install"]
+    assert poetry_cold["status"] == "not_measured"
+    assert poetry_cold["exit_code"] is None
+    assert poetry_cold["seconds"] is None
+    assert upgraded["tools"]["poetry"]["hard_rules"]["H3"]["passed"] is True
+    assert upgraded["tools"]["poetry"]["summary"]["median_cold_install_seconds"] is None
+    pip_warm = upgraded["tools"]["pip-tools"]["runs"][0]["warm_install"]
+    assert pip_warm["status"] == "failed"
+    assert pip_warm["exit_code"] == 1
+    assert upgraded["tools"]["pip-tools"]["hard_rules"]["H3"]["passed"] is False
+
+
+def test_upgrade_results_raises_on_unknown_entry() -> None:
+    """WHAT: Verifies upgrade_results_data raises ValueError on corrupt/unknown step statuses.
+    WHY: Prevents silent acceptance of unrecognized benchmark data formats.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_upgrade_results_raises_on_unknown_entry() -> None
+    """
+    bad_data = {
+        "metadata": {"candidate_versions": {}},
+        "tools": {
+            "corrupt": {
+                "hard_rules": {},
+                "summary": {},
+                "runs": [{
+                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    "cold_install": {"status": "unrecognized_status"},
+                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                }],
+            }
+        },
+    }
+    with pytest.raises(ValueError, match="Unrecognised cold_install entry in corrupt"):
+        upgrade_results_data(bad_data)

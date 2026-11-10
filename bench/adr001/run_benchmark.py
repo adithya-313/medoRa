@@ -27,6 +27,8 @@ INSTALL_TIMEOUT_SECONDS: float = 600.0
 METADATA_TIMEOUT_SECONDS: float = 30.0
 TIE_THRESHOLD_RATIO: float = 0.10
 COLD_WARM_DIVERGENCE_RATIO: float = 0.20
+# Captures sufficient stack trace and root cause error messages from underlying package managers
+SUBPROCESS_TAIL_LINES: int = 60
 
 
 def compute_sha256(path: Path) -> str:
@@ -358,7 +360,7 @@ def run_subprocess_timed(
         )
         elapsed = time.perf_counter() - start_time
         combined_output = proc.stdout + ("\n" if proc.stderr else "") + proc.stderr
-        output_tail = combined_output.strip().splitlines()[-10:]
+        output_tail = combined_output.strip().splitlines()[-SUBPROCESS_TAIL_LINES:]
         return elapsed, proc.returncode, "\n".join(output_tail)
     except subprocess.TimeoutExpired as exc:
         elapsed = time.perf_counter() - start_time
@@ -597,6 +599,21 @@ def filter_qualifying_tools(results_data: dict[str, Any]) -> list[dict[str, Any]
     return qualifying
 
 
+def get_cold_install_score(candidate: dict[str, Any]) -> float:
+    """WHAT: Extracts the median cold install seconds or infinity if unmeasured.
+    WHY: Supplies a robust sort key for tie-breaking candidate evaluations.
+
+    Args:
+        candidate: Candidate tool evaluation dictionary.
+    Returns:
+        Median cold install seconds or infinity.
+    Example:
+        get_cold_install_score(cand) -> 7.44
+    """
+    cold_sec = candidate["summary"].get("median_cold_install_seconds")
+    return float("inf") if cold_sec is None else cold_sec
+
+
 def evaluate_decision(results_data: dict[str, Any]) -> tuple[str, str]:
     """WHAT: Applies the ADR-001 decision rule to pick the winning dependency manager.
     WHY: Implements the exact policy rule in code without human intervention.
@@ -623,7 +640,7 @@ def evaluate_decision(results_data: dict[str, Any]) -> tuple[str, str]:
             f"{winner} satisfied all hard criteria H1-H4 and achieved the lowest "
             f"median warm install time ({min_warm_sec:.2f}s)."
         )
-    best_cold = min(tied, key=lambda c: c["summary"]["median_cold_install_seconds"])
+    best_cold = min(tied, key=get_cold_install_score)
     winner = best_cold["tool"]
     cold_sec = best_cold["summary"]["median_cold_install_seconds"]
     return winner, (
@@ -647,8 +664,10 @@ def check_cold_warm_divergence(tools_data: dict[str, Any]) -> list[str]:
     warnings: list[str] = []
     for tool_name, tool_info in tools_data.items():
         summary = tool_info.get("summary", {})
-        cold_s = summary.get("median_cold_install_seconds", 0.0)
-        warm_s = summary.get("median_warm_install_seconds", 0.0)
+        cold_s = summary.get("median_cold_install_seconds")
+        warm_s = summary.get("median_warm_install_seconds")
+        if cold_s is None or warm_s is None:
+            continue
         if warm_s > 0.0 and (cold_s - warm_s) / warm_s <= COLD_WARM_DIVERGENCE_RATIO:
             warnings.append(
                 f"WARNING: `{tool_name}` median cold install ({cold_s:.2f}s) is within 20% of warm install "
@@ -758,9 +777,12 @@ def render_results_table(results_data: dict[str, Any]) -> str:
         h3 = "PASS" if hr.get("H3", {}).get("passed") else "FAIL"
         h4 = "PASS" if hr.get("H4", {}).get("passed") else "FAIL"
         summ = data.get("summary", {})
-        lock_s = f"{summ.get('median_lock_seconds', 0.0):.2f}" if tool != "pip" else "N/A"
-        cold_s = f"{summ.get('median_cold_install_seconds', 0.0):.2f}"
-        warm_s = f"{summ.get('median_warm_install_seconds', 0.0):.2f}"
+        l_val = summ.get("median_lock_seconds")
+        c_val = summ.get("median_cold_install_seconds")
+        w_val = summ.get("median_warm_install_seconds")
+        lock_s = f"{l_val:.2f}" if l_val is not None else ("N/A" if tool == "pip" else "not measured")
+        cold_s = f"{c_val:.2f}" if c_val is not None else "not measured"
+        warm_s = f"{w_val:.2f}" if w_val is not None else "not measured"
         lines.append(f"| {tool} | {ver} | {h1} | {h2} | {h3} | {h4} | {lock_s} | {cold_s} | {warm_s} |")
     return "\n".join(lines)
 
@@ -784,10 +806,11 @@ def render_repetition_details(results_data: dict[str, Any]) -> str:
     for tool in tool_order:
         runs = results_data["tools"].get(tool, {}).get("runs", [])
         for idx, run in enumerate(runs):
-            c_sec = f"{run['cold_install']['seconds']:.2f}"
-            b_bef = run["cold_install"].get("bytes_before", 0)
-            b_aft = run["cold_install"].get("bytes_after", 0)
-            status = run["cold_install"]["status"]
+            c_inst = run["cold_install"]
+            c_sec = f"{c_inst['seconds']:.2f}" if c_inst.get("seconds") is not None else "not measured"
+            b_bef = c_inst.get("bytes_before", 0)
+            b_aft = c_inst.get("bytes_after", 0)
+            status = c_inst["status"]
             lines.append(f"| {tool} | {idx + 1} | {c_sec} | {b_bef:,} | {b_aft:,} | {status} |")
     return "\n".join(lines)
 
@@ -857,6 +880,9 @@ def render_adr_footer(winner: str, rationale: str) -> str:
         f"- **Single machine**: Measurements reflect this Windows laptop (SSD, Windows 11, x86_64).\n"
         f"- **Network variance**: Cold installs depend on PyPI latency, mitigated by interleaved random runs.\n"
         f"- **Windows Defender scanning**: Background filesystem scanning adds constant overhead to file writes.\n"
+        f"- **Poetry cache limitation**: poetry's cache-clear command leaves the artifacts cache, so its cold install wasn't measured.\n"
+        f"- **Pip cache behavior**: pip's cache held no packages, so pip/pip-tools cold vs warm isn't comparable.\n"
+        f"- **Subprocess log truncation**: the pip-tools rep 5 failure cause wasn't captured (tail truncated in this run).\n"
     )
 
 
@@ -974,7 +1000,8 @@ def execute_cold_install(
     create_target_venv(cold_venv)
     if not clean_ok:
         return {
-            "seconds": 0.0, "exit_code": 1, "status": "failed",
+            "seconds": None, "exit_code": None, "status": "not_measured",
+            "reason": f"Cache clean unverified: {clean_msg}",
             "tail": f"Cache clean unverified: {clean_msg}",
             "bytes_before": b_before, "bytes_after": b_after,
         }
@@ -1048,6 +1075,36 @@ def prepare_tool_project(tool: str, work_dir: Path, packages: list[str]) -> Path
     return proj_dir
 
 
+def evaluate_h3_status(rep_results: list[dict[str, Any]]) -> tuple[bool, str]:
+    """WHAT: Evaluates hard rule H3 across all executed runs, ignoring unmeasured steps.
+    WHY: Separates execution verification from unmeasured trial steps.
+
+    Args:
+        rep_results: List of trial repetition dictionaries.
+    Returns:
+        (passed, detail_text).
+    Example:
+        evaluate_h3_status(runs) -> (True, "All executed runs exited with code 0")
+    """
+    has_not_measured = False
+    failed_steps: list[str] = []
+    for rep_idx, run in enumerate(rep_results):
+        for step_name in ("lock", "cold_install", "warm_install"):
+            step = run[step_name]
+            if step.get("status") == "not_measured" or step.get("exit_code") is None:
+                has_not_measured = True
+            elif step.get("exit_code") != 0:
+                failed_steps.append(f"{step_name} rep {rep_idx + 1} (exit {step.get('exit_code')})")
+    if failed_steps:
+        detail = f"One or more runs failed: {', '.join(failed_steps)}"
+        if has_not_measured:
+            detail += " (cold install was not measured)"
+        return False, detail
+    if has_not_measured:
+        return True, "All executed runs exited with code 0 (cold install was not measured)"
+    return True, "All benchmark runs exited with code 0"
+
+
 def check_tool_hard_rules(
     tool: str,
     project_dir: Path,
@@ -1072,11 +1129,7 @@ def check_tool_hard_rules(
     lock_path = project_dir / lock_file
     lock_text = lock_path.read_text(encoding="utf-8") if lock_path.is_file() else ""
     h2_pass, h2_msg = verify_h2_hashes(tool, lock_text)
-    h3_pass = all(
-        r["lock"]["exit_code"] == 0 and r["cold_install"]["exit_code"] == 0 and r["warm_install"]["exit_code"] == 0
-        for r in rep_results
-    )
-    h3_msg = "All benchmark runs exited with code 0" if h3_pass else "One or more runs failed"
+    h3_pass, h3_msg = evaluate_h3_status(rep_results)
     h4_pass, h4_msg = verify_h4_python_pin(tool, lock_text)
     return {
         "H1": {"passed": h1_pass, "detail": h1_msg, "hashes": [h1_a, h1_b]},
@@ -1086,7 +1139,7 @@ def check_tool_hard_rules(
     }
 
 
-def summarize_tool_runs(tool: str, rep_results: list[dict[str, Any]]) -> dict[str, float]:
+def summarize_tool_runs(tool: str, rep_results: list[dict[str, Any]]) -> dict[str, float | None]:
     """WHAT: Computes summary statistics (median, min, max) for tool trial timings.
     WHY: Supplies numerical evidence for the decision rule and report tables.
 
@@ -1098,19 +1151,31 @@ def summarize_tool_runs(tool: str, rep_results: list[dict[str, Any]]) -> dict[st
     Example:
         summarize_tool_runs("uv", results) -> {"median_warm_install_seconds": 1.2, ...}
     """
-    lock_times = [r["lock"]["seconds"] for r in rep_results if r["lock"]["status"] == "ok"]
-    cold_times = [r["cold_install"]["seconds"] for r in rep_results if r["cold_install"]["status"] == "ok"]
-    warm_times = [r["warm_install"]["seconds"] for r in rep_results if r["warm_install"]["status"] == "ok"]
+    lock_times = [
+        r["lock"]["seconds"] for r in rep_results
+        if r["lock"]["status"] == "ok" and r["lock"]["seconds"] is not None
+    ]
+    cold_times = [
+        r["cold_install"]["seconds"] for r in rep_results
+        if r["cold_install"]["status"] == "ok" and r["cold_install"]["seconds"] is not None
+    ]
+    warm_times = [
+        r["warm_install"]["seconds"] for r in rep_results
+        if r["warm_install"]["status"] == "ok" and r["warm_install"]["seconds"] is not None
+    ]
+    has_lock = any(r.get("lock", {}).get("status") in ("ok", "failed") for r in rep_results)
+    has_cold = any(r.get("cold_install", {}).get("status") in ("ok", "failed") for r in rep_results)
+    has_warm = any(r.get("warm_install", {}).get("status") in ("ok", "failed") for r in rep_results)
     return {
-        "median_lock_seconds": compute_median(lock_times) if lock_times else 0.0,
-        "min_lock_seconds": min(lock_times) if lock_times else 0.0,
-        "max_lock_seconds": max(lock_times) if lock_times else 0.0,
-        "median_cold_install_seconds": compute_median(cold_times) if cold_times else 0.0,
-        "min_cold_install_seconds": min(cold_times) if cold_times else 0.0,
-        "max_cold_install_seconds": max(cold_times) if cold_times else 0.0,
-        "median_warm_install_seconds": compute_median(warm_times) if warm_times else 0.0,
-        "min_warm_install_seconds": min(warm_times) if warm_times else 0.0,
-        "max_warm_install_seconds": max(warm_times) if warm_times else 0.0,
+        "median_lock_seconds": compute_median(lock_times) if lock_times else (0.0 if has_lock else None),
+        "min_lock_seconds": min(lock_times) if lock_times else (0.0 if has_lock else None),
+        "max_lock_seconds": max(lock_times) if lock_times else (0.0 if has_lock else None),
+        "median_cold_install_seconds": compute_median(cold_times) if cold_times else (0.0 if has_cold else None),
+        "min_cold_install_seconds": min(cold_times) if cold_times else (0.0 if has_cold else None),
+        "max_cold_install_seconds": max(cold_times) if cold_times else (0.0 if has_cold else None),
+        "median_warm_install_seconds": compute_median(warm_times) if warm_times else (0.0 if has_warm else None),
+        "min_warm_install_seconds": min(warm_times) if warm_times else (0.0 if has_warm else None),
+        "max_warm_install_seconds": max(warm_times) if warm_times else (0.0 if has_warm else None),
     }
 
 
@@ -1192,9 +1257,99 @@ def execute_benchmark(
     return results
 
 
+def upgrade_single_run(tool_name: str, run: dict[str, Any]) -> dict[str, Any]:
+    """WHAT: Reclassifies unverified cold cleans in a single repetition to not_measured.
+    WHY: Converts invented exit code 1 to None while preserving real tool failures.
+
+    Args:
+        tool_name: Name of tool.
+        run: Repetition dictionary.
+    Returns:
+        Updated repetition dictionary.
+    Example:
+        upgrade_single_run("poetry", run) -> updated_run
+    """
+    cold = run.get("cold_install", {})
+    tail_text = cold.get("tail", "")
+    if cold.get("status") == "failed" and isinstance(tail_text, str) and tail_text.startswith("Cache clean unverified"):
+        cold["status"] = "not_measured"
+        cold["exit_code"] = None
+        cold["seconds"] = None
+        cold["reason"] = tail_text
+    elif cold.get("status") not in ("ok", "failed", "not_measured"):
+        raise ValueError(f"Unrecognised cold_install entry in {tool_name}: {cold}")
+    if run.get("lock", {}).get("status") not in ("ok", "failed"):
+        raise ValueError(f"Unrecognised lock entry in {tool_name}: {run.get('lock')}")
+    if run.get("warm_install", {}).get("status") not in ("ok", "failed"):
+        raise ValueError(f"Unrecognised warm_install entry in {tool_name}: {run.get('warm_install')}")
+    return run
+
+
+def upgrade_tool_entry(tool_name: str, tool_info: dict[str, Any]) -> dict[str, Any]:
+    """WHAT: Reclassifies runs and recomputes H3 and medians for a single tool.
+    WHY: Modular helper ensuring upgrade_results_data remains under function line limits.
+
+    Args:
+        tool_name: Tool identifier.
+        tool_info: Tool data dictionary from results.json.
+    Returns:
+        Updated tool dictionary.
+    Example:
+        upgrade_tool_entry("poetry", info) -> updated_info
+    """
+    runs = [upgrade_single_run(tool_name, r) for r in tool_info.get("runs", [])]
+    summary = summarize_tool_runs(tool_name, runs)
+    h3_passed, h3_detail = evaluate_h3_status(runs)
+    hard_rules = dict(tool_info.get("hard_rules", {}))
+    hard_rules["H3"] = {"passed": h3_passed, "detail": h3_detail}
+    tool_info["runs"] = runs
+    tool_info["summary"] = summary
+    tool_info["hard_rules"] = hard_rules
+    return tool_info
+
+
+def upgrade_results_data(results_data: dict[str, Any]) -> dict[str, Any]:
+    """WHAT: Upgrades entire benchmark results dictionary to the new classification format.
+    WHY: Reclassifies cached data and updates decision without requiring benchmark rerun.
+
+    Args:
+        results_data: Full raw results dictionary from results.json.
+    Returns:
+        Updated results dictionary with recomputed H3 and summary medians.
+    Example:
+        upgrade_results_data(old_results) -> new_results
+    """
+    for tool_name, tool_info in results_data.get("tools", {}).items():
+        results_data["tools"][tool_name] = upgrade_tool_entry(tool_name, tool_info)
+    winner, rationale = evaluate_decision(results_data)
+    results_data["decision"] = {"winner": winner, "rationale": rationale}
+    return results_data
+
+
+def upgrade_results_file(results_path: Path, adr_path: Path) -> dict[str, Any]:
+    """WHAT: Reads, upgrades, writes results.json and re-renders ADR-001 markdown.
+    WHY: Automates Commit 2 execution cleanly and deterministically.
+
+    Args:
+        results_path: Path to results.json.
+        adr_path: Path to ADR-001 markdown output.
+    Returns:
+        Upgraded results dictionary.
+    Example:
+        upgrade_results_file(Path("results.json"), Path("ADR.md")) -> {...}
+    """
+    content = results_path.read_text(encoding="utf-8")
+    data = json.loads(content)
+    upgraded = upgrade_results_data(data)
+    results_path.write_text(json.dumps(upgraded, indent=2), encoding="utf-8")
+    adr_markdown = render_adr(upgraded)
+    adr_path.write_text(adr_markdown, encoding="utf-8")
+    return upgraded
+
+
 def main() -> int:
     """WHAT: Main entry point running the benchmark and rendering ADR-001 outputs.
-    WHY: Automates execution of Commit 3 from the command line.
+    WHY: Automates execution of benchmark from the command line.
 
     Args:
         none.
