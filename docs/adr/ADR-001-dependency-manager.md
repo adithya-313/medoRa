@@ -2,7 +2,7 @@
 
 **Date**: 2026-11-10  
 **Status**: Accepted  
-**Git Commit**: `a62070374e94649e30211b7e3feba9bb24a81f99`  
+**Git Commit**: `f24784a33abe9e17f4afb925aafbad3ef8c0b3df`  
 **Random Seed**: `1729`  
 **Input Spec SHA-256**: `1f58ae0fff8065232ccaa3e5ca16cae45bd72ec84cb00a221e8822c33f635dad`  
 
@@ -32,16 +32,52 @@ Host environment: Windows-11-10.0.26200-SP0, CPU: AMD64 Family 25 Model 124 Step
 
 | Tool | Version | H1 | H2 | H3 | H4 | Median Lock (s) | Median Cold (s) | Median Warm (s) |
 |---|---|:---:|:---:|:---:|:---:|---:|---:|---:|
-| uv | uv 0.13.7 (316c827e0 2026-11-03 x86_64-pc-windows-msvc) | PASS | PASS | PASS | PASS | 0.11 | 0.50 | 0.23 |
-| poetry | Poetry (version 2.5.1) | PASS | PASS | PASS | PASS | 6.27 | 6.46 | 4.52 |
-| pip-tools | pip-compile, version 7.6.2 | PASS | PASS | PASS | PASS | 8.21 | 40.69 | 38.55 |
-| pip | pip 25.0.1 from C:\Users\sinne\AppData\Local\Programs\Python\Python312\Lib\site-packages\pip (python 3.12) | FAIL | FAIL | PASS | FAIL | N/A | 40.76 | 37.92 |
+| uv | uv 0.13.7 (316c827e0 2026-11-03 x86_64-pc-windows-msvc) | PASS | PASS | PASS | PASS | 1.45 | 7.44 | 1.30 |
+| poetry | Poetry (version 2.5.1) | PASS | PASS | FAIL | PASS | 12.71 | 0.00 | 7.08 |
+| pip-tools | pip-compile, version 7.6.2 | PASS | PASS | FAIL | PASS | 39.80 | 48.35 | 47.19 |
+| pip | pip 25.0.1 from C:\Users\sinne\AppData\Local\Programs\Python\Python312\Lib\site-packages\pip (python 3.12) | FAIL | FAIL | PASS | FAIL | N/A | 45.56 | 42.12 |
+
+### Divergence Warnings
+
+> [!WARNING]
+> WARNING: `poetry` median cold install (0.00s) is within 20% of warm install (7.08s); cache may not have forced complete network re-downloads.
+
+> [!WARNING]
+> WARNING: `pip-tools` median cold install (48.35s) is within 20% of warm install (47.19s); cache may not have forced complete network re-downloads.
+
+> [!WARNING]
+> WARNING: `pip` median cold install (45.56s) is within 20% of warm install (42.12s); cache may not have forced complete network re-downloads.
+
+### Cold Install Verification Per Repetition
+
+| Tool | Repetition | Cold Install (s) | Cache Bytes Before | Cache Bytes After | Cold Status |
+|---|:---:|---:|---:|---:|:---:|
+| uv | 1 | 7.44 | 15,704,386 | 0 | ok |
+| uv | 2 | 8.48 | 15,704,386 | 0 | ok |
+| uv | 3 | 9.12 | 15,704,386 | 0 | ok |
+| uv | 4 | 7.20 | 15,704,386 | 0 | ok |
+| uv | 5 | 6.90 | 15,704,946 | 0 | ok |
+| poetry | 1 | 0.00 | 59,087,262 | 52,396,044 | failed |
+| poetry | 2 | 0.00 | 59,087,176 | 52,396,044 | failed |
+| poetry | 3 | 0.00 | 59,087,163 | 52,396,044 | failed |
+| poetry | 4 | 0.00 | 59,087,167 | 52,396,044 | failed |
+| poetry | 5 | 0.00 | 59,087,510 | 52,396,044 | failed |
+| pip-tools | 1 | 48.35 | 12,083 | 12,083 | ok |
+| pip-tools | 2 | 55.30 | 12,083 | 12,083 | ok |
+| pip-tools | 3 | 54.78 | 12,083 | 12,083 | ok |
+| pip-tools | 4 | 43.08 | 12,083 | 12,083 | ok |
+| pip-tools | 5 | 40.12 | 12,083 | 12,083 | ok |
+| pip | 1 | 45.56 | 12,083 | 12,083 | ok |
+| pip | 2 | 49.24 | 12,083 | 12,083 | ok |
+| pip | 3 | 47.36 | 12,083 | 12,083 | ok |
+| pip | 4 | 40.24 | 12,083 | 12,083 | ok |
+| pip | 5 | 42.19 | 12,083 | 12,083 | ok |
 
 ## Decision
 
 **Selected tool**: `uv`
 
-uv satisfied all hard criteria H1-H4 and achieved the lowest median warm install time (0.23s).
+uv satisfied all hard criteria H1-H4 and achieved the lowest median warm install time (1.30s).
 
 ## Consequences
 
