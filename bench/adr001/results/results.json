@@ -179,8 +179,8 @@
           "detail": "All 37 packages have valid hashes in poetry.lock"
         },
         "H3": {
-          "passed": false,
-          "detail": "One or more runs failed"
+          "passed": true,
+          "detail": "All executed runs exited with code 0 (cold install was not measured)"
         },
         "H4": {
           "passed": true,
@@ -191,9 +191,9 @@
         "median_lock_seconds": 12.707410300034098,
         "min_lock_seconds": 9.497298500034958,
         "max_lock_seconds": 20.356577900005504,
-        "median_cold_install_seconds": 0.0,
-        "min_cold_install_seconds": 0.0,
-        "max_cold_install_seconds": 0.0,
+        "median_cold_install_seconds": null,
+        "min_cold_install_seconds": null,
+        "max_cold_install_seconds": null,
         "median_warm_install_seconds": 7.081745200033765,
         "min_warm_install_seconds": 6.501038699992932,
         "max_warm_install_seconds": 8.652561800030526
@@ -207,12 +207,13 @@
             "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
           },
           "cold_install": {
-            "seconds": 0.0,
-            "exit_code": 1,
-            "status": "failed",
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
             "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
             "bytes_before": 59087262,
-            "bytes_after": 52396044
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
           },
           "warm_install": {
             "seconds": 7.081745200033765,
@@ -229,12 +230,13 @@
             "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
           },
           "cold_install": {
-            "seconds": 0.0,
-            "exit_code": 1,
-            "status": "failed",
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
             "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
             "bytes_before": 59087176,
-            "bytes_after": 52396044
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
           },
           "warm_install": {
             "seconds": 8.652561800030526,
@@ -251,12 +253,13 @@
             "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
           },
           "cold_install": {
-            "seconds": 0.0,
-            "exit_code": 1,
-            "status": "failed",
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
             "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
             "bytes_before": 59087163,
-            "bytes_after": 52396044
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
           },
           "warm_install": {
             "seconds": 8.174469900026452,
@@ -273,12 +276,13 @@
             "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
           },
           "cold_install": {
-            "seconds": 0.0,
-            "exit_code": 1,
-            "status": "failed",
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
             "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
             "bytes_before": 59087167,
-            "bytes_after": 52396044
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
           },
           "warm_install": {
             "seconds": 6.501038699992932,
@@ -295,12 +299,13 @@
             "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
           },
           "cold_install": {
-            "seconds": 0.0,
-            "exit_code": 1,
-            "status": "failed",
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
             "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
             "bytes_before": 59087510,
-            "bytes_after": 52396044
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
           },
           "warm_install": {
             "seconds": 6.877800600021146,
@@ -327,7 +332,7 @@
         },
         "H3": {
           "passed": false,
-          "detail": "One or more runs failed"
+          "detail": "One or more runs failed: warm_install rep 5 (exit 1)"
         },
         "H4": {
           "passed": true,

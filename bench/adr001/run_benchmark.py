@@ -780,7 +780,7 @@ def render_results_table(results_data: dict[str, Any]) -> str:
         l_val = summ.get("median_lock_seconds")
         c_val = summ.get("median_cold_install_seconds")
         w_val = summ.get("median_warm_install_seconds")
-        lock_s = f"{l_val:.2f}" if l_val is not None else ("N/A" if tool == "pip" else "not measured")
+        lock_s = "N/A" if tool == "pip" else (f"{l_val:.2f}" if l_val is not None else "not measured")
         cold_s = f"{c_val:.2f}" if c_val is not None else "not measured"
         warm_s = f"{w_val:.2f}" if w_val is not None else "not measured"
         lines.append(f"| {tool} | {ver} | {h1} | {h2} | {h3} | {h4} | {lock_s} | {cold_s} | {warm_s} |")

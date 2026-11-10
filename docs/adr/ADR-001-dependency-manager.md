@@ -33,14 +33,11 @@ Host environment: Windows-11-10.0.26200-SP0, CPU: AMD64 Family 25 Model 124 Step
 | Tool | Version | H1 | H2 | H3 | H4 | Median Lock (s) | Median Cold (s) | Median Warm (s) |
 |---|---|:---:|:---:|:---:|:---:|---:|---:|---:|
 | uv | uv 0.13.7 (316c827e0 2026-11-03 x86_64-pc-windows-msvc) | PASS | PASS | PASS | PASS | 1.45 | 7.44 | 1.30 |
-| poetry | Poetry (version 2.5.1) | PASS | PASS | FAIL | PASS | 12.71 | 0.00 | 7.08 |
+| poetry | Poetry (version 2.5.1) | PASS | PASS | PASS | PASS | 12.71 | not measured | 7.08 |
 | pip-tools | pip-compile, version 7.6.2 | PASS | PASS | FAIL | PASS | 39.80 | 48.35 | 47.19 |
 | pip | pip 25.0.1 from C:\Users\sinne\AppData\Local\Programs\Python\Python312\Lib\site-packages\pip (python 3.12) | FAIL | FAIL | PASS | FAIL | N/A | 45.56 | 42.12 |
 
 ### Divergence Warnings
-
-> [!WARNING]
-> WARNING: `poetry` median cold install (0.00s) is within 20% of warm install (7.08s); cache may not have forced complete network re-downloads.
 
 > [!WARNING]
 > WARNING: `pip-tools` median cold install (48.35s) is within 20% of warm install (47.19s); cache may not have forced complete network re-downloads.
@@ -57,11 +54,11 @@ Host environment: Windows-11-10.0.26200-SP0, CPU: AMD64 Family 25 Model 124 Step
 | uv | 3 | 9.12 | 15,704,386 | 0 | ok |
 | uv | 4 | 7.20 | 15,704,386 | 0 | ok |
 | uv | 5 | 6.90 | 15,704,946 | 0 | ok |
-| poetry | 1 | 0.00 | 59,087,262 | 52,396,044 | failed |
-| poetry | 2 | 0.00 | 59,087,176 | 52,396,044 | failed |
-| poetry | 3 | 0.00 | 59,087,163 | 52,396,044 | failed |
-| poetry | 4 | 0.00 | 59,087,167 | 52,396,044 | failed |
-| poetry | 5 | 0.00 | 59,087,510 | 52,396,044 | failed |
+| poetry | 1 | not measured | 59,087,262 | 52,396,044 | not_measured |
+| poetry | 2 | not measured | 59,087,176 | 52,396,044 | not_measured |
+| poetry | 3 | not measured | 59,087,163 | 52,396,044 | not_measured |
+| poetry | 4 | not measured | 59,087,167 | 52,396,044 | not_measured |
+| poetry | 5 | not measured | 59,087,510 | 52,396,044 | not_measured |
 | pip-tools | 1 | 48.35 | 12,083 | 12,083 | ok |
 | pip-tools | 2 | 55.30 | 12,083 | 12,083 | ok |
 | pip-tools | 3 | 54.78 | 12,083 | 12,083 | ok |
@@ -90,3 +87,6 @@ uv satisfied all hard criteria H1-H4 and achieved the lowest median warm install
 - **Single machine**: Measurements reflect this Windows laptop (SSD, Windows 11, x86_64).
 - **Network variance**: Cold installs depend on PyPI latency, mitigated by interleaved random runs.
 - **Windows Defender scanning**: Background filesystem scanning adds constant overhead to file writes.
+- **Poetry cache limitation**: poetry's cache-clear command leaves the artifacts cache, so its cold install wasn't measured.
+- **Pip cache behavior**: pip's cache held no packages, so pip/pip-tools cold vs warm isn't comparable.
+- **Subprocess log truncation**: the pip-tools rep 5 failure cause wasn't captured (tail truncated in this run).
