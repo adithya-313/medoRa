@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+psycopg[binary]
+httpx
+pyyaml
+structlog
+pytest
+hypothesis
+ruff
+mypy
+

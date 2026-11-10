@@ -34,6 +34,8 @@ NEW_CODE_FILES = [
     "tests/v1_flaws/test_scorecard_flaws.py",
     "tests/phase0/test_package_diff.py",
     "tests/showcase/test_gates_characterisation.py",
+    "bench/adr001/run_benchmark.py",
+    "tests/bench/test_adr001.py",
     "tests/test_code_standard.py",
 ]
 # policy: the written code standard allows at most 30 real code lines per function.

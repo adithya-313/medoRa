@@ -1,0 +1,618 @@
+{
+  "date": "2026-11-10",
+  "seed": 1729,
+  "repetitions": 5,
+  "input_spec_sha256": "1f58ae0fff8065232ccaa3e5ca16cae45bd72ec84cb00a221e8822c33f635dad",
+  "metadata": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu": "AMD64 Family 25 Model 124 Stepping 0, AuthenticAMD",
+    "ram": "15.3 GB",
+    "python_version": "3.12.10",
+    "git_commit": "f24784a33abe9e17f4afb925aafbad3ef8c0b3df",
+    "tool_versions": {
+      "uv": "uv 0.13.7 (316c827e0 2026-11-03 x86_64-pc-windows-msvc)",
+      "poetry": "Poetry (version 2.5.1)",
+      "pip-tools": "pip-compile, version 7.6.2",
+      "pip": "pip 25.0.1 from C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\pip (python 3.12)"
+    }
+  },
+  "tools": {
+    "uv": {
+      "hard_rules": {
+        "H1": {
+          "passed": true,
+          "detail": "Reproducible: byte-identical lock SHA-256 (83988032eb4f68cb5b7e26f2ff8c5776e4e694aa3405879624d77a60d7f7b46b)",
+          "hashes": [
+            "83988032eb4f68cb5b7e26f2ff8c5776e4e694aa3405879624d77a60d7f7b46b",
+            "83988032eb4f68cb5b7e26f2ff8c5776e4e694aa3405879624d77a60d7f7b46b"
+          ]
+        },
+        "H2": {
+          "passed": true,
+          "detail": "All 37 dependency packages have hashes in uv.lock"
+        },
+        "H3": {
+          "passed": true,
+          "detail": "All benchmark runs exited with code 0"
+        },
+        "H4": {
+          "passed": true,
+          "detail": "Pinned in uv.lock (requires-python = '==3.12.*')"
+        }
+      },
+      "summary": {
+        "median_lock_seconds": 1.4481820999644697,
+        "min_lock_seconds": 1.1730562999728136,
+        "max_lock_seconds": 1.5138462000177242,
+        "median_cold_install_seconds": 7.436635399993975,
+        "min_cold_install_seconds": 6.895853199996054,
+        "max_cold_install_seconds": 9.11728210002184,
+        "median_warm_install_seconds": 1.304099100001622,
+        "min_warm_install_seconds": 1.2858873999794014,
+        "max_warm_install_seconds": 1.8509807000518776
+      },
+      "runs": [
+        {
+          "lock": {
+            "seconds": 1.4481820999644697,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using CPython 3.12.10 interpreter at: C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\nResolved 38 packages in 983ms"
+          },
+          "cold_install": {
+            "seconds": 7.436635399993975,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0",
+            "bytes_before": 15704386,
+            "bytes_after": 0
+          },
+          "warm_install": {
+            "seconds": 1.304099100001622,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 1.1730562999728136,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using CPython 3.12.10 interpreter at: C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\nResolved 38 packages in 721ms"
+          },
+          "cold_install": {
+            "seconds": 8.479073400027119,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0",
+            "bytes_before": 15704386,
+            "bytes_after": 0
+          },
+          "warm_install": {
+            "seconds": 1.8509807000518776,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 1.500579799991101,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using CPython 3.12.10 interpreter at: C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\nResolved 38 packages in 734ms"
+          },
+          "cold_install": {
+            "seconds": 9.11728210002184,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0",
+            "bytes_before": 15704386,
+            "bytes_after": 0
+          },
+          "warm_install": {
+            "seconds": 1.2890655999653973,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 1.5138462000177242,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using CPython 3.12.10 interpreter at: C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\nResolved 38 packages in 699ms"
+          },
+          "cold_install": {
+            "seconds": 7.197096200019587,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0",
+            "bytes_before": 15704386,
+            "bytes_after": 0
+          },
+          "warm_install": {
+            "seconds": 1.2858873999794014,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 1.334379700012505,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using CPython 3.12.10 interpreter at: C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\nResolved 38 packages in 795ms"
+          },
+          "cold_install": {
+            "seconds": 6.895853199996054,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0",
+            "bytes_before": 15704946,
+            "bytes_after": 0
+          },
+          "warm_install": {
+            "seconds": 1.5407147000078112,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": " + pyyaml==6.0.3\n + ruff==0.17.4\n + sortedcontainers==2.4.0\n + sqlalchemy==2.1.8\n + starlette==1.10.0\n + structlog==26.1.0\n + typing-extensions==4.16.0\n + typing-inspection==0.4.5\n + tzdata==2026.6\n + uvicorn==0.54.0"
+          }
+        }
+      ]
+    },
+    "poetry": {
+      "hard_rules": {
+        "H1": {
+          "passed": true,
+          "detail": "Reproducible: byte-identical lock SHA-256 (17b245199347e68770fb820ac4a22e9359cfaf97021631a537913285adde09a7)",
+          "hashes": [
+            "17b245199347e68770fb820ac4a22e9359cfaf97021631a537913285adde09a7",
+            "17b245199347e68770fb820ac4a22e9359cfaf97021631a537913285adde09a7"
+          ]
+        },
+        "H2": {
+          "passed": true,
+          "detail": "All 37 packages have valid hashes in poetry.lock"
+        },
+        "H3": {
+          "passed": true,
+          "detail": "All executed runs exited with code 0 (cold install was not measured)"
+        },
+        "H4": {
+          "passed": true,
+          "detail": "Pinned in poetry.lock (metadata.python-versions = '>=3.12,<3.13')"
+        }
+      },
+      "summary": {
+        "median_lock_seconds": 12.707410300034098,
+        "min_lock_seconds": 9.497298500034958,
+        "max_lock_seconds": 20.356577900005504,
+        "median_cold_install_seconds": null,
+        "min_cold_install_seconds": null,
+        "max_cold_install_seconds": null,
+        "median_warm_install_seconds": 7.081745200033765,
+        "min_warm_install_seconds": 6.501038699992932,
+        "max_warm_install_seconds": 8.652561800030526
+      },
+      "runs": [
+        {
+          "lock": {
+            "seconds": 20.356577900005504,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
+          },
+          "cold_install": {
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
+            "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
+            "bytes_before": 59087262,
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
+          },
+          "warm_install": {
+            "seconds": 7.081745200033765,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "  - Installing pyyaml (6.0.3)\n  - Installing ruff (0.17.4)\n  - Installing sortedcontainers (2.4.0)\n  - Installing sqlalchemy (2.1.8)\n  - Installing starlette (1.10.0)\n  - Installing structlog (26.1.0)\n  - Installing typing-extensions (4.16.0)\n  - Installing typing-inspection (0.4.5)\n  - Installing tzdata (2026.6)\n  - Installing uvicorn (0.54.0)"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 11.181792900024448,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
+          },
+          "cold_install": {
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
+            "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
+            "bytes_before": 59087176,
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
+          },
+          "warm_install": {
+            "seconds": 8.652561800030526,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "  - Installing pyyaml (6.0.3)\n  - Installing ruff (0.17.4)\n  - Installing sortedcontainers (2.4.0)\n  - Installing sqlalchemy (2.1.8)\n  - Installing starlette (1.10.0)\n  - Installing structlog (26.1.0)\n  - Installing typing-extensions (4.16.0)\n  - Installing typing-inspection (0.4.5)\n  - Installing tzdata (2026.6)\n  - Installing uvicorn (0.54.0)"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 12.707410300034098,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
+          },
+          "cold_install": {
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
+            "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
+            "bytes_before": 59087163,
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
+          },
+          "warm_install": {
+            "seconds": 8.174469900026452,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "  - Installing pyyaml (6.0.3)\n  - Installing ruff (0.17.4)\n  - Installing sortedcontainers (2.4.0)\n  - Installing sqlalchemy (2.1.8)\n  - Installing starlette (1.10.0)\n  - Installing structlog (26.1.0)\n  - Installing typing-extensions (4.16.0)\n  - Installing typing-inspection (0.4.5)\n  - Installing tzdata (2026.6)\n  - Installing uvicorn (0.54.0)"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 9.497298500034958,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
+          },
+          "cold_install": {
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
+            "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
+            "bytes_before": 59087167,
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
+          },
+          "warm_install": {
+            "seconds": 6.501038699992932,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "  - Installing pyyaml (6.0.3)\n  - Installing ruff (0.17.4)\n  - Installing sortedcontainers (2.4.0)\n  - Installing sqlalchemy (2.1.8)\n  - Installing starlette (1.10.0)\n  - Installing structlog (26.1.0)\n  - Installing typing-extensions (4.16.0)\n  - Installing typing-inspection (0.4.5)\n  - Installing tzdata (2026.6)\n  - Installing uvicorn (0.54.0)"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 13.840142000000924,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Updating dependencies\nResolving dependencies...\n\nWriting lock file\n\nThe currently activated Python version 3.11.9 is not supported by the project (>=3.12,<3.13).\nTrying to find and use a compatible version. \nUsing python.exe (3.12.10)"
+          },
+          "cold_install": {
+            "seconds": null,
+            "exit_code": null,
+            "status": "not_measured",
+            "tail": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)",
+            "bytes_before": 59087510,
+            "bytes_after": 52396044,
+            "reason": "Cache clean unverified: Cache contains 37 package files (e.g. packaging-26.3-py3-none-any.whl)"
+          },
+          "warm_install": {
+            "seconds": 6.877800600021146,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "  - Installing pyyaml (6.0.3)\n  - Installing ruff (0.17.4)\n  - Installing sortedcontainers (2.4.0)\n  - Installing sqlalchemy (2.1.8)\n  - Installing starlette (1.10.0)\n  - Installing structlog (26.1.0)\n  - Installing typing-extensions (4.16.0)\n  - Installing typing-inspection (0.4.5)\n  - Installing tzdata (2026.6)\n  - Installing uvicorn (0.54.0)"
+          }
+        }
+      ]
+    },
+    "pip-tools": {
+      "hard_rules": {
+        "H1": {
+          "passed": true,
+          "detail": "Reproducible: byte-identical lock SHA-256 (1af1f040a017ecf2d4aaa3a11fc0dfec3f9ac506ba2db8cb3611a0821af47209)",
+          "hashes": [
+            "1af1f040a017ecf2d4aaa3a11fc0dfec3f9ac506ba2db8cb3611a0821af47209",
+            "1af1f040a017ecf2d4aaa3a11fc0dfec3f9ac506ba2db8cb3611a0821af47209"
+          ]
+        },
+        "H2": {
+          "passed": true,
+          "detail": "All 37 packages have hashes in requirements.txt"
+        },
+        "H3": {
+          "passed": false,
+          "detail": "One or more runs failed: warm_install rep 5 (exit 1)"
+        },
+        "H4": {
+          "passed": true,
+          "detail": "Pinned in requirements.txt header (Python 3.12)"
+        }
+      },
+      "summary": {
+        "median_lock_seconds": 39.804968199983705,
+        "min_lock_seconds": 28.25795629998902,
+        "max_lock_seconds": 46.467145399947185,
+        "median_cold_install_seconds": 48.34593180002412,
+        "min_cold_install_seconds": 40.11647260002792,
+        "max_cold_install_seconds": 55.30017599998973,
+        "median_warm_install_seconds": 47.19118385002366,
+        "min_warm_install_seconds": 38.73716710001463,
+        "max_warm_install_seconds": 50.253411300014704
+      },
+      "runs": [
+        {
+          "lock": {
+            "seconds": 39.804968199983705,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "    #   fastapi\n    #   pydantic\ntzdata==2026.6 \\\n    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \\\n    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d\n    # via psycopg\nuvicorn==0.54.0 \\\n    --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \\\n    --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620\n    # via -r C:/Users/sinne/Downloads/PROJECT-medoRa/medoRa/bench/adr001/work/project_pip-tools/requirements.in"
+          },
+          "cold_install": {
+            "seconds": 48.34593180002412,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpphko7zg0 (line 786))\n  Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpphko7zg0 (line 789))\n  Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_cold_rep0\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 45.995898200024385,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp0yqfes98 (line 786))\n  Using cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp0yqfes98 (line 789))\n  Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_warm_rep0\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 46.467145399947185,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "    #   fastapi\n    #   pydantic\ntzdata==2026.6 \\\n    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \\\n    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d\n    # via psycopg\nuvicorn==0.54.0 \\\n    --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \\\n    --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620\n    # via -r C:/Users/sinne/Downloads/PROJECT-medoRa/medoRa/bench/adr001/work/project_pip-tools/requirements.in"
+          },
+          "cold_install": {
+            "seconds": 55.30017599998973,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpwhqkblr5 (line 786))\n  Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpwhqkblr5 (line 789))\n  Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_cold_rep1\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 48.38646950002294,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpp8dobwxt (line 786))\n  Using cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpp8dobwxt (line 789))\n  Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_warm_rep1\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 41.868142599996645,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "    #   fastapi\n    #   pydantic\ntzdata==2026.6 \\\n    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \\\n    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d\n    # via psycopg\nuvicorn==0.54.0 \\\n    --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \\\n    --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620\n    # via -r C:/Users/sinne/Downloads/PROJECT-medoRa/medoRa/bench/adr001/work/project_pip-tools/requirements.in"
+          },
+          "cold_install": {
+            "seconds": 54.77826509997249,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp5m1z6kn2 (line 786))\n  Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp5m1z6kn2 (line 789))\n  Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_cold_rep2\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 50.253411300014704,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp5bqx5_1c (line 786))\n  Using cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp5bqx5_1c (line 789))\n  Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_warm_rep2\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 38.869092700013425,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "    #   fastapi\n    #   pydantic\ntzdata==2026.6 \\\n    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \\\n    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d\n    # via psycopg\nuvicorn==0.54.0 \\\n    --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \\\n    --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620\n    # via -r C:/Users/sinne/Downloads/PROJECT-medoRa/medoRa/bench/adr001/work/project_pip-tools/requirements.in"
+          },
+          "cold_install": {
+            "seconds": 43.079076800029725,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpi3rpyuml (line 786))\n  Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpi3rpyuml (line 789))\n  Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_cold_rep3\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 38.73716710001463,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp7e4l1qw8 (line 786))\n  Using cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmp7e4l1qw8 (line 789))\n  Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_warm_rep3\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 28.25795629998902,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "    #   fastapi\n    #   pydantic\ntzdata==2026.6 \\\n    --hash=sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec \\\n    --hash=sha256:85d2cd9c09f81f0bb29db27759fc83af4f1e620efb814f8c5bf8b4cc4feece6d\n    # via psycopg\nuvicorn==0.54.0 \\\n    --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \\\n    --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620\n    # via -r C:/Users/sinne/Downloads/PROJECT-medoRa/medoRa/bench/adr001/work/project_pip-tools/requirements.in"
+          },
+          "cold_install": {
+            "seconds": 40.11647260002792,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Collecting tzdata==2026.6 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpi1d7ya_j (line 786))\n  Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nCollecting uvicorn==0.54.0 (from -r C:\\Users\\sinne\\AppData\\Local\\Temp\\tmpi1d7ya_j (line 789))\n  Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy-extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.4 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy-extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip-tools_cold_rep4\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 5.136359399999492,
+            "exit_code": 1,
+            "status": "failed",
+            "tail": "  File \"C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\.tools\\pip-tools\\Lib\\site-packages\\click\\core.py\", line 911, in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\.tools\\pip-tools\\Lib\\site-packages\\piptools\\scripts\\sync.py\", line 163, in cli\n    sync.sync(\n  File \"C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\.tools\\pip-tools\\Lib\\site-packages\\piptools\\sync.py\", line 280, in sync\n    run(  # nosec\n  File \"C:\\Users\\sinne\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nsubprocess.CalledProcessError: Command '['C:\\\\Users\\\\sinne\\\\Downloads\\\\PROJECT-medoRa\\\\medoRa\\\\bench\\\\adr001\\\\work\\\\venv_pip-tools_warm_rep4\\\\Scripts\\\\python.exe', '-m', 'pip', 'install', '-r', 'C:\\\\Users\\\\sinne\\\\AppData\\\\Local\\\\Temp\\\\tmp9m068ox1']' returned non-zero exit status 1."
+          }
+        }
+      ]
+    },
+    "pip": {
+      "hard_rules": {
+        "H1": {
+          "passed": false,
+          "detail": "Baseline pip does not lock dependencies",
+          "hashes": [
+            "",
+            ""
+          ]
+        },
+        "H2": {
+          "passed": false,
+          "detail": "Baseline unpinned pip does not produce a lock file or hashes"
+        },
+        "H3": {
+          "passed": true,
+          "detail": "All benchmark runs exited with code 0"
+        },
+        "H4": {
+          "passed": false,
+          "detail": "Baseline does not pin Python version in a lock file"
+        }
+      },
+      "summary": {
+        "median_lock_seconds": 0.0,
+        "min_lock_seconds": 0.0,
+        "max_lock_seconds": 0.0,
+        "median_cold_install_seconds": 45.56325409997953,
+        "min_cold_install_seconds": 40.238099100010004,
+        "max_cold_install_seconds": 49.23861649999162,
+        "median_warm_install_seconds": 42.123644199979026,
+        "min_warm_install_seconds": 37.18650730000809,
+        "max_warm_install_seconds": 47.51226420002058
+      },
+      "runs": [
+        {
+          "lock": {
+            "seconds": 0.0,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Baseline pip does not lock dependencies"
+          },
+          "cold_install": {
+            "seconds": 45.56325409997953,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nDownloading certifi-2026.10.23-py3-none-any.whl (135 kB)\nDownloading psycopg-3.3.8-py3-none-any.whl (216 kB)\nDownloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_cold_rep0\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 42.123644199979026,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nUsing cached certifi-2026.10.23-py3-none-any.whl (135 kB)\nUsing cached psycopg-3.3.8-py3-none-any.whl (216 kB)\nUsing cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_warm_rep0\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 0.0,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Baseline pip does not lock dependencies"
+          },
+          "cold_install": {
+            "seconds": 49.23861649999162,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nDownloading certifi-2026.10.23-py3-none-any.whl (135 kB)\nDownloading psycopg-3.3.8-py3-none-any.whl (216 kB)\nDownloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_cold_rep1\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 47.51226420002058,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nUsing cached certifi-2026.10.23-py3-none-any.whl (135 kB)\nUsing cached psycopg-3.3.8-py3-none-any.whl (216 kB)\nUsing cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_warm_rep1\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 0.0,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Baseline pip does not lock dependencies"
+          },
+          "cold_install": {
+            "seconds": 47.36487779999152,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nDownloading certifi-2026.10.23-py3-none-any.whl (135 kB)\nDownloading psycopg-3.3.8-py3-none-any.whl (216 kB)\nDownloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_cold_rep2\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 44.64142100000754,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nUsing cached certifi-2026.10.23-py3-none-any.whl (135 kB)\nUsing cached psycopg-3.3.8-py3-none-any.whl (216 kB)\nUsing cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_warm_rep2\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 0.0,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Baseline pip does not lock dependencies"
+          },
+          "cold_install": {
+            "seconds": 40.238099100010004,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nDownloading certifi-2026.10.23-py3-none-any.whl (135 kB)\nDownloading psycopg-3.3.8-py3-none-any.whl (216 kB)\nDownloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_cold_rep3\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 37.27717130002566,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nUsing cached certifi-2026.10.23-py3-none-any.whl (135 kB)\nUsing cached psycopg-3.3.8-py3-none-any.whl (216 kB)\nUsing cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_warm_rep3\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        },
+        {
+          "lock": {
+            "seconds": 0.0,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Baseline pip does not lock dependencies"
+          },
+          "cold_install": {
+            "seconds": 42.188473500020336,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nDownloading certifi-2026.10.23-py3-none-any.whl (135 kB)\nDownloading psycopg-3.3.8-py3-none-any.whl (216 kB)\nDownloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.4 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_cold_rep4\\Scripts\\python.exe -m pip install --upgrade pip",
+            "bytes_before": 12083,
+            "bytes_after": 12083
+          },
+          "warm_install": {
+            "seconds": 37.18650730000809,
+            "exit_code": 0,
+            "status": "ok",
+            "tail": "Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)\nUsing cached certifi-2026.10.23-py3-none-any.whl (135 kB)\nUsing cached psycopg-3.3.8-py3-none-any.whl (216 kB)\nUsing cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)\nInstalling collected packages: sortedcontainers, tzdata, typing-extensions, structlog, ruff, pyyaml, pygments, psycopg-binary, pluggy, pathspec, packaging, mypy_extensions, librt, iniconfig, idna, hypothesis, h11, colorama, click, certifi, ast-serialize, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, psycopg, opentelemetry-api, mypy, httpcore, anyio, starlette, pydantic, httpx, fastapi\nSuccessfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 ast-serialize-0.13.1 certifi-2026.10.23 click-8.5.1 colorama-0.4.6 fastapi-0.162.4 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.170.15 idna-3.20 iniconfig-2.3.1 librt-0.16.0 mypy-2.4.1 mypy_extensions-1.2.0 opentelemetry-api-1.45.2 packaging-26.3 pathspec-1.1.1 pluggy-1.7.0 psycopg-3.3.8 psycopg-binary-3.3.8 pydantic-2.14.3 pydantic-core-2.50.4 pygments-2.21.0 pytest-9.2.0 pyyaml-6.0.3 ruff-0.17.4 sortedcontainers-2.4.0 sqlalchemy-2.1.8 starlette-1.10.0 structlog-26.1.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0\n\n\n[notice] A new release of pip is available: 25.0.1 -> 26.3\n[notice] To update, run: C:\\Users\\sinne\\Downloads\\PROJECT-medoRa\\medoRa\\bench\\adr001\\work\\venv_pip_warm_rep4\\Scripts\\python.exe -m pip install --upgrade pip"
+          }
+        }
+      ]
+    }
+  },
+  "decision": {
+    "winner": "uv",
+    "rationale": "uv satisfied all hard criteria H1-H4 and achieved the lowest median warm install time (1.30s)."
+  }
+}
