@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 showcase/out/
+bench/adr001/.tools/
+bench/adr001/work/
+
