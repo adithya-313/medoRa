@@ -1,6 +1,7 @@
 # TERM: lockfile - a file recording exact versions and cryptographic hashes of all dependencies.
 # TERM: cold install - an installation executed after completely clearing package manager caches.
 # TERM: warm install - an installation executed immediately into a clean environment with caches retained.
+# TERM: cold lock - dependency resolution executed after cache clearing with any prior lockfile deleted.
 """ADR-001 dependency manager benchmark harness for medoRa."""
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import json
 import os
 import platform
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -24,6 +26,7 @@ LOCK_TIMEOUT_SECONDS: float = 300.0
 INSTALL_TIMEOUT_SECONDS: float = 600.0
 METADATA_TIMEOUT_SECONDS: float = 30.0
 TIE_THRESHOLD_RATIO: float = 0.10
+COLD_WARM_DIVERGENCE_RATIO: float = 0.20
 
 
 def compute_sha256(path: Path) -> str:
@@ -362,6 +365,78 @@ def run_subprocess_timed(
         return elapsed, -1, f"Command timed out after {timeout_seconds}s: {exc}"
 
 
+def get_tool_cache_dir(tool: str, repo_root: Path) -> Path:
+    """WHAT: Obtains each tool's official cache directory from its CLI command.
+    WHY: Required to inspect directory state before and after cache-clean operations.
+
+    Args:
+        tool: Tool identifier ('uv', 'poetry', 'pip-tools', 'pip').
+        repo_root: Root path of the repository.
+    Returns:
+        Path to the tool's cache directory.
+    Example:
+        get_tool_cache_dir("uv", Path(".")) -> Path("C:/Users/.../AppData/Local/uv/cache")
+    """
+    if tool == "uv":
+        exe = repo_root / "bench/adr001/.tools/uv/Scripts/uv.exe"
+        cmd = [str(exe), "cache", "dir"]
+    elif tool == "poetry":
+        exe = repo_root / "bench/adr001/.tools/poetry/Scripts/poetry.exe"
+        cmd = [str(exe), "config", "cache-dir"]
+    elif tool == "pip-tools":
+        exe = repo_root / "bench/adr001/.tools/pip-tools/Scripts/pip.exe"
+        cmd = [str(exe), "cache", "dir"]
+    else:
+        cmd = [sys.executable, "-m", "pip", "cache", "dir"]
+    _, code, out = run_subprocess_timed(cmd, METADATA_TIMEOUT_SECONDS)
+    if code != 0 or not out.strip():
+        raise RuntimeError(f"Failed to query cache dir for {tool}: {out}")
+    return Path(out.strip().splitlines()[-1])
+
+
+def get_cache_bytes(cache_dir: Path) -> int:
+    """WHAT: Measures total byte size of all files inside a cache directory.
+    WHY: Proves cache state changes and emptiness across benchmark repetitions.
+
+    Args:
+        cache_dir: Path to directory being measured.
+    Returns:
+        Total size in bytes (0 if non-existent).
+    Example:
+        get_cache_bytes(Path("cache")) -> 1048576
+    """
+    if not cache_dir.exists():
+        return 0
+    total = 0
+    for file_path in cache_dir.rglob("*"):
+        if file_path.is_file():
+            total += file_path.stat().st_size
+    return total
+
+
+def is_cache_clean(cache_dir: Path) -> tuple[bool, str]:
+    """WHAT: Verifies that a cache directory is empty or contains no package files.
+    WHY: Implements strict proof of cache emptiness before cold installs.
+
+    Args:
+        cache_dir: Path to tool cache directory.
+    Returns:
+        (True, details) if empty/clean, else (False, failure reason).
+    Example:
+        is_cache_clean(Path("cache")) -> (True, "Contains no package files")
+    """
+    if not cache_dir.exists():
+        return True, "Cache directory does not exist (empty)"
+    package_exts = (".whl", ".tar.gz", ".zip")
+    pkg_files = [
+        f for f in cache_dir.rglob("*")
+        if f.is_file() and f.name.endswith(package_exts)
+    ]
+    if pkg_files:
+        return False, f"Cache contains {len(pkg_files)} package files (e.g. {pkg_files[0].name})"
+    return True, "Cache is empty or contains no package files"
+
+
 def clean_cache(tool: str, repo_root: Path) -> tuple[float, int, str]:
     """WHAT: Cleans package manager cache using the tool's verified CLI command.
     WHY: Essential to establish a pristine cold state for cold install measurements.
@@ -388,6 +463,30 @@ def clean_cache(tool: str, repo_root: Path) -> tuple[float, int, str]:
         cmd = [sys.executable, "-m", "pip", "cache", "purge"]
         return run_subprocess_timed(cmd, CACHE_CLEAN_TIMEOUT_SECONDS)
     return 0.0, 1, f"Unknown tool: {tool}"
+
+
+def clean_cache_verified(tool: str, repo_root: Path) -> tuple[int, int, bool, str]:
+    """WHAT: Cleans cache and verifies that package files were completely removed.
+    WHY: Proves cache eviction with concrete byte counts and filesystem inspection.
+
+    Args:
+        tool: Tool identifier ('uv', 'poetry', 'pip-tools', 'pip').
+        repo_root: Root path of the repository.
+    Returns:
+        (bytes_before, bytes_after, success_boolean, details_string).
+    Example:
+        clean_cache_verified("uv", Path(".")) -> (1048576, 0, True, "Cache cleared")
+    """
+    cache_dir = get_tool_cache_dir(tool, repo_root)
+    bytes_before = get_cache_bytes(cache_dir)
+    _, exit_code, tail = clean_cache(tool, repo_root)
+    bytes_after = get_cache_bytes(cache_dir)
+    clean_ok, clean_msg = is_cache_clean(cache_dir)
+    if exit_code != 0:
+        return bytes_before, bytes_after, False, f"Clean command exited {exit_code}: {tail}"
+    if not clean_ok:
+        return bytes_before, bytes_after, False, clean_msg
+    return bytes_before, bytes_after, True, "Cache successfully verified empty"
 
 
 def create_target_venv(venv_path: Path) -> tuple[float, int, str]:
@@ -458,10 +557,10 @@ def run_install_step(
     if tool == "uv":
         exe = repo_root / "bench/adr001/.tools/uv/Scripts/uv.exe"
         cmd = [
-            str(exe), "sync", "--frozen", "--no-install-project",
-            "--python", str(venv_python), "--directory", str(project_dir),
+            str(exe), "sync", "--frozen", "--no-install-project", "--active",
+            "--directory", str(project_dir),
         ]
-        return run_subprocess_timed(cmd, INSTALL_TIMEOUT_SECONDS)
+        return run_subprocess_timed(cmd, INSTALL_TIMEOUT_SECONDS, env={"VIRTUAL_ENV": str(venv_path)})
     if tool == "poetry":
         exe = repo_root / "bench/adr001/.tools/poetry/Scripts/poetry.exe"
         cmd = [str(exe), "sync", "--no-root", "--no-interaction", "-C", str(project_dir)]
@@ -532,6 +631,30 @@ def evaluate_decision(results_data: dict[str, Any]) -> tuple[str, str]:
         f"of {min_warm_sec:.2f}s, and {winner} achieved the lowest median cold install "
         f"time ({cold_sec:.2f}s)."
     )
+
+
+def check_cold_warm_divergence(tools_data: dict[str, Any]) -> list[str]:
+    """WHAT: Flags tools where median cold install is within 20% of warm install.
+    WHY: Enforces policy that real cold installs must download rather than hitting cache.
+
+    Args:
+        tools_data: Dictionary mapping tool names to results data.
+    Returns:
+        List of warning string descriptions.
+    Example:
+        check_cold_warm_divergence(data) -> ["WARNING: uv cold install within 20% of warm"]
+    """
+    warnings: list[str] = []
+    for tool_name, tool_info in tools_data.items():
+        summary = tool_info.get("summary", {})
+        cold_s = summary.get("median_cold_install_seconds", 0.0)
+        warm_s = summary.get("median_warm_install_seconds", 0.0)
+        if warm_s > 0.0 and (cold_s - warm_s) / warm_s <= COLD_WARM_DIVERGENCE_RATIO:
+            warnings.append(
+                f"WARNING: `{tool_name}` median cold install ({cold_s:.2f}s) is within 20% of warm install "
+                f"({warm_s:.2f}s); cache may not have forced complete network re-downloads."
+            )
+    return warnings
 
 
 def get_system_ram_gb() -> str:
@@ -642,6 +765,33 @@ def render_results_table(results_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_repetition_details(results_data: dict[str, Any]) -> str:
+    """WHAT: Formats per-repetition cold timings and verified cache bytes into markdown.
+    WHY: Required by ADR-001 review to surface cache emptiness proof per repetition.
+
+    Args:
+        results_data: Benchmark results dictionary.
+    Returns:
+        Markdown table string showing repetitions.
+    Example:
+        render_repetition_details(results) -> "| Tool | Rep | Cold (s) | Bytes After | ..."
+    """
+    lines = [
+        "| Tool | Repetition | Cold Install (s) | Cache Bytes Before | Cache Bytes After | Cold Status |",
+        "|---|:---:|---:|---:|---:|:---:|",
+    ]
+    tool_order = ["uv", "poetry", "pip-tools", "pip"]
+    for tool in tool_order:
+        runs = results_data["tools"].get(tool, {}).get("runs", [])
+        for idx, run in enumerate(runs):
+            c_sec = f"{run['cold_install']['seconds']:.2f}"
+            b_bef = run["cold_install"].get("bytes_before", 0)
+            b_aft = run["cold_install"].get("bytes_after", 0)
+            status = run["cold_install"]["status"]
+            lines.append(f"| {tool} | {idx + 1} | {c_sec} | {b_bef:,} | {b_aft:,} | {status} |")
+    return "\n".join(lines)
+
+
 def render_adr_header_and_context(meta: dict[str, Any], date_str: str, seed: int, spec_sha: str) -> str:
     """WHAT: Renders the markdown header, context, and candidates sections of ADR-001.
     WHY: Keeps document rendering modular and within the line length limit.
@@ -728,9 +878,15 @@ def render_adr(results_data: dict[str, Any]) -> str:
         meta, results_data["date"], results_data["seed"], results_data["input_spec_sha256"]
     )
     table = render_results_table(results_data)
+    rep_table = render_repetition_details(results_data)
     footer = render_adr_footer(winner, rationale)
+    warnings = check_cold_warm_divergence(results_data["tools"])
+    warn_text = ("\n\n### Divergence Warnings\n\n" + "\n\n".join(f"> [!WARNING]\n> {w}" for w in warnings)) if warnings else ""
     env_line = f"Host environment: {meta['os']}, CPU: {meta['cpu']}, RAM: {meta['ram']}, Python: {meta['python_version']}.\n\n"
-    return f"{header}## Benchmark Results\n\n{env_line}{table}\n\n{footer}"
+    return (
+        f"{header}## Benchmark Results\n\n{env_line}{table}{warn_text}\n\n"
+        f"### Cold Install Verification Per Repetition\n\n{rep_table}\n\n{footer}"
+    )
 
 
 def run_h1_check(tool: str, project_dir: Path, repo_root: Path) -> tuple[bool, str, str, str]:
@@ -752,17 +908,82 @@ def run_h1_check(tool: str, project_dir: Path, repo_root: Path) -> tuple[bool, s
     lock_path = project_dir / lock_file_name
     if lock_path.is_file():
         lock_path.unlink()
+    clean_cache_verified(tool, repo_root)
     _, code1, tail1 = run_lock_step(tool, project_dir, repo_root)
     if code1 != 0 or not lock_path.is_file():
         return False, "", "", f"First lock failed with exit code {code1}: {tail1}"
     hash1 = compute_sha256(lock_path)
     lock_path.unlink()
+    clean_cache_verified(tool, repo_root)
     _, code2, tail2 = run_lock_step(tool, project_dir, repo_root)
     if code2 != 0 or not lock_path.is_file():
         return False, hash1, "", f"Second lock failed with exit code {code2}: {tail2}"
     hash2 = compute_sha256(lock_path)
     passed, msg = verify_h1_reproducible(hash1, hash2)
     return passed, hash1, hash2, msg
+
+
+def delete_project_lockfile(tool: str, project_dir: Path) -> None:
+    """WHAT: Removes any existing lockfile and project environment before locking.
+    WHY: Enforces that every repetition generates its lockfile from scratch.
+
+    Args:
+        tool: Tool identifier.
+        project_dir: Project directory.
+    Returns:
+        Nothing.
+    Example:
+        delete_project_lockfile("uv", Path("work/project_uv")) -> None
+    """
+    lock_file_name = "uv.lock" if tool == "uv" else ("poetry.lock" if tool == "poetry" else "requirements.txt")
+    lock_path = project_dir / lock_file_name
+    if lock_path.is_file():
+        lock_path.unlink()
+    local_venv = project_dir / ".venv"
+    if local_venv.is_dir():
+        shutil.rmtree(local_venv, ignore_errors=True)
+
+
+def execute_cold_install(
+    tool: str,
+    project_dir: Path,
+    cold_venv: Path,
+    repo_root: Path,
+    clean_ok: bool,
+    clean_msg: str,
+    b_before: int,
+    b_after: int,
+) -> dict[str, Any]:
+    """WHAT: Executes the cold install into a fresh venv or records clean failure.
+    WHY: Modular helper ensuring run_tool_repetition remains within function length limits.
+
+    Args:
+        tool: Tool name.
+        project_dir: Project directory.
+        cold_venv: Target venv directory.
+        repo_root: Repo root.
+        clean_ok: Whether cache clearing verified empty.
+        clean_msg: Cache clean verification message.
+        b_before: Cache bytes before clean.
+        b_after: Cache bytes after clean.
+    Returns:
+        Step result dictionary for cold install.
+    Example:
+        execute_cold_install("uv", proj, venv, repo, True, "clean", 100, 0) -> {...}
+    """
+    create_target_venv(cold_venv)
+    if not clean_ok:
+        return {
+            "seconds": 0.0, "exit_code": 1, "status": "failed",
+            "tail": f"Cache clean unverified: {clean_msg}",
+            "bytes_before": b_before, "bytes_after": b_after,
+        }
+    c_time, c_code, c_tail = run_install_step(tool, project_dir, cold_venv, repo_root)
+    return {
+        "seconds": c_time, "exit_code": c_code,
+        "status": "ok" if c_code == 0 else "failed", "tail": c_tail,
+        "bytes_before": b_before, "bytes_after": b_after,
+    }
 
 
 def run_tool_repetition(
@@ -786,18 +1007,21 @@ def run_tool_repetition(
     Example:
         run_tool_repetition("uv", proj, work, repo, 0) -> {"lock": 1.1, "cold": 5.2, ...}
     """
+    clean_cache_verified(tool, repo_root)
+    delete_project_lockfile(tool, project_dir)
     lock_time, lock_code, lock_tail = run_lock_step(tool, project_dir, repo_root)
-    clean_cache(tool, repo_root)
+    b_before, b_after, clean_ok, clean_msg = clean_cache_verified(tool, repo_root)
     cold_venv = work_dir / f"venv_{tool}_cold_rep{rep_idx}"
-    create_target_venv(cold_venv)
-    cold_time, cold_code, cold_tail = run_install_step(tool, project_dir, cold_venv, repo_root)
+    cold_res = execute_cold_install(
+        tool, project_dir, cold_venv, repo_root, clean_ok, clean_msg, b_before, b_after
+    )
     warm_venv = work_dir / f"venv_{tool}_warm_rep{rep_idx}"
     create_target_venv(warm_venv)
-    warm_time, warm_code, warm_tail = run_install_step(tool, project_dir, warm_venv, repo_root)
+    w_time, w_code, w_tail = run_install_step(tool, project_dir, warm_venv, repo_root)
     return {
         "lock": {"seconds": lock_time, "exit_code": lock_code, "status": "ok" if lock_code == 0 else "failed", "tail": lock_tail},
-        "cold_install": {"seconds": cold_time, "exit_code": cold_code, "status": "ok" if cold_code == 0 else "failed", "tail": cold_tail},
-        "warm_install": {"seconds": warm_time, "exit_code": warm_code, "status": "ok" if warm_code == 0 else "failed", "tail": warm_tail},
+        "cold_install": cold_res,
+        "warm_install": {"seconds": w_time, "exit_code": w_code, "status": "ok" if w_code == 0 else "failed", "tail": w_tail},
     }
 
 

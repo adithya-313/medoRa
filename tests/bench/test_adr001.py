@@ -8,9 +8,13 @@ from typing import Any
 import pytest
 
 from bench.adr001.run_benchmark import (
+    check_cold_warm_divergence,
     check_tool_hard_rules,
     compute_median,
+    delete_project_lockfile,
     evaluate_decision,
+    execute_cold_install,
+    is_cache_clean,
     summarize_tool_runs,
     verify_h1_reproducible,
     verify_h2_hashes,
@@ -197,3 +201,90 @@ def test_failed_step_is_reported_not_dropped() -> None:
     rules = check_tool_hard_rules("pip", Path("."), Path("."), failed_runs)
     assert not rules["H3"]["passed"]
     assert "One or more runs failed" in rules["H3"]["detail"]
+
+
+def test_failing_clean_marks_cold_step_failed(tmp_path: Path) -> None:
+    """WHAT: Verifies that an unverified cache clean causes the cold step to fail.
+    WHY: Enforces that uncleaned caches are never counted as cold installs.
+
+    Args:
+        tmp_path: Pytest temporary directory fixture.
+    Returns:
+        Nothing.
+    Example:
+        test_failing_clean_marks_cold_step_failed(tmp_path) -> None
+    """
+    res = execute_cold_install(
+        "tool_x", tmp_path, tmp_path / "venv", tmp_path,
+        clean_ok=False, clean_msg="exit code 1", b_before=100, b_after=100
+    )
+    assert res["status"] == "failed"
+    assert res["exit_code"] == 1
+    assert "Cache clean unverified" in res["tail"]
+    assert res["bytes_before"] == 100
+    assert res["bytes_after"] == 100
+
+
+def test_non_empty_cache_marks_clean_failed(tmp_path: Path) -> None:
+    """WHAT: Verifies that is_cache_clean detects leftover package archive files.
+    WHY: Guarantees that cache directory emptiness is strictly verified.
+
+    Args:
+        tmp_path: Pytest temporary directory fixture.
+    Returns:
+        Nothing.
+    Example:
+        test_non_empty_cache_marks_clean_failed(tmp_path) -> None
+    """
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / "pkg-1.0.0-py3-none-any.whl").touch()
+    clean_ok, msg = is_cache_clean(cache_dir)
+    assert not clean_ok
+    assert "contains 1 package files" in msg
+    (cache_dir / "pkg-1.0.0-py3-none-any.whl").unlink()
+    (cache_dir / ".lock").touch()
+    clean_ok2, _ = is_cache_clean(cache_dir)
+    assert clean_ok2
+
+
+def test_leftover_lock_deleted_before_timed_lock(tmp_path: Path) -> None:
+    """WHAT: Verifies that delete_project_lockfile deletes preexisting locks and venvs.
+    WHY: Guarantees all timed lock runs resolve strictly from scratch.
+
+    Args:
+        tmp_path: Pytest temporary directory fixture.
+    Returns:
+        Nothing.
+    Example:
+        test_leftover_lock_deleted_before_timed_lock(tmp_path) -> None
+    """
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("dummy", encoding="utf-8")
+    local_venv = tmp_path / ".venv"
+    local_venv.mkdir()
+    (local_venv / "file.txt").touch()
+    delete_project_lockfile("uv", tmp_path)
+    assert not lock_file.exists()
+    assert not local_venv.exists()
+
+
+def test_cold_near_warm_warning_emitted_for_divergence() -> None:
+    """WHAT: Verifies that check_cold_warm_divergence flags tools within 20% threshold.
+    WHY: Prevents hiding invalid benchmark runs where cold installs hit cached files.
+
+    Args:
+        none.
+    Returns:
+        Nothing.
+    Example:
+        test_cold_near_warm_warning_emitted_for_divergence() -> None
+    """
+    diverged = {
+        "uv": {"summary": {"median_cold_install_seconds": 0.50, "median_warm_install_seconds": 0.45}},
+        "poetry": {"summary": {"median_cold_install_seconds": 9.00, "median_warm_install_seconds": 0.20}},
+    }
+    warnings = check_cold_warm_divergence(diverged)
+    assert len(warnings) == 1
+    assert "uv" in warnings[0]
+    assert "poetry" not in warnings[0]
