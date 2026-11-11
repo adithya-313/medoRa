@@ -337,6 +337,40 @@ def has_owner_reference(decision: Decision) -> bool:
     return any(reference.kind == "owner-decision" for reference in decision.evidence)
 
 
+def check_feature_keep_rule(decision: Decision, feature: Feature) -> list[str]:
+    """Verify that non-working features are not marked as keep.
+
+    Only features with a 'working' status may be kept in v2.
+    """
+    if decision.decision == "keep" and feature.status != "working":
+        return [f"{decision.item}: a {feature.status} feature cannot be 'keep' (only working ones can)"]
+    return []
+
+
+def check_feature_security_findings(decision: Decision, feature: Feature) -> list[str]:
+    """Verify that features with security findings are rebuilt in an early phase and cite all findings.
+
+    A feature with security findings must have decision 'rebuild', specify a security_phase
+    less than or equal to EARLY_PHASE_MAX, and cite every finding title in its artifact evidence.
+    """
+    if not feature.findings:
+        return []
+    problems: list[str] = []
+    if decision.decision != "rebuild" or decision.security_phase is None or decision.security_phase > EARLY_PHASE_MAX:
+        problems.append(
+            f"{decision.item}: has security findings, so it needs decision rebuild and security_phase <= {EARLY_PHASE_MAX}"
+        )
+    cited_titles: list[str] = []
+    for reference in decision.evidence:
+        is_own_artifact_reference = reference.kind == "artifact" and reference.data.get("id") == decision.item
+        if is_own_artifact_reference and reference.data.get("finding"):
+            cited_titles.append(reference.data["finding"])
+    for finding in feature.findings:
+        if finding.title not in cited_titles:
+            problems.append(f"{decision.item}: security finding not cited: {finding.title}")
+    return problems
+
+
 def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     """WHAT: Rules for a feature decision: "keep" only for a working feature (mocked and missing can never be
     kept); a feature with security findings must be a rebuild with security_phase in an early phase, and every
@@ -359,19 +393,8 @@ def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     if feature is None:
         return []
     problems: list[str] = []
-    if decision.decision == "keep" and feature.status != "working":
-        problems.append(f"{decision.item}: a {feature.status} feature cannot be 'keep' (only working ones can)")
-    if feature.findings:
-        if decision.decision != "rebuild" or decision.security_phase is None or decision.security_phase > EARLY_PHASE_MAX:
-            problems.append(f"{decision.item}: has security findings, so it needs decision rebuild and security_phase <= {EARLY_PHASE_MAX}")
-        cited_titles: list[str] = []
-        for reference in decision.evidence:
-            is_own_artifact_reference = reference.kind == "artifact" and reference.data.get("id") == decision.item
-            if is_own_artifact_reference and reference.data.get("finding"):
-                cited_titles.append(reference.data["finding"])
-        for finding in feature.findings:
-            if finding.title not in cited_titles:
-                problems.append(f"{decision.item}: security finding not cited: {finding.title}")
+    problems.extend(check_feature_keep_rule(decision, feature))
+    problems.extend(check_feature_security_findings(decision, feature))
     return problems
 
 

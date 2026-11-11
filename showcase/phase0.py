@@ -528,9 +528,25 @@ def rerun_v1_suite(runner: Runner, repo_root: Path, temp_dir: Path) -> CheckResu
             seconds=result.seconds,
         )
     live, baseline = read_counts(live_path), read_counts(repo_root / BASELINE_RESULTS)
-    numbers = {f"live {name}": str(live[name]) for name in live} | {f"baseline {name} (committed docker-no-services)": str(baseline[name]) for name in baseline}
+    numbers: dict[str, str] = {}
+    for name in live:
+        numbers[f"live {name}"] = str(live[name])
+    for name in baseline:
+        numbers[f"baseline {name} (committed docker-no-services)"] = str(baseline[name])
     status = PASS if live == baseline else FAIL
-    return CheckResult("v1_rerun", title, claim, " ".join(command), result.exit_code, status, result.output, numbers, [], [], result.seconds)
+    return CheckResult(
+        check_id="v1_rerun",
+        title=title,
+        claim=claim,
+        command=" ".join(command),
+        exit_code=result.exit_code,
+        status=status,
+        output=result.output,
+        numbers=numbers,
+        notes=[],
+        drifts=[],
+        seconds=result.seconds,
+    )
 
 
 def drifted_files(checks: dict[str, CheckResult]) -> list[str]:
@@ -595,8 +611,26 @@ def compute_gates(checks: dict[str, CheckResult]) -> list[Gate]:
     g5 = Gate("G5", "Live v1 counts equal the committed baseline", checks["v1_rerun"].status == PASS, checks["v1_rerun"].status, g5_detail)
 
     drift_names = drifted_files(checks)
-    g6_passed = checks["suite"].status == PASS and exited_zero(checks, "screen_inventory") and not drift_names
-    g6 = Gate("G6", "medoRa's own suite passes and no checker render drifted", g6_passed, PASS if g6_passed else FAIL, f"suite {checks['suite'].status}, screen_inventory exit {checks['screen_inventory'].exit_code}, drifted files: {len(drift_names)}")
+    g6_passed = (
+        checks["suite"].status == PASS
+        and exited_zero(checks, "screen_inventory")
+        and not drift_names
+    )
+    if g6_passed:
+        g6_status = PASS
+    else:
+        g6_status = FAIL
+    suite_status = checks["suite"].status
+    screen_exit = checks["screen_inventory"].exit_code
+    drift_count = len(drift_names)
+    g6_detail = f"suite {suite_status}, screen_inventory exit {screen_exit}, drifted files: {drift_count}"
+    g6 = Gate(
+        "G6",
+        "medoRa's own suite passes and no checker render drifted",
+        g6_passed,
+        g6_status,
+        g6_detail,
+    )
 
     return [g1, g2, g3, g4, g5, g6]
 
