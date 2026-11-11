@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from showcase.phase0 import (
     FAIL,
     NOT_RUN,
@@ -15,6 +17,8 @@ from showcase.phase0 import (
     compute_gates,
     exit_code_for,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def make_check(

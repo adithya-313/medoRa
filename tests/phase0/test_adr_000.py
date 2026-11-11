@@ -29,6 +29,8 @@ from tools.phase0.adr_000 import (
 from tools.phase0.data_provenance import UNKNOWN_LICENCE, Entry, Licence
 from tools.phase0.feature_truth import Evidence, Feature, Finding
 
+pytestmark = pytest.mark.unit
+
 PHASES = {1: "Foundation", 3: "Identity", 5: "Billing core"}
 
 

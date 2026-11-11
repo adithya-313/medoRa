@@ -4,12 +4,16 @@
 
 from __future__ import annotations
 
+import pytest
+
 from tools.phase0.run_v1_suite_docker import (
     compare_packages,
     normalise_name,
     parse_freeze,
     parse_installed_from_log,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_normalise_name_unifies_spellings() -> None:

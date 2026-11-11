@@ -9,6 +9,8 @@ import pytest
 
 from tools.phase0.run_v1_suite_docker import mask_url, pytest_command, read_service_env
 
+pytestmark = pytest.mark.unit
+
 
 def test_mask_url_hides_the_password_only() -> None:
     """WHAT: Checks the password in a connection URL is replaced by **** and the rest is kept.

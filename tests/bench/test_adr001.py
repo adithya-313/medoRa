@@ -25,6 +25,8 @@ from bench.adr001.run_benchmark import (
     verify_h2_hashes,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def test_compute_median_odd_and_even() -> None:
     """WHAT: Verifies median computation for odd, even, and singleton lists of floats.

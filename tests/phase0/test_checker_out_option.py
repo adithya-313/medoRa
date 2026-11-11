@@ -18,6 +18,8 @@ import yaml
 
 from tools.phase0 import adr_000, data_provenance, feature_truth, screen_inventory
 
+pytestmark = pytest.mark.unit
+
 CODE_EVIDENCE = {"type": "code", "file": "app/api/good.py", "line": 2, "contains": "@router.get"}
 
 

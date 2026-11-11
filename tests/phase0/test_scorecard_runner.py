@@ -7,8 +7,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tools.phase0.run_scorecard_flaws import FLAWS, flaw_id_of, render_results, verify_rows
 from tools.phase0.run_v1_suite import TestRow, parse_junit
+
+pytestmark = pytest.mark.unit
 
 FLAW_NAMES = {
     "f1": "test_f1_no_orders_is_not_trusted",
