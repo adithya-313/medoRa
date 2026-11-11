@@ -1,0 +1,6 @@
+{
+  "name": "medora-bench-adr002-node",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true
+}
