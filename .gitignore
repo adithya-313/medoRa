@@ -3,4 +3,5 @@ __pycache__/
 showcase/out/
 bench/adr001/.tools/
 bench/adr001/work/
+node_modules/
 
