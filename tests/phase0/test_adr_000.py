@@ -372,8 +372,19 @@ def test_missing_fields_wrong_types_and_unknown_values_name_the_item() -> None:
         v2_phase "5" -> AdrError("x: v2_phase '5' is not in the phase map (or is phase 0)")
     """
     assert parse_decision(valid_raw_decision(), PHASES).item == "x"
-    breaks = [{"kind": None}, {"reason": None}, {"evidence": None}, {"decision": "maybe"}, {"v2_phase": "5"}, {"v2_phase": 5.0},
-              {"v2_phase": True}, {"security_phase": "3"}, {"reason": ["r"]}, {"evidence": "features.yaml"}, {"confirm": 7}]
+    breaks: list[dict[str, object]] = [
+        {"kind": None},
+        {"reason": None},
+        {"evidence": None},
+        {"decision": "maybe"},
+        {"v2_phase": "5"},
+        {"v2_phase": 5.0},
+        {"v2_phase": True},
+        {"security_phase": "3"},
+        {"reason": ["r"]},
+        {"evidence": "features.yaml"},
+        {"confirm": 7},
+    ]
     for change in breaks:
         raw = {**valid_raw_decision(), **change}
         with pytest.raises(AdrError, match="x:"):

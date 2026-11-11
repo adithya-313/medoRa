@@ -194,7 +194,7 @@ def test_adr_000_out_writes_there_and_leaves_docs_untouched(tmp_path: Path, monk
     decisions = [{"item": "f1", "kind": "feature", "decision": "drop", "reason": "r", "v2_phase": None, "evidence": [owner]}]
     for item, kind in adr_000.REQUIRED_MODULES_AND_SERVICES.items():
         decisions.append({"item": item, "kind": kind, "decision": "drop", "reason": "r", "v2_phase": None, "evidence": [owner]})
-    screens = {"pages": [], "unused_calls": [], "reviewed_non_literal_calls": [], "hard_coded_data": [], "must_keep": [], "rebuild_in_v2": []}
+    screens: dict[str, list[object]] = {"pages": [], "unused_calls": [], "reviewed_non_literal_calls": [], "hard_coded_data": [], "must_keep": [], "rebuild_in_v2": []}
     write_files(root / "docs", {
         "plan/phase-map.yaml": yaml.safe_dump({"phases": [{"number": 1, "name": "Foundation"}, {"number": 3, "name": "Identity"}]}),
         "phase0/feature-truth/features.yaml": yaml.safe_dump({"features": [feature_row(["x"])]}),

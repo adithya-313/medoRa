@@ -30,8 +30,14 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.data_provenance import Entry, clone_exact, load_entries  # noqa: E402
-from tools.phase0.feature_truth import Feature, check_one_evidence, load_features, load_test_outcomes, parse_evidence  # noqa: E402
-from tools.phase0.feature_truth import FeatureTruthError  # noqa: E402
+from tools.phase0.feature_truth import (  # noqa: E402
+    Feature,
+    FeatureTruthError,  # noqa: E402
+    check_one_evidence,
+    load_features,
+    load_test_outcomes,
+    parse_evidence,
+)
 from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, make_writable_and_retry  # noqa: E402
 
 DECISIONS = ["keep", "rebuild", "drop", "defer-v3"]

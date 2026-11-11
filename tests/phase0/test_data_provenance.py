@@ -32,7 +32,7 @@ GOOD_LICENCE = {"value": "public domain", "evidence_url": "https://example.org/t
 CODE_SOURCE = {"type": "code", "file": "a.py", "line": 1, "contains": "x"}
 
 
-def raw_entry(**changes: object) -> dict:
+def raw_entry(**changes: object) -> dict[str, object]:
     """WHAT: Builds a valid raw provenance.yaml file entry as a dict, with optional field replacements.
     WHY: Each validation test changes exactly one field of an otherwise valid entry.
 
@@ -43,9 +43,10 @@ def raw_entry(**changes: object) -> dict:
     Example:
         raw_entry(licence={"value": "x"}) -> the valid entry with a different licence block
     """
-    entry = {"path": "data/a.csv", "kind": "dataset", "source": [CODE_SOURCE], "licence": dict(GOOD_LICENCE),
-             "personal_data": {"value": "no", "reason": "product columns only"},
-             "production_use": {"value": "not-for-production", "reason": "test"}}
+    entry: dict[str, object] = {
+        "path": "data/a.csv", "kind": "dataset", "source": [CODE_SOURCE], "licence": dict(GOOD_LICENCE),
+        "personal_data": {"value": "no", "reason": "product columns only"},
+        "production_use": {"value": "not-for-production", "reason": "test"}}
     entry.update(changes)
     return entry
 

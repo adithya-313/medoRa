@@ -20,9 +20,9 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 from tools.phase0.run_scorecard_flaws import CONTROL_TEST_NAME, FLAWS, flaw_id_of, verify_rows
 from tools.phase0.run_v1_suite import JunitParseError, TestRow, parse_junit, summarise
@@ -632,7 +632,7 @@ def run_phase0(repo_root: Path, runner: Runner | None = None) -> Report:
     """
     run = runner or SubprocessRunner(repo_root)
     started_clock = time.monotonic()
-    started = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    started = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     facts = collect_facts(run, started)
     with tempfile.TemporaryDirectory(prefix="showcase_phase0_") as temp_name:
         temp_dir = Path(temp_name)

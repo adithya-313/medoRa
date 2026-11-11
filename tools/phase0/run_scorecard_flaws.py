@@ -17,15 +17,23 @@ import re
 import shutil
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Run as `python tools/phase0/run_scorecard_flaws.py`, so the repo root must be importable.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.run_v1_suite import (  # noqa: E402
-    JunitParseError, TestRow, V1_DEFAULT_TAG, clone_v1, make_writable_and_retry, parse_junit,
-    read_commit_hash, run_command, sha256_of_file)
+    V1_DEFAULT_TAG,
+    JunitParseError,
+    TestRow,
+    clone_v1,
+    make_writable_and_retry,
+    parse_junit,
+    read_commit_hash,
+    run_command,
+    sha256_of_file,
+)
 from tools.phase0.run_v1_suite_docker import ENV_IMAGE_NAME, image_id  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -245,7 +253,7 @@ def verify_and_report(out_dir: Path, tag: str, commit: str, image: str) -> int:
     Example:
         a junit file whose totals do not reconcile -> results.md says NOT OK and the result is 1
     """
-    meta = {"tag": tag, "commit": commit, "image_id": image, "timestamp": datetime.now(timezone.utc).isoformat(),
+    meta = {"tag": tag, "commit": commit, "image_id": image, "timestamp": datetime.now(UTC).isoformat(),
             "machine": platform.platform(), "junit_sha256": sha256_of_file(out_dir / "junit.xml")}
     try:
         rows = parse_junit(out_dir / "junit.xml")

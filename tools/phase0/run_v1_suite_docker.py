@@ -18,7 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from tools.phase0 import run_v1_suite as base
@@ -392,7 +392,7 @@ def record_container_outcome(
             note = (note + " pytest hit the timeout and was killed.").strip()
     os_name = f"Linux container (image {getattr(args, "image_name", IMAGE_NAME)}) on host {platform.system()} {platform.release()}"
     version = container_python_version(project_dir, out_dir)
-    meta = base.RunMeta(args.tag, commit, args.run_label, datetime.now(timezone.utc).isoformat(),
+    meta = base.RunMeta(args.tag, commit, args.run_label, datetime.now(UTC).isoformat(),
                         os_name, version, round(wall, 1), sha, note)
     base.write_results(rows, base.summarise(rows), meta, out_dir)
 
@@ -674,7 +674,10 @@ def verify_saved_image(earlier_dir: Path, out_dir: Path) -> dict[str, object]:
     Example:
         same ID and same freeze hash -> facts with env_image_verified True
     """
-    earlier = json.loads((earlier_dir / "meta.json").read_text(encoding="utf-8"))
+    loaded = json.loads((earlier_dir / "meta.json").read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError(f"expected JSON object in {earlier_dir / 'meta.json'}")
+    earlier: dict[str, object] = loaded
     current_id = image_id(ENV_IMAGE_NAME)
     arguments = ["docker", "run", "--rm", ENV_IMAGE_NAME, "python", "-m", "pip", "freeze"]
     freeze = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)

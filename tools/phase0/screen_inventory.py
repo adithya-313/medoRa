@@ -26,7 +26,14 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.data_provenance import clone_exact  # noqa: E402
-from tools.phase0.feature_truth import Evidence, FeatureTruthError, check_one_evidence, discover_inventory, load_features, parse_evidence  # noqa: E402
+from tools.phase0.feature_truth import (  # noqa: E402
+    Evidence,
+    FeatureTruthError,
+    check_one_evidence,
+    discover_inventory,
+    load_features,
+    parse_evidence,
+)
 from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, make_writable_and_retry  # noqa: E402
 
 FRONTEND = "frontend"
@@ -355,7 +362,7 @@ def path_matches(call_path: str, route_path: str) -> int:
     if len(call_segments) != len(route_segments):
         return -1
     literal_matches = 0
-    for call_segment, route_segment in zip(call_segments, route_segments):
+    for call_segment, route_segment in zip(call_segments, route_segments, strict=True):
         if call_segment == route_segment:
             literal_matches += 1
         elif "{param}" not in (call_segment, route_segment):

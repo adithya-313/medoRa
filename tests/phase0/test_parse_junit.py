@@ -10,7 +10,15 @@ from pathlib import Path
 
 import pytest
 
-from tools.phase0.run_v1_suite import JunitParseError, RunMeta, TestRow, parse_junit, reparse_results, sha256_of_file, summarise
+from tools.phase0.run_v1_suite import (
+    JunitParseError,
+    RunMeta,
+    TestRow,
+    parse_junit,
+    reparse_results,
+    sha256_of_file,
+    summarise,
+)
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 

@@ -21,9 +21,9 @@ import sys
 import tempfile
 import time
 import xml.etree.ElementTree as ElementTree
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 # sourced: the repository and tag created in Part B of this task.
 V1_REPO_URL = "https://github.com/adithya-313/prv3"
@@ -703,7 +703,7 @@ def build_meta(
         wall=312.44 -> RunMeta(..., wall_seconds=312.4, ...)
     """
     version = run_command([str(venv_python(venv)), "--version"], None, SHORT_COMMAND_TIMEOUT_SECONDS)
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     os_name = f"{platform.system()} {platform.release()} ({platform.version()})"
     return RunMeta(args.tag, commit, args.run_label, timestamp, os_name,
                    version.stdout.strip(), round(wall, 1), sha, note)

@@ -1248,7 +1248,7 @@ def execute_benchmark(
         summary = summarize_tool_runs(tool, tool_runs[tool])
         final_tools[tool] = {"hard_rules": hard_rules, "summary": summary, "runs": tool_runs[tool]}
     results: dict[str, Any] = {
-        "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),
+        "date": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d"),
         "seed": seed,
         "repetitions": repetitions,
         "input_spec_sha256": spec_sha,
