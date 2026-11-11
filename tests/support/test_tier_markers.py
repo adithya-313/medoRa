@@ -160,3 +160,39 @@ def test_marker_selection_filters_appropriately(pytester: pytest.Pytester) -> No
     result = pytester.runpytest("-p", "tests.support.tier_markers", "--strict-markers", "-m", "unit")
     assert result.ret == pytest.ExitCode.OK
     result.assert_outcomes(passed=1, deselected=1)
+
+
+def test_unmarked_test_caught_before_marker_filter(pytester: pytest.Pytester) -> None:
+    """Verify that tier checking runs before -m filtering deselects unmarked tests.
+
+    Purpose:
+        Guards tryfirst=True: the check must see tests before -m filters them out,
+        otherwise an unlabelled test escapes CI's -m unit run.
+
+    Inputs/Outputs:
+        pytester: Pytest fixture for running isolated test instances.
+
+    Key Logic:
+        Writes a file with one unit-marked test and one unmarked test.
+        Runs pytest with -m unit and tier_markers plugin.
+        Asserts ret == pytest.ExitCode.USAGE_ERROR and that the unmarked test name appears in output.
+
+    Errors:
+        AssertionError if exit code is not USAGE_ERROR or unmarked test name is absent from output.
+    """
+    pytester.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.unit
+        def test_marked_unit():
+            assert True
+
+        def test_unmarked_escape():
+            assert True
+        """
+    )
+    result = pytester.runpytest("-p", "tests.support.tier_markers", "--strict-markers", "-m", "unit")
+    assert result.ret == pytest.ExitCode.USAGE_ERROR
+    combined_output = str(result.stdout) + "\n" + str(result.stderr)
+    assert "test_unmarked_escape" in combined_output
