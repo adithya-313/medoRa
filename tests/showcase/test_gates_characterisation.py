@@ -2,6 +2,7 @@
 # TERM: gate tuple - a four-element tuple (gate_id, passed, status, detail) representing one gate verdict.
 # TERM: drift - a freshly rendered file differs from the committed one in docs/.
 """Characterisation tests for compute_gates and exit_code_for, pinning exact gate outcomes."""
+
 from __future__ import annotations
 
 from showcase.phase0 import (

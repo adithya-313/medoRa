@@ -9,6 +9,7 @@ and render the human-readable table. Standard library plus PyYAML only.
 
 Paths in evidence and entry points are relative to v1's sentinel_flow_mvp folder.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,8 +30,20 @@ from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, clone_v1, make_writable_an
 
 ROUTE_METHODS = ["get", "post", "put", "patch", "delete"]
 STATUSES = ["working", "mocked", "broken", "missing", "untested"]
-AREAS = ["billing", "stock", "procurement", "vendor", "ml", "rag", "health-risk", "crm",
-         "notifications", "audit", "admin", "infra"]
+AREAS = [
+    "billing",
+    "stock",
+    "procurement",
+    "vendor",
+    "ml",
+    "rag",
+    "health-risk",
+    "crm",
+    "notifications",
+    "audit",
+    "admin",
+    "infra",
+]
 EVIDENCE_TYPES = ["test", "code", "doc"]
 EXPECTED_OUTCOMES = ["passed", "failed", "error"]
 FINDING_CATEGORIES = ["security"]
@@ -217,7 +230,9 @@ def read_mounts(main_source: str) -> dict[str, str]:
             for alias in node.names:
                 imported_as = alias.asname or alias.name
                 is_router_object = alias.name == "router"
-                file_by_name[imported_as] = module_to_file(node.module if is_router_object else node.module + "." + alias.name)
+                file_by_name[imported_as] = module_to_file(
+                    node.module if is_router_object else node.module + "." + alias.name
+                )
     mounts: dict[str, str] = {}
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "include_router":
@@ -291,7 +306,9 @@ def discover_routes(v1_dir: Path) -> list[InventoryItem]:
                 items.append(InventoryItem(f"UNRESOLVED {relative}::{function_name}", "route", relative))
                 continue
             mount_prefix = "" if relative == MAIN_FILE else mounts[relative]
-            full_path = join_paths(mount_prefix, "" if relative == MAIN_FILE else facts.own_prefix, route_path)
+            full_path = join_paths(
+                mount_prefix, "" if relative == MAIN_FILE else facts.own_prefix, route_path
+            )
             items.append(InventoryItem(f"{method} {full_path}", "route", relative))
     return mark_duplicate_keys(items)
 
@@ -380,8 +397,11 @@ def discover_files(v1_dir: Path) -> list[InventoryItem]:
     Example:
         app/services/fefo_engine.py -> key "app/services/fefo_engine.py"
     """
-    patterns = [("service", "app/services", "*.py"), ("worker", "app/workers", "*.py"),
-                ("page", "frontend/src/app", "page.tsx")]
+    patterns = [
+        ("service", "app/services", "*.py"),
+        ("worker", "app/workers", "*.py"),
+        ("page", "frontend/src/app", "page.tsx"),
+    ]
     items: list[InventoryItem] = []
     for kind, folder, pattern in patterns:
         for path in sorted((v1_dir / folder).rglob(pattern)):
@@ -420,8 +440,11 @@ def parse_evidence(raw: object, feature_id: str) -> Evidence:
     """
     if not isinstance(raw, dict) or raw.get("type") not in EVIDENCE_TYPES:
         raise FeatureTruthError(f"{feature_id}: evidence item needs a type in {EVIDENCE_TYPES}: {raw!r}")
-    required = {"test": ["run", "test_id", "expect"], "code": ["file", "line", "contains"],
-                "doc": ["file", "contains"]}[raw["type"]]
+    required = {
+        "test": ["run", "test_id", "expect"],
+        "code": ["file", "line", "contains"],
+        "doc": ["file", "contains"],
+    }[raw["type"]]
     for field_name in required:
         if field_name not in raw:
             raise FeatureTruthError(f"{feature_id}: {raw['type']} evidence lacks '{field_name}'")
@@ -429,8 +452,15 @@ def parse_evidence(raw: object, feature_id: str) -> Evidence:
         raise FeatureTruthError(f"{feature_id}: expect must be one of {EXPECTED_OUTCOMES}")
     if raw["type"] == "code" and not isinstance(raw["line"], int):
         raise FeatureTruthError(f"{feature_id}: line must be a whole number")
-    return Evidence(raw["type"], raw.get("run", ""), raw.get("test_id", ""), raw.get("expect", ""),
-                    raw.get("file", ""), raw.get("line", 0), raw.get("contains", ""))
+    return Evidence(
+        raw["type"],
+        raw.get("run", ""),
+        raw.get("test_id", ""),
+        raw.get("expect", ""),
+        raw.get("file", ""),
+        raw.get("line", 0),
+        raw.get("contains", ""),
+    )
 
 
 def parse_finding(raw: object, feature_id: str) -> Finding:
@@ -449,8 +479,15 @@ def parse_finding(raw: object, feature_id: str) -> Finding:
         {"category": "security", "title": "no tenant filter", "file": "a.py", "line": 3, "contains": "x"} -> Finding(...)
     """
     if not isinstance(raw, dict) or raw.get("category") not in FINDING_CATEGORIES or not raw.get("title"):
-        raise FeatureTruthError(f"{feature_id}: a finding needs a category in {FINDING_CATEGORIES} and a title: {raw!r}")
-    code_fields = {"type": "code", "file": raw.get("file"), "line": raw.get("line"), "contains": raw.get("contains")}
+        raise FeatureTruthError(
+            f"{feature_id}: a finding needs a category in {FINDING_CATEGORIES} and a title: {raw!r}"
+        )
+    code_fields = {
+        "type": "code",
+        "file": raw.get("file"),
+        "line": raw.get("line"),
+        "contains": raw.get("contains"),
+    }
     return Finding(raw["category"], raw["title"], parse_evidence(code_fields, feature_id))
 
 
@@ -478,8 +515,17 @@ def parse_feature(raw: object) -> Feature:
         raise FeatureTruthError(f"{feature_id}: status must be in {STATUSES} and area in {AREAS}")
     evidence = [parse_evidence(item, feature_id) for item in raw["evidence"] or []]
     findings = [parse_finding(item, feature_id) for item in raw.get("findings") or []]
-    feature = Feature(feature_id, raw["name"], raw["area"], list(raw["entry_points"] or []), raw["status"],
-                      raw.get("note", ""), raw.get("mock_check", ""), evidence, findings)
+    feature = Feature(
+        feature_id,
+        raw["name"],
+        raw["area"],
+        list(raw["entry_points"] or []),
+        raw["status"],
+        raw.get("note", ""),
+        raw.get("mock_check", ""),
+        evidence,
+        findings,
+    )
     validate_status_rules(feature)
     return feature
 
@@ -504,7 +550,9 @@ def validate_status_rules(feature: Feature) -> None:
         if not passing_tests:
             raise FeatureTruthError(f"{feature.id}: 'working' needs a test item with expect: passed")
         if not feature.mock_check:
-            raise FeatureTruthError(f"{feature.id}: 'working' needs mock_check (file::name of the mocks, or 'none')")
+            raise FeatureTruthError(
+                f"{feature.id}: 'working' needs mock_check (file::name of the mocks, or 'none')"
+            )
     if not feature.entry_points and feature.status != "missing":
         raise FeatureTruthError(f"{feature.id}: only 'missing' features may have no entry_points")
 
@@ -559,7 +607,9 @@ def load_ignored(path: Path) -> dict[str, str]:
     return ignored
 
 
-def check_coverage(inventory: list[InventoryItem], features: list[Feature], ignored: dict[str, str]) -> list[str]:
+def check_coverage(
+    inventory: list[InventoryItem], features: list[Feature], ignored: dict[str, str]
+) -> list[str]:
     """WHAT: Checks that every discovered item appears in exactly one feature's entry_points or in the
     ignored list, and that no entry point names something that was not discovered.
     WHY: This stops features from being silently forgotten or counted twice.
@@ -623,8 +673,13 @@ def load_test_outcomes(results_dir: Path, run: str) -> dict[str, set[str]]:
     return outcomes
 
 
-def check_one_evidence(feature_id: str, item: Evidence, v1_dir: Path, results_dir: Path,
-                       outcomes_by_run: dict[str, dict[str, set[str]]]) -> str | None:
+def check_one_evidence(
+    feature_id: str,
+    item: Evidence,
+    v1_dir: Path,
+    results_dir: Path,
+    outcomes_by_run: dict[str, dict[str, set[str]]],
+) -> str | None:
     """WHAT: Checks a single evidence item and returns a problem text, or None when it holds.
     test: the id exists in that run with the expected outcome ("passed" means every result passed).
     code: the file exists and the given line contains the text. doc: the file contains the text.
@@ -648,13 +703,19 @@ def check_one_evidence(feature_id: str, item: Evidence, v1_dir: Path, results_di
         if outcomes is None:
             return f"{feature_id}: test {item.test_id} not found in run {item.run}"
         matches = outcomes == {"passed"} if item.expect == "passed" else item.expect in outcomes
-        return None if matches else f"{feature_id}: test {item.test_id} has outcomes {sorted(outcomes)}, expected {item.expect}"
+        return (
+            None
+            if matches
+            else f"{feature_id}: test {item.test_id} has outcomes {sorted(outcomes)}, expected {item.expect}"
+        )
     path = v1_dir / item.file
     if not path.is_file():
         return f"{feature_id}: file not found: {item.file}"
     text = path.read_text(encoding="utf-8", errors="replace")
     if item.kind == "doc":
-        return None if item.contains in text else f"{feature_id}: {item.file} does not contain {item.contains!r}"
+        return (
+            None if item.contains in text else f"{feature_id}: {item.file} does not contain {item.contains!r}"
+        )
     lines = text.splitlines()
     if not 1 <= item.line <= len(lines) or item.contains not in lines[item.line - 1]:
         return f"{feature_id}: {item.file}:{item.line} does not contain {item.contains!r}"
@@ -718,8 +779,12 @@ def render_findings(features: list[Feature]) -> list[str]:
     """
     lines: list[str] = []
     for category in FINDING_CATEGORIES:
-        entries = [(feature, finding) for feature in features for finding in feature.findings
-                   if finding.category == category]
+        entries = [
+            (feature, finding)
+            for feature in features
+            for finding in feature.findings
+            if finding.category == category
+        ]
         if not entries:
             continue
         lines += ["", f"## {category.capitalize()} findings", ""]
@@ -739,15 +804,29 @@ def render_table(features: list[Feature]) -> str:
     Example:
         2 working + 1 mocked -> a summary line "working: 2, mocked: 1, ..." and the rows below it
     """
-    lines = ["# v1 feature-truth table", "", "_Generated by tools/phase0/feature_truth.py. Do not edit by hand._", "",
-             WORKING_DEFINITION, "", "## Summary", ""]
+    lines = [
+        "# v1 feature-truth table",
+        "",
+        "_Generated by tools/phase0/feature_truth.py. Do not edit by hand._",
+        "",
+        WORKING_DEFINITION,
+        "",
+        "## Summary",
+        "",
+    ]
     for status in STATUSES:
         lines.append(f"- {status}: {sum(1 for feature in features if feature.status == status)}")
     for area in AREAS:
         in_area = [feature for feature in features if feature.area == area]
         if not in_area:
             continue
-        lines += ["", f"## {area}", "", "| id | feature | status | note | evidence |", "|---|---|---|---|---|"]
+        lines += [
+            "",
+            f"## {area}",
+            "",
+            "| id | feature | status | note | evidence |",
+            "|---|---|---|---|---|",
+        ]
         for feature in in_area:
             links = "<br>".join(evidence_link(item) for item in feature.evidence)
             note = feature.note.replace("|", "/").replace(chr(10), " ")
@@ -756,7 +835,9 @@ def render_table(features: list[Feature]) -> str:
     return chr(10).join(lines) + chr(10)
 
 
-def run_checks(v1_dir: Path, features_path: Path, ignored_path: Path, results_dir: Path) -> tuple[list[Feature], list[str]]:
+def run_checks(
+    v1_dir: Path, features_path: Path, ignored_path: Path, results_dir: Path
+) -> tuple[list[Feature], list[str]]:
     """WHAT: Loads the YAML, discovers the inventory, and runs both checks.
     WHY: Keeps main() short and testable.
 
@@ -797,13 +878,19 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/feature-truth")
     parser.add_argument("--results-dir", default="docs/phase0/v1-test-results")
-    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="folder to render into (default: the same as --dir); inputs are always read from --dir",
+    )
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="feature_truth_"))
     try:
         v1_dir = clone_v1(args.tag, work_root / "v1")
         directory = Path(args.dir)
-        features, problems = run_checks(v1_dir, directory / "features.yaml", directory / "ignored.yaml", Path(args.results_dir))
+        features, problems = run_checks(
+            v1_dir, directory / "features.yaml", directory / "ignored.yaml", Path(args.results_dir)
+        )
         for problem in problems:
             print("PROBLEM:", problem)
         if problems:

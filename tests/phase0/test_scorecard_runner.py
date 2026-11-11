@@ -2,6 +2,7 @@
 # TERM: positive control - a test that must PASS on v1.
 # TERM: junit fixture - a small junit XML file written into pytest's temp folder for one test.
 """Unit tests for the verification logic of tools/phase0/run_scorecard_flaws.py. No Docker, no network."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,13 +35,17 @@ def good_results() -> list[tuple[str, str, str]]:
     Example:
         good_results()[0] -> ("test_f1_no_orders_is_not_trusted", "failed", "AssertionError: v1 returned ...")
     """
-    results = [(name, "failed", f"AssertionError: v1 returned a wrong value for {flaw_id}")
-               for flaw_id, name in FLAW_NAMES.items()]
+    results = [
+        (name, "failed", f"AssertionError: v1 returned a wrong value for {flaw_id}")
+        for flaw_id, name in FLAW_NAMES.items()
+    ]
     results.append((CONTROL, "passed", ""))
     return results
 
 
-def replace_result(results: list[tuple[str, str, str]], name: str, outcome: str, message: str) -> list[tuple[str, str, str]]:
+def replace_result(
+    results: list[tuple[str, str, str]], name: str, outcome: str, message: str
+) -> list[tuple[str, str, str]]:
     """WHAT: Returns a copy of the results where the entry for `name` has a new outcome and message.
     WHY: Each negative test changes exactly one result and keeps the rest healthy.
 
@@ -73,16 +78,21 @@ def parse_results(tmp_path: Path, results: list[tuple[str, str, str]]) -> list[T
     Example:
         [("test_a", "failed", "AssertionError: x")] -> one TestRow with outcome "failed"
     """
-    children = {"passed": "", "failed": '<failure message="{m}">trace</failure>',
-                "error": '<error message="{m}">trace</error>'}
+    children = {
+        "passed": "",
+        "failed": '<failure message="{m}">trace</failure>',
+        "error": '<error message="{m}">trace</error>',
+    }
     cases = []
     for name, outcome, message in results:
         child = children[outcome].format(m=message)
         cases.append(f'<testcase classname="flaws" name="{name}" time="0.1">{child}</testcase>')
     failures = sum(1 for _, outcome, _ in results if outcome == "failed")
     errors = sum(1 for _, outcome, _ in results if outcome == "error")
-    xml = (f'<testsuites><testsuite name="pytest" errors="{errors}" failures="{failures}" skipped="0" '
-           f'tests="{len(results)}">{"".join(cases)}</testsuite></testsuites>')
+    xml = (
+        f'<testsuites><testsuite name="pytest" errors="{errors}" failures="{failures}" skipped="0" '
+        f'tests="{len(results)}">{"".join(cases)}</testsuite></testsuites>'
+    )
     xml_path = tmp_path / "junit.xml"
     xml_path.write_text(xml, encoding="utf-8")
     return parse_junit(xml_path)

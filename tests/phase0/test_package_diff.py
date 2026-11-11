@@ -1,6 +1,7 @@
 # TERM: pip freeze - a pip command that prints every installed package as name==version.
 # TERM: normalised name - a package name lower-cased with '-', '_' and '.' treated as the same character.
 """Unit tests for the package-list comparison helpers. No Docker, no network."""
+
 from __future__ import annotations
 
 from tools.phase0.run_v1_suite_docker import (

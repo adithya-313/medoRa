@@ -2,6 +2,7 @@
 # TERM: fixture file - a small hand-written XML file in tests/phase0/fixtures used as test input.
 # TERM: collection error - pytest failed to import a test file, so none of its tests ran.
 """Unit tests for parse_junit and summarise. No network, no cloning, no subprocesses."""
+
 from __future__ import annotations
 
 import json

@@ -3,6 +3,7 @@
 # TERM: fixture - tiny in-memory artifacts built inside one test; no files, no network.
 # TERM: dangling reference - an evidence pointer to a feature, test or action that does not exist.
 """Unit tests for tools/phase0/adr_000.py: coverage, rules, evidence references, phase map and rendering."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -75,17 +76,35 @@ def make_artifacts(features: list[Feature]) -> Artifacts:
     Example:
         make_artifacts([make_feature("f1", "working")]) -> Artifacts with 1 feature, 1 data item, 1 action
     """
-    screens = {"pages": [{"route": "/pos", "user_actions": [{"name": "Search"}]}],
-               "must_keep": [{"page": "/pos", "action": "Search", "feature": "f1"}], "rebuild_in_v2": [],
-               "unused_calls": [{}, {}], "hard_coded_data": [{}]}
+    screens = {
+        "pages": [{"route": "/pos", "user_actions": [{"name": "Search"}]}],
+        "must_keep": [{"page": "/pos", "action": "Search", "feature": "f1"}],
+        "rebuild_in_v2": [],
+        "unused_calls": [{}, {}],
+        "hard_coded_data": [{}],
+    }
     summary = {"passed": 10, "failed": 2, "error": 1, "skipped": 0}
-    return Artifacts(features, [make_entry("data/a.csv", "not-for-production")], screens, PHASES,
-                     {"docker-with-db": summary, "docker-with-db-health-risk": {"passed": 7, "failed": 0, "error": 0, "skipped": 0}},
-                     {"failed": 8, "passed": 1})
+    return Artifacts(
+        features,
+        [make_entry("data/a.csv", "not-for-production")],
+        screens,
+        PHASES,
+        {
+            "docker-with-db": summary,
+            "docker-with-db-health-risk": {"passed": 7, "failed": 0, "error": 0, "skipped": 0},
+        },
+        {"failed": 8, "passed": 1},
+    )
 
 
-def decision(item: str, kind: str, choice: str, phase: int | None = 5, evidence: list[Reference] | None = None,
-             security_phase: int | None = None) -> Decision:
+def decision(
+    item: str,
+    kind: str,
+    choice: str,
+    phase: int | None = 5,
+    evidence: list[Reference] | None = None,
+    security_phase: int | None = None,
+) -> Decision:
     """WHAT: Builds a Decision with a default evidence reference.
     WHY: Keeps the test code short.
 
@@ -118,9 +137,14 @@ def full_decisions(choice_for_feature: str = "keep") -> list[Decision]:
         full_decisions() -> 1 feature + 1 data + 1 action + 14 module/service decisions
     """
     artifacts = make_artifacts([make_feature("f1", "working")])
-    owner = [Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"})]
-    decisions = [decision("f1", "feature", choice_for_feature), decision("data/a.csv", "data", "drop", None),
-                 decision("/pos: Search", "screen-action", "rebuild")]
+    owner = [
+        Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"})
+    ]
+    decisions = [
+        decision("f1", "feature", choice_for_feature),
+        decision("data/a.csv", "data", "drop", None),
+        decision("/pos: Search", "screen-action", "rebuild"),
+    ]
     for item, kind in required_items(artifacts).items():
         if kind in ("module", "service") and item != "data/a.csv":
             decisions.append(decision(item, kind, "drop", None, owner))
@@ -145,7 +169,9 @@ def test_uncovered_feature_and_duplicate_fail_coverage() -> None:
     assert "no decision for feature: f1" in check_coverage(without, artifacts)
     duplicated = full_decisions() + [decision("data/a.csv", "data", "drop", None)]
     assert "more than one decision for: data/a.csv" in check_coverage(duplicated, artifacts)
-    assert "decision for an unknown item: ghost" in check_coverage(full_decisions() + [decision("ghost", "feature", "drop", None)], artifacts)
+    assert "decision for an unknown item: ghost" in check_coverage(
+        full_decisions() + [decision("ghost", "feature", "drop", None)], artifacts
+    )
 
 
 def test_keep_on_mocked_feature_and_on_not_for_production_data_are_rejected() -> None:
@@ -161,10 +187,15 @@ def test_keep_on_mocked_feature_and_on_not_for_production_data_are_rejected() ->
         keep on mocked f1 -> ["f1: a mocked feature cannot be 'keep' (only working ones can)"]
     """
     mocked = make_artifacts([make_feature("f1", "mocked")])
-    assert check_rules(full_decisions("keep"), mocked) == ["f1: a mocked feature cannot be 'keep' (only working ones can)"]
+    assert check_rules(full_decisions("keep"), mocked) == [
+        "f1: a mocked feature cannot be 'keep' (only working ones can)"
+    ]
     working = make_artifacts([make_feature("f1", "working")])
     assert check_rules(full_decisions("keep"), working) == []
-    data_keep = [decision("data/a.csv", "data", "keep") if each.item == "data/a.csv" else each for each in full_decisions()]
+    data_keep = [
+        decision("data/a.csv", "data", "keep") if each.item == "data/a.csv" else each
+        for each in full_decisions()
+    ]
     assert check_rules(data_keep, working) == ["data/a.csv: not-for-production items cannot be 'keep'"]
 
 
@@ -180,7 +211,9 @@ def test_security_finding_needs_an_early_rebuild_that_cites_it() -> None:
     Example:
         rebuild with security_phase 5 -> "... needs decision rebuild and security_phase <= 3"
     """
-    finding = Finding("security", "no tenant filter", Evidence(kind="code", file="a.py", line=1, contains="x"))
+    finding = Finding(
+        "security", "no tenant filter", Evidence(kind="code", file="a.py", line=1, contains="x")
+    )
     artifacts = make_artifacts([make_feature("f1", "working", [finding])])
     cite = Reference("artifact", {"artifact": "features.yaml", "id": "f1", "finding": "no tenant filter"})
     others = [each for each in full_decisions() if each.item != "f1"]
@@ -189,7 +222,10 @@ def test_security_finding_needs_an_early_rebuild_that_cites_it() -> None:
     late = others + [decision("f1", "feature", "rebuild", 5, [cite], security_phase=5)]
     assert any("security_phase <= 3" in problem for problem in check_rules(late, artifacts))
     uncited = others + [decision("f1", "feature", "rebuild", 5, None, security_phase=3)]
-    assert any("security finding not cited: no tenant filter" in problem for problem in check_rules(uncited, artifacts))
+    assert any(
+        "security finding not cited: no tenant filter" in problem
+        for problem in check_rules(uncited, artifacts)
+    )
     kept = others + [decision("f1", "feature", "keep", 5, [cite], security_phase=3)]
     assert any("needs decision rebuild" in problem for problem in check_rules(kept, artifacts))
 
@@ -207,13 +243,20 @@ def test_dropping_a_must_keep_action_needs_an_owner_reference() -> None:
         drop of "/pos: Search" without owner evidence -> "... can only be dropped with an owner-decision reference"
     """
     artifacts = make_artifacts([make_feature("f1", "working")])
-    owner = [Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"})]
+    owner = [
+        Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"})
+    ]
     others = [each for each in full_decisions() if each.item != "/pos: Search"]
     bare = others + [decision("/pos: Search", "screen-action", "drop", None)]
-    assert any("only be dropped with an owner-decision reference" in problem for problem in check_rules(bare, artifacts))
+    assert any(
+        "only be dropped with an owner-decision reference" in problem
+        for problem in check_rules(bare, artifacts)
+    )
     backed = others + [decision("/pos: Search", "screen-action", "drop", None, owner)]
     assert check_rules(backed, artifacts) == []
-    feature_dropped = [decision("f1", "feature", "drop", None) if each.item == "f1" else each for each in full_decisions()]
+    feature_dropped = [
+        decision("f1", "feature", "drop", None) if each.item == "f1" else each for each in full_decisions()
+    ]
     assert any("its feature f1 is dropped" in problem for problem in check_rules(feature_dropped, artifacts))
 
 
@@ -230,17 +273,23 @@ def test_dangling_evidence_reference_is_rejected(tmp_path: Path) -> None:
         {"artifact": "features.yaml", "id": "nope"} -> "x: features.yaml has no feature 'nope'"
     """
     artifacts = make_artifacts([make_feature("f1", "working")])
-    good = [Reference("artifact", {"artifact": "features.yaml", "id": "f1"}),
-            Reference("artifact", {"artifact": "provenance.yaml", "key": "data/a.csv"}),
-            Reference("artifact", {"artifact": "screens.yaml", "page": "/pos", "action": "Search"}),
-            Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"})]
-    bad = [Reference("artifact", {"artifact": "features.yaml", "id": "nope"}),
-           Reference("artifact", {"artifact": "provenance.yaml", "key": "nope.csv"}),
-           Reference("artifact", {"artifact": "screens.yaml", "page": "/pos", "action": "Ghost"}),
-           Reference("artifact", {"artifact": "v1-test-results", "run": "r", "test_id": "t::missing"})]
+    good = [
+        Reference("artifact", {"artifact": "features.yaml", "id": "f1"}),
+        Reference("artifact", {"artifact": "provenance.yaml", "key": "data/a.csv"}),
+        Reference("artifact", {"artifact": "screens.yaml", "page": "/pos", "action": "Search"}),
+        Reference("owner-decision", {"type": "owner-decision", "date": OWNER_DECISION_DATE, "note": "n"}),
+    ]
+    bad = [
+        Reference("artifact", {"artifact": "features.yaml", "id": "nope"}),
+        Reference("artifact", {"artifact": "provenance.yaml", "key": "nope.csv"}),
+        Reference("artifact", {"artifact": "screens.yaml", "page": "/pos", "action": "Ghost"}),
+        Reference("artifact", {"artifact": "v1-test-results", "run": "r", "test_id": "t::missing"}),
+    ]
     assert check_evidence([decision("x", "feature", "drop", None, good)], artifacts, tmp_path, tmp_path) == []
     problems = check_evidence([decision("x", "feature", "drop", None, bad)], artifacts, tmp_path, tmp_path)
-    assert len(problems) == 4 and any("features.yaml has no feature 'nope'" in problem for problem in problems)
+    assert len(problems) == 4 and any(
+        "features.yaml has no feature 'nope'" in problem for problem in problems
+    )
 
 
 def test_unknown_phase_number_raises_an_error_naming_the_item() -> None:
@@ -256,7 +305,14 @@ def test_unknown_phase_number_raises_an_error_naming_the_item() -> None:
         v2_phase 99 -> AdrError("x: v2_phase 99 is not in the phase map (or is phase 0)")
     """
     evidence = [{"artifact": "features.yaml", "id": "x"}]
-    base = {"item": "x", "kind": "feature", "decision": "rebuild", "reason": "r", "evidence": evidence, "v2_phase": 5}
+    base = {
+        "item": "x",
+        "kind": "feature",
+        "decision": "rebuild",
+        "reason": "r",
+        "evidence": evidence,
+        "v2_phase": 5,
+    }
     assert parse_decision(base, PHASES).v2_phase == 5
     with pytest.raises(AdrError, match="x: v2_phase 99 is not in the phase map"):
         parse_decision({**base, "v2_phase": 99}, PHASES)
@@ -281,10 +337,20 @@ def test_render_headline_numbers_match_the_fixture_counts() -> None:
     Example:
         4 features -> the Context says "Features: 4 in total: 2 working, 1 mocked, 1 broken"
     """
-    features = [make_feature("f1", "working"), make_feature("f2", "working"), make_feature("f3", "mocked"), make_feature("f4", "broken")]
+    features = [
+        make_feature("f1", "working"),
+        make_feature("f2", "working"),
+        make_feature("f3", "mocked"),
+        make_feature("f4", "broken"),
+    ]
     artifacts = make_artifacts(features)
     numbers = compute_headline(artifacts)
-    assert (numbers["features"], numbers["status_working"], numbers["status_mocked"], numbers["status_broken"]) == (4, 2, 1, 1)
+    assert (
+        numbers["features"],
+        numbers["status_working"],
+        numbers["status_mocked"],
+        numbers["status_broken"],
+    ) == (4, 2, 1, 1)
     decisions = full_decisions()
     decisions[0].confirm = "unclear which phase"
     owner = [{"text": "New UI design", "date": OWNER_DECISION_DATE}]
@@ -292,7 +358,16 @@ def test_render_headline_numbers_match_the_fixture_counts() -> None:
     assert "Features: 4 in total: 2 working, 1 mocked, 1 broken, 0 missing, 0 untested" in text
     assert "docker-with-db baseline): 10 passed, 2 failed, 1 errors" in text
     assert "5 - Billing core" in text and "- f1: unclear which phase" in text
-    for heading in ("## Status", "## Date", "## Context", "## Decision", "## Consequences", "## Alternatives considered", "## Why no benchmark", "## Owner to confirm"):
+    for heading in (
+        "## Status",
+        "## Date",
+        "## Context",
+        "## Decision",
+        "## Consequences",
+        "## Alternatives considered",
+        "## Why no benchmark",
+        "## Owner to confirm",
+    ):
         assert heading in text
 
 
@@ -353,8 +428,14 @@ def valid_raw_decision() -> dict:
     Example:
         valid_raw_decision()["item"] -> "x"
     """
-    return {"item": "x", "kind": "feature", "decision": "rebuild", "reason": "r", "v2_phase": 5,
-            "evidence": [{"artifact": "features.yaml", "id": "x"}]}
+    return {
+        "item": "x",
+        "kind": "feature",
+        "decision": "rebuild",
+        "reason": "r",
+        "v2_phase": 5,
+        "evidence": [{"artifact": "features.yaml", "id": "x"}],
+    }
 
 
 def test_missing_fields_wrong_types_and_unknown_values_name_the_item() -> None:
@@ -409,8 +490,24 @@ def test_decision_for_a_nonexistent_item_is_reported_by_name(tmp_path: Path) -> 
     Example:
         decision for "f-typo" -> "decision for an unknown item: f-typo"
     """
-    text = ("owner_decisions: []" + chr(10) + "decisions:" + chr(10) + "- item: f-typo" + chr(10) + "  kind: feature" + chr(10)
-            + "  decision: drop" + chr(10) + "  reason: r" + chr(10) + "  evidence:" + chr(10) + "  - {artifact: features.yaml, id: f1}" + chr(10))
+    text = (
+        "owner_decisions: []"
+        + chr(10)
+        + "decisions:"
+        + chr(10)
+        + "- item: f-typo"
+        + chr(10)
+        + "  kind: feature"
+        + chr(10)
+        + "  decision: drop"
+        + chr(10)
+        + "  reason: r"
+        + chr(10)
+        + "  evidence:"
+        + chr(10)
+        + "  - {artifact: features.yaml, id: f1}"
+        + chr(10)
+    )
     decisions, _ = load_decisions(write_decisions_file(tmp_path, text), PHASES)
     problems = check_coverage(decisions, make_artifacts([make_feature("f1", "working")]))
     assert "decision for an unknown item: f-typo" in problems

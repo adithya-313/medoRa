@@ -2,6 +2,7 @@
 # TERM: exit gate - the pass/fail conditions G1-G6 that decide whether Phase 0 is finished.
 """Command line: `python -m showcase run --phase 0` runs every Phase 0 check live, writes
 showcase/out/phase-0.html and exits 0 only if every gate passed."""
+
 from __future__ import annotations
 
 import argparse
@@ -29,7 +30,9 @@ def main(argv: list[str]) -> int:
     Example:
         main(["run", "--phase", "0"]) -> 0 when G1-G6 all pass
     """
-    parser = argparse.ArgumentParser(prog="showcase", description="Re-run and show the checks of a medoRa phase.")
+    parser = argparse.ArgumentParser(
+        prog="showcase", description="Re-run and show the checks of a medoRa phase."
+    )
     parser.add_argument("command", choices=["run"])
     parser.add_argument("--phase", type=int, required=True)
     args = parser.parse_args(argv)
@@ -45,7 +48,9 @@ def main(argv: list[str]) -> int:
     OUTPUT_PATH.write_text(render_report(report), encoding="utf-8")
     for gate in report.gates:
         print(f"{gate.gate_id} {gate.status:8} {gate.claim}")
-    print(f"PHASE 0: {'PASS' if report.passed else 'FAIL'} in {report.total_seconds:.0f} s; page: {OUTPUT_PATH}")
+    print(
+        f"PHASE 0: {'PASS' if report.passed else 'FAIL'} in {report.total_seconds:.0f} s; page: {OUTPUT_PATH}"
+    )
     return exit_code_for(report.gates)
 
 

@@ -7,6 +7,7 @@
 Reuses the clone, parse, summary and writing steps of run_v1_suite.py. v1 tests and
 requirements are never edited, skipped or filtered.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -63,8 +64,14 @@ def build_image() -> None:
 
 
 def container_arguments(
-    project_dir: Path, out_dir: Path, network: str | None, command: list[str], name: str,
-    use_cache: bool = False, image: str = IMAGE_NAME, environment: dict[str, str] | None = None,
+    project_dir: Path,
+    out_dir: Path,
+    network: str | None,
+    command: list[str],
+    name: str,
+    use_cache: bool = False,
+    image: str = IMAGE_NAME,
+    environment: dict[str, str] | None = None,
 ) -> list[str]:
     """WHAT: Builds a `docker run` argument list that mounts v1's folder at /work and results at /out.
     WHY: One place defines how every container step is started.
@@ -83,8 +90,19 @@ def container_arguments(
     Example:
         network=None, command=["python", "--version"] -> ["docker", "run", "--rm", ..., "python", "--version"]
     """
-    arguments = ["docker", "run", "--rm", "-v", f"{project_dir.as_posix()}:/work",
-                 "-v", f"{out_dir.resolve().as_posix()}:/out", "--name", name, "-w", "/work"]
+    arguments = [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{project_dir.as_posix()}:/work",
+        "-v",
+        f"{out_dir.resolve().as_posix()}:/out",
+        "--name",
+        name,
+        "-w",
+        "/work",
+    ]
     if use_cache:
         arguments += ["-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip"]
     for key, value in (environment or {}).items():
@@ -196,9 +214,11 @@ def install_note(cache_before: str, wall_seconds: float, downloaded: int, cached
     Example:
         ("reused (9 kB)", 300.0, 1000000, 2000000) -> "Install ran on a warm cache: pip 300.0 s, ..."
     """
-    return (f"Install ran on a {cache_label(cache_before)}: pip {round(wall_seconds, 1)} s, "
-            f"downloaded {round(downloaded / 1_000_000, 1)} MB, served from cache {round(cached / 1_000_000, 1)} MB "
-            f"(sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold).")
+    return (
+        f"Install ran on a {cache_label(cache_before)}: pip {round(wall_seconds, 1)} s, "
+        f"downloaded {round(downloaded / 1_000_000, 1)} MB, served from cache {round(cached / 1_000_000, 1)} MB "
+        f"(sizes are an ESTIMATE from pip log lines; not a cold-install figure unless labelled cold)."
+    )
 
 
 def write_meta_json(out_dir: Path, fields: dict[str, object]) -> None:
@@ -243,7 +263,17 @@ def remove_clone_in_container(work_root: Path) -> None:
     """
     if not (work_root / "v1").exists():
         return
-    arguments = ["docker", "run", "--rm", "-v", f"{work_root.as_posix()}:/cleanup", IMAGE_NAME, "rm", "-rf", "/cleanup/v1"]
+    arguments = [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{work_root.as_posix()}:/cleanup",
+        IMAGE_NAME,
+        "rm",
+        "-rf",
+        "/cleanup/v1",
+    ]
     base.run_command(arguments, None, CLEANUP_TIMEOUT_SECONDS)
 
 
@@ -266,7 +296,11 @@ def container_pip_install(
         requirements.txt installs fine on Linux -> InstallResult(succeeded=True, return_code=0, ...)
     """
     venv_command = ["python", "-m", "venv", "/work/.venv"]
-    base.run_command(container_arguments(project_dir, out_dir, None, venv_command, "medora-v1-venv"), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    base.run_command(
+        container_arguments(project_dir, out_dir, None, venv_command, "medora-v1-venv"),
+        None,
+        base.SHORT_COMMAND_TIMEOUT_SECONDS,
+    )
     pip_command = ["/work/.venv/bin/python", "-m", "pip", "install", "-r", requirements_name]
     arguments = container_arguments(project_dir, out_dir, None, pip_command, "medora-v1-pip", use_cache)
     started = time.monotonic()
@@ -296,14 +330,29 @@ def pytest_command(python_command: str, test_path: str) -> list[str]:
     Example:
         ("python", "tests") -> ["python", "-m", "pytest", "-p", "no:cacheprovider", "-rA", ..., "tests"]
     """
-    return [python_command, "-m", "pytest", "-p", "no:cacheprovider", "-rA", "--junitxml=/out/junit.xml",
-            "--ignore=tests/benchmarks", "--ignore=tests/load", test_path]
+    return [
+        python_command,
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "-rA",
+        "--junitxml=/out/junit.xml",
+        "--ignore=tests/benchmarks",
+        "--ignore=tests/load",
+        test_path,
+    ]
 
 
 def container_run_pytest(
-    project_dir: Path, out_dir: Path, run_label: str, network: str | None,
-    python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
-    environment: dict[str, str] | None = None, test_path: str = "tests",
+    project_dir: Path,
+    out_dir: Path,
+    run_label: str,
+    network: str | None,
+    python_command: str = "/work/.venv/bin/python",
+    image: str = IMAGE_NAME,
+    environment: dict[str, str] | None = None,
+    test_path: str = "tests",
 ) -> base.RunResult:
     """WHAT: Runs the whole v1 suite inside the container with no filters.
     Only tests/benchmarks and tests/load are ignored; the pytest cache is off.
@@ -330,7 +379,13 @@ def container_run_pytest(
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(container_arguments(project_dir, out_dir, network, command, "medora-v1-pytest", False, image, environment), None, base.PYTEST_TIMEOUT_SECONDS)
+        finished = base.run_command(
+            container_arguments(
+                project_dir, out_dir, network, command, "medora-v1-pytest", False, image, environment
+            ),
+            None,
+            base.PYTEST_TIMEOUT_SECONDS,
+        )
         return_code, stdout, stderr = finished.returncode, finished.stdout, finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
@@ -339,8 +394,15 @@ def container_run_pytest(
     elapsed = time.monotonic() - started
     (out_dir / "pytest.log").write_text(stdout, encoding="utf-8")
     (out_dir / "pytest-stderr.log").write_text(stderr, encoding="utf-8")
-    return base.RunResult(run_label, return_code, timed_out, elapsed, out_dir / "junit.xml",
-                          out_dir / "pytest.log", out_dir / "pytest-stderr.log")
+    return base.RunResult(
+        run_label,
+        return_code,
+        timed_out,
+        elapsed,
+        out_dir / "junit.xml",
+        out_dir / "pytest.log",
+        out_dir / "pytest-stderr.log",
+    )
 
 
 def container_python_version(project_dir: Path, out_dir: Path) -> str:
@@ -356,13 +418,21 @@ def container_python_version(project_dir: Path, out_dir: Path) -> str:
         container_python_version(proj, out) -> "Python 3.11.14"
     """
     command = ["python", "--version"]
-    finished = base.run_command(container_arguments(project_dir, out_dir, None, command, "medora-v1-version"), None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
+    finished = base.run_command(
+        container_arguments(project_dir, out_dir, None, command, "medora-v1-version"),
+        None,
+        base.SHORT_COMMAND_TIMEOUT_SECONDS,
+    )
     return finished.stdout.strip()
 
 
 def record_container_outcome(
-    args: argparse.Namespace, commit: str, project_dir: Path, out_dir: Path,
-    result: base.RunResult | None, note: str,
+    args: argparse.Namespace,
+    commit: str,
+    project_dir: Path,
+    out_dir: Path,
+    result: base.RunResult | None,
+    note: str,
 ) -> None:
     """WHAT: Parses junit.xml if present, summarises, and writes results.json/results.md.
     WHY: A failed install or crash must still leave honest evidence.
@@ -390,10 +460,19 @@ def record_container_outcome(
             note = (note + " No junit XML was produced.").strip()
         if result.timed_out:
             note = (note + " pytest hit the timeout and was killed.").strip()
-    os_name = f"Linux container (image {getattr(args, "image_name", IMAGE_NAME)}) on host {platform.system()} {platform.release()}"
+    os_name = f"Linux container (image {getattr(args, 'image_name', IMAGE_NAME)}) on host {platform.system()} {platform.release()}"
     version = container_python_version(project_dir, out_dir)
-    meta = base.RunMeta(args.tag, commit, args.run_label, datetime.now(UTC).isoformat(),
-                        os_name, version, round(wall, 1), sha, note)
+    meta = base.RunMeta(
+        args.tag,
+        commit,
+        args.run_label,
+        datetime.now(UTC).isoformat(),
+        os_name,
+        version,
+        round(wall, 1),
+        sha,
+        note,
+    )
     base.write_results(rows, base.summarise(rows), meta, out_dir)
 
 
@@ -417,9 +496,25 @@ def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
     listing = base.run_command(["docker", "network", "ls"], None, timeout).stdout
     (out_dir / "docker-network-ls.txt").write_text(listing, encoding="utf-8")
     print(listing)
-    ps_arguments = ["docker", "compose", "-p", COMPOSE_PROJECT_NAME, "-f", str(compose_file), "ps", "-q", "redis"]
+    ps_arguments = [
+        "docker",
+        "compose",
+        "-p",
+        COMPOSE_PROJECT_NAME,
+        "-f",
+        str(compose_file),
+        "ps",
+        "-q",
+        "redis",
+    ]
     container_id = base.run_command(ps_arguments, compose_file.parent, timeout).stdout.strip()
-    inspect_arguments = ["docker", "inspect", "--format", "{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}", container_id]
+    inspect_arguments = [
+        "docker",
+        "inspect",
+        "--format",
+        "{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}",
+        container_id,
+    ]
     names = base.run_command(inspect_arguments, None, timeout).stdout.split()
     if container_id == "" or len(names) != 1 or names[0] not in listing.split():
         raise RuntimeError(f"cannot determine the compose network (networks seen: {names})")
@@ -429,9 +524,20 @@ def discover_compose_network(compose_file: Path, out_dir: Path) -> str:
 # sourced: compose "!reset" (Compose v2.24+) clears a key. Host ports 5432/6379 and the fixed container names
 # sentinel_db/sentinel_redis are already taken by other containers on this laptop.
 PORT_OVERRIDE_TEXT = (
-    "services:" + chr(10)
-    + "  timescaledb:" + chr(10) + "    container_name: !reset null" + chr(10) + "    ports: !reset []" + chr(10)
-    + "  redis:" + chr(10) + "    container_name: !reset null" + chr(10) + "    ports: !reset []" + chr(10)
+    "services:"
+    + chr(10)
+    + "  timescaledb:"
+    + chr(10)
+    + "    container_name: !reset null"
+    + chr(10)
+    + "    ports: !reset []"
+    + chr(10)
+    + "  redis:"
+    + chr(10)
+    + "    container_name: !reset null"
+    + chr(10)
+    + "    ports: !reset []"
+    + chr(10)
 )
 
 
@@ -452,7 +558,16 @@ def compose_with_override(compose_file: Path, override_file: Path, action: list[
     Example:
         action=["down"] -> containers stopped, volumes kept
     """
-    arguments = ["docker", "compose", "-p", COMPOSE_PROJECT_NAME, "-f", str(compose_file), "-f", str(override_file)] + action
+    arguments = [
+        "docker",
+        "compose",
+        "-p",
+        COMPOSE_PROJECT_NAME,
+        "-f",
+        str(compose_file),
+        "-f",
+        str(override_file),
+    ] + action
     # v1's api/worker services declare "env_file: .env", and compose refuses to load without it.
     # The file exists only while compose runs, so pytest never sees it (pydantic would read it).
     env_file = compose_file.parent / ".env"
@@ -537,14 +652,21 @@ def compare_packages(image_packages: dict[str, str], venv_packages: dict[str, st
     Example:
         image {"a": "1", "pip": "24"}, earlier {"a": "2"} -> only_in_image ["pip==24"], version_differences [["a","1","2"]]
     """
-    only_in_image = [f"{name}=={image_packages[name]}" for name in sorted(set(image_packages) - set(venv_packages))]
-    only_in_earlier = [f"{name}=={venv_packages[name]}" for name in sorted(set(venv_packages) - set(image_packages))]
+    only_in_image = [
+        f"{name}=={image_packages[name]}" for name in sorted(set(image_packages) - set(venv_packages))
+    ]
+    only_in_earlier = [
+        f"{name}=={venv_packages[name]}" for name in sorted(set(venv_packages) - set(image_packages))
+    ]
     differences = []
     for name in sorted(set(image_packages) & set(venv_packages)):
         if image_packages[name] != venv_packages[name]:
             differences.append([name, image_packages[name], venv_packages[name]])
-    return {"only_in_image": only_in_image, "only_in_earlier_run": only_in_earlier,
-            "version_differences": differences}
+    return {
+        "only_in_image": only_in_image,
+        "only_in_earlier_run": only_in_earlier,
+        "version_differences": differences,
+    }
 
 
 def start_env_container(project_dir: Path) -> None:
@@ -564,9 +686,22 @@ def start_env_container(project_dir: Path) -> None:
     """
     reqs = (project_dir / "requirements.txt").as_posix()
     dev_reqs = (project_dir / "requirements-dev.txt").as_posix()
-    arguments = ["docker", "run", "-d", "--name", ENV_CONTAINER_NAME,
-                 "-v", f"{reqs}:/tmp/requirements.txt:ro", "-v", f"{dev_reqs}:/tmp/requirements-dev.txt:ro",
-                 "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip", IMAGE_NAME, "sleep", "infinity"]
+    arguments = [
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        ENV_CONTAINER_NAME,
+        "-v",
+        f"{reqs}:/tmp/requirements.txt:ro",
+        "-v",
+        f"{dev_reqs}:/tmp/requirements-dev.txt:ro",
+        "-v",
+        f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
+        IMAGE_NAME,
+        "sleep",
+        "infinity",
+    ]
     finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
     if finished.returncode != 0:
         raise RuntimeError(f"cannot start the build container: {finished.stderr.strip()}")
@@ -588,7 +723,9 @@ def exec_pip(requirements_path: str, log_path: Path) -> base.InstallResult:
     started = time.monotonic()
     timed_out = False
     try:
-        finished = base.run_command(["docker", "exec", ENV_CONTAINER_NAME] + command, None, CONTAINER_PIP_TIMEOUT_SECONDS)
+        finished = base.run_command(
+            ["docker", "exec", ENV_CONTAINER_NAME] + command, None, CONTAINER_PIP_TIMEOUT_SECONDS
+        )
         return_code, output = finished.returncode, finished.stdout + finished.stderr
     except subprocess.TimeoutExpired as error:
         timed_out = True
@@ -612,12 +749,16 @@ def freeze_and_commit(out_dir: Path) -> tuple[str, str, float]:
         freeze_and_commit(out) -> ("9f2c...", "sha256:73e7...", 412.6)
     """
     timeout = base.SHORT_COMMAND_TIMEOUT_SECONDS
-    freeze = base.run_command(["docker", "exec", ENV_CONTAINER_NAME, "python", "-m", "pip", "freeze"], None, timeout)
+    freeze = base.run_command(
+        ["docker", "exec", ENV_CONTAINER_NAME, "python", "-m", "pip", "freeze"], None, timeout
+    )
     if freeze.returncode != 0:
         raise RuntimeError(f"pip freeze failed: {freeze.stderr.strip()}")
     (out_dir / "pip-freeze.txt").write_text(freeze.stdout, encoding="utf-8")
     commit_started = time.monotonic()
-    commit = base.run_command(["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, COMMIT_TIMEOUT_SECONDS)
+    commit = base.run_command(
+        ["docker", "commit", ENV_CONTAINER_NAME, ENV_IMAGE_NAME], None, COMMIT_TIMEOUT_SECONDS
+    )
     commit_seconds = time.monotonic() - commit_started
     if commit.returncode != 0:
         raise RuntimeError(f"docker commit failed: {commit.stderr.strip()}")
@@ -646,17 +787,25 @@ def build_env_image(project_dir: Path, out_dir: Path, pip_log: Path) -> dict[str
     try:
         v1_install = exec_pip("/tmp/requirements.txt", pip_log)
         if not v1_install.succeeded:
-            raise RuntimeError(f"pip install of v1 requirements failed (rc={v1_install.return_code}); see pip.log")
+            raise RuntimeError(
+                f"pip install of v1 requirements failed (rc={v1_install.return_code}); see pip.log"
+            )
         dev_install = exec_pip("/tmp/requirements-dev.txt", pip_log)
         freeze_hash, env_image_id, save_seconds = freeze_and_commit(out_dir)
     finally:
         stop_container(ENV_CONTAINER_NAME)
-    return {"env_image_name": ENV_IMAGE_NAME, "env_image_id": env_image_id, "pip_freeze_sha256": freeze_hash,
-            "cache_before_run": cache_before, "install_cache_label": cache_label(cache_before),
-            "env_pip_v1_exit_code": v1_install.return_code, "env_pip_v1_wall_seconds": round(v1_install.wall_seconds, 1),
-            "env_pip_dev_wall_seconds": round(dev_install.wall_seconds, 1),
-            "env_image_save_wall_seconds": round(save_seconds, 1),
-            "env_build_total_wall_seconds": round(time.monotonic() - started, 1)}
+    return {
+        "env_image_name": ENV_IMAGE_NAME,
+        "env_image_id": env_image_id,
+        "pip_freeze_sha256": freeze_hash,
+        "cache_before_run": cache_before,
+        "install_cache_label": cache_label(cache_before),
+        "env_pip_v1_exit_code": v1_install.return_code,
+        "env_pip_v1_wall_seconds": round(v1_install.wall_seconds, 1),
+        "env_pip_dev_wall_seconds": round(dev_install.wall_seconds, 1),
+        "env_image_save_wall_seconds": round(save_seconds, 1),
+        "env_build_total_wall_seconds": round(time.monotonic() - started, 1),
+    }
 
 
 def verify_saved_image(earlier_dir: Path, out_dir: Path) -> dict[str, object]:
@@ -751,7 +900,9 @@ def execute_env_run(args: argparse.Namespace, work_root: Path, out_dir: Path) ->
     build_image()
     project_dir = base.clone_v1(args.tag, work_root / "v1")
     commit = base.read_commit_hash(work_root / "v1")
-    shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
+    shutil.copy(
+        Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt"
+    )
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
     if args.reuse_env_from:
@@ -829,18 +980,31 @@ def prove_connectivity(
     Example:
         services up -> file lists "accepting connections", "select 1 -> 1", "redis ping -> True"
     """
-    code = "; ".join(["import os, psycopg2, redis",
-                      "c = psycopg2.connect(os.environ['DATABASE_URL'], connect_timeout=10)",
-                      "k = c.cursor()", "k.execute('select 1')", "print('postgres select 1 ->', k.fetchone()[0])",
-                      "r = redis.Redis.from_url(os.environ['REDIS_URL'], socket_connect_timeout=10)",
-                      "print('redis ping ->', r.ping())"])
-    report = [f"DATABASE_URL={mask_url(environment['DATABASE_URL'])}", f"REDIS_URL={mask_url(environment['REDIS_URL'])}"]
+    code = "; ".join(
+        [
+            "import os, psycopg2, redis",
+            "c = psycopg2.connect(os.environ['DATABASE_URL'], connect_timeout=10)",
+            "k = c.cursor()",
+            "k.execute('select 1')",
+            "print('postgres select 1 ->', k.fetchone()[0])",
+            "r = redis.Redis.from_url(os.environ['REDIS_URL'], socket_connect_timeout=10)",
+            "print('redis ping ->', r.ping())",
+        ]
+    )
+    report = [
+        f"DATABASE_URL={mask_url(environment['DATABASE_URL'])}",
+        f"REDIS_URL={mask_url(environment['REDIS_URL'])}",
+    ]
     commands = [["pg_isready", "-h", "timescaledb", "-p", "5432"], ["python", "-c", code]]
     failed = False
     for command in commands:
-        arguments = container_arguments(project_dir, out_dir, network, command, "medora-v1-check", False, image, environment)
+        arguments = container_arguments(
+            project_dir, out_dir, network, command, "medora-v1-check", False, image, environment
+        )
         finished = base.run_command(arguments, None, base.SHORT_COMMAND_TIMEOUT_SECONDS)
-        report.append(f"$ {command[0]} -> rc={finished.returncode} {finished.stdout.strip()} {finished.stderr.strip()[-300:]}")
+        report.append(
+            f"$ {command[0]} -> rc={finished.returncode} {finished.stdout.strip()} {finished.stderr.strip()[-300:]}"
+        )
         failed = failed or finished.returncode != 0
     (out_dir / "connectivity-check.txt").write_text(chr(10).join(report) + chr(10), encoding="utf-8")
     if failed:
@@ -848,8 +1012,11 @@ def prove_connectivity(
 
 
 def run_inside_container(
-    args: argparse.Namespace, project_dir: Path, out_dir: Path,
-    python_command: str = "/work/.venv/bin/python", image: str = IMAGE_NAME,
+    args: argparse.Namespace,
+    project_dir: Path,
+    out_dir: Path,
+    python_command: str = "/work/.venv/bin/python",
+    image: str = IMAGE_NAME,
     use_services_env: bool = False,
 ) -> base.RunResult:
     """WHAT: Runs pytest in the container; for docker-with-db it first starts v1's timescaledb and redis
@@ -872,7 +1039,9 @@ def run_inside_container(
         "docker-with-db" -> compose up timescaledb+redis, pytest on network, compose down
     """
     if args.run_label == "docker-no-services":
-        return container_run_pytest(project_dir, out_dir, args.run_label, None, python_command, image, None, args.test_path)
+        return container_run_pytest(
+            project_dir, out_dir, args.run_label, None, python_command, image, None, args.test_path
+        )
     compose_file = project_dir / "docker-compose.yml"
     try:
         override_file = project_dir / "docker-compose.no-ports.yml"
@@ -882,7 +1051,9 @@ def run_inside_container(
         environment = read_service_env(project_dir) if use_services_env else None
         if environment is not None:
             prove_connectivity(project_dir, out_dir, network, image, environment)
-        return container_run_pytest(project_dir, out_dir, args.run_label, network, python_command, image, environment, args.test_path)
+        return container_run_pytest(
+            project_dir, out_dir, args.run_label, network, python_command, image, environment, args.test_path
+        )
     finally:
         compose_with_override(compose_file, project_dir / "docker-compose.no-ports.yml", ["down"])
 
@@ -910,13 +1081,22 @@ def install_and_record_meta(
     if installed.succeeded:
         installed = container_pip_install(project_dir, out_dir, "requirements-dev.txt", pip_log, use_cache)
     downloaded, cached = parse_pip_sizes(pip_log.read_text(encoding="utf-8", errors="replace"))
-    write_meta_json(out_dir, {
-        "image_name": IMAGE_NAME, "image_id": image_id(), "cache_before_run": cache_before,
-        "fresh_cache": args.fresh_cache, "install_cache_label": cache_label(cache_before),
-        "pip_exit_code": v1_install.return_code, "pip_wall_seconds": round(v1_install.wall_seconds, 1),
-        "pip_timed_out": v1_install.timed_out, "pip_downloaded_bytes": downloaded,
-        "pip_cached_bytes": cached, "size_measurement": SIZE_MEASUREMENT_NOTE,
-    })
+    write_meta_json(
+        out_dir,
+        {
+            "image_name": IMAGE_NAME,
+            "image_id": image_id(),
+            "cache_before_run": cache_before,
+            "fresh_cache": args.fresh_cache,
+            "install_cache_label": cache_label(cache_before),
+            "pip_exit_code": v1_install.return_code,
+            "pip_wall_seconds": round(v1_install.wall_seconds, 1),
+            "pip_timed_out": v1_install.timed_out,
+            "pip_downloaded_bytes": downloaded,
+            "pip_cached_bytes": cached,
+            "size_measurement": SIZE_MEASUREMENT_NOTE,
+        },
+    )
     note = install_note(cache_before, v1_install.wall_seconds, downloaded, cached)
     if not installed.succeeded:
         note += f" pip install failed (rc={installed.return_code}); tests not run."
@@ -943,7 +1123,9 @@ def execute_container_run(args: argparse.Namespace, work_root: Path, out_dir: Pa
     build_image()
     project_dir = base.clone_v1(args.tag, work_root / "v1")
     commit = base.read_commit_hash(work_root / "v1")
-    shutil.copy(Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt")
+    shutil.copy(
+        Path(__file__).resolve().parents[2] / "requirements-dev.txt", project_dir / "requirements-dev.txt"
+    )
     pip_log = out_dir / "pip.log"
     pip_log.unlink(missing_ok=True)
     installed, note = install_and_record_meta(args, project_dir, out_dir, pip_log)
@@ -967,9 +1149,17 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description="Record v1's test results inside a Linux container.")
     parser.add_argument("--run-label", required=True, choices=ALLOWED_LABELS)
-    parser.add_argument("--reuse-env-from", default=None, help="out folder of an earlier run; reuse its saved image if provably identical")
-    parser.add_argument("--test-path", default="tests", help="path pytest collects, relative to sentinel_flow_mvp")
-    parser.add_argument("--fresh-cache", action="store_true", help="do not mount the wheel-cache volume (cold install)")
+    parser.add_argument(
+        "--reuse-env-from",
+        default=None,
+        help="out folder of an earlier run; reuse its saved image if provably identical",
+    )
+    parser.add_argument(
+        "--test-path", default="tests", help="path pytest collects, relative to sentinel_flow_mvp"
+    )
+    parser.add_argument(
+        "--fresh-cache", action="store_true", help="do not mount the wheel-cache volume (cold install)"
+    )
     parser.add_argument("--tag", default=base.V1_DEFAULT_TAG)
     parser.add_argument("--out-root", default="docs/phase0/v1-test-results")
     args = parser.parse_args(argv)

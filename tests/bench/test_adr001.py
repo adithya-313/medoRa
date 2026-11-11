@@ -1,6 +1,7 @@
 # TERM: unit test - an automated check that tests isolated logic without external dependencies.
 # TERM: test fixture - synthetic data structured to exercise specific code execution paths.
 """Unit tests for ADR-001 dependency manager benchmark harness."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -219,8 +220,14 @@ def test_failing_clean_marks_cold_step_not_measured(tmp_path: Path) -> None:
         test_failing_clean_marks_cold_step_not_measured(tmp_path) -> None
     """
     res = execute_cold_install(
-        "tool_x", tmp_path, tmp_path / "venv", tmp_path,
-        clean_ok=False, clean_msg="exit code 1", b_before=100, b_after=100
+        "tool_x",
+        tmp_path,
+        tmp_path / "venv",
+        tmp_path,
+        clean_ok=False,
+        clean_msg="exit code 1",
+        b_before=100,
+        b_after=100,
     )
     assert res["status"] == "not_measured"
     assert res["exit_code"] is None
@@ -388,8 +395,10 @@ def test_table_renders_not_measured_not_zero() -> None:
         "tools": {
             "poetry": {
                 "hard_rules": {
-                    "H1": {"passed": True}, "H2": {"passed": True},
-                    "H3": {"passed": True}, "H4": {"passed": True},
+                    "H1": {"passed": True},
+                    "H2": {"passed": True},
+                    "H3": {"passed": True},
+                    "H4": {"passed": True},
                 },
                 "summary": {
                     "median_lock_seconds": 5.0,
@@ -420,22 +429,46 @@ def build_unupgraded_mock_results() -> dict[str, Any]:
         "metadata": {"candidate_versions": {"poetry": "1.8.0", "pip-tools": "7.4.0"}},
         "tools": {
             "poetry": {
-                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": False}, "H4": {"passed": True}},
+                "hard_rules": {
+                    "H1": {"passed": True},
+                    "H2": {"passed": True},
+                    "H3": {"passed": False},
+                    "H4": {"passed": True},
+                },
                 "summary": {},
-                "runs": [{
-                    "lock": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
-                    "cold_install": {"seconds": 0.0, "exit_code": 1, "status": "failed", "tail": "Cache clean unverified: 37 files"},
-                    "warm_install": {"seconds": 2.0, "exit_code": 0, "status": "ok"},
-                }],
+                "runs": [
+                    {
+                        "lock": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
+                        "cold_install": {
+                            "seconds": 0.0,
+                            "exit_code": 1,
+                            "status": "failed",
+                            "tail": "Cache clean unverified: 37 files",
+                        },
+                        "warm_install": {"seconds": 2.0, "exit_code": 0, "status": "ok"},
+                    }
+                ],
             },
             "pip-tools": {
-                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": False}, "H4": {"passed": True}},
+                "hard_rules": {
+                    "H1": {"passed": True},
+                    "H2": {"passed": True},
+                    "H3": {"passed": False},
+                    "H4": {"passed": True},
+                },
                 "summary": {},
-                "runs": [{
-                    "lock": {"seconds": 10.0, "exit_code": 0, "status": "ok"},
-                    "cold_install": {"seconds": 15.0, "exit_code": 0, "status": "ok"},
-                    "warm_install": {"seconds": 5.0, "exit_code": 1, "status": "failed", "tail": "Traceback: error"},
-                }],
+                "runs": [
+                    {
+                        "lock": {"seconds": 10.0, "exit_code": 0, "status": "ok"},
+                        "cold_install": {"seconds": 15.0, "exit_code": 0, "status": "ok"},
+                        "warm_install": {
+                            "seconds": 5.0,
+                            "exit_code": 1,
+                            "status": "failed",
+                            "tail": "Traceback: error",
+                        },
+                    }
+                ],
             },
         },
     }
@@ -483,11 +516,13 @@ def test_upgrade_results_raises_on_unknown_entry() -> None:
             "corrupt": {
                 "hard_rules": {},
                 "summary": {},
-                "runs": [{
-                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                    "cold_install": {"status": "unrecognized_status"},
-                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                }],
+                "runs": [
+                    {
+                        "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                        "cold_install": {"status": "unrecognized_status"},
+                        "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    }
+                ],
             }
         },
     }
@@ -510,22 +545,41 @@ def test_upgrade_results_preserves_real_cold_failure() -> None:
         "metadata": {"tool_versions": {"uv": "0.13.7", "pip-tools": "7.6.2"}},
         "tools": {
             "uv": {
-                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": True}, "H4": {"passed": True}},
+                "hard_rules": {
+                    "H1": {"passed": True},
+                    "H2": {"passed": True},
+                    "H3": {"passed": True},
+                    "H4": {"passed": True},
+                },
                 "summary": {"median_warm_install_seconds": 1.0, "median_cold_install_seconds": 5.0},
-                "runs": [{
-                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                    "cold_install": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
-                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                }],
+                "runs": [
+                    {
+                        "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                        "cold_install": {"seconds": 5.0, "exit_code": 0, "status": "ok"},
+                        "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    }
+                ],
             },
             "pip-tools": {
-                "hard_rules": {"H1": {"passed": True}, "H2": {"passed": True}, "H3": {"passed": True}, "H4": {"passed": True}},
+                "hard_rules": {
+                    "H1": {"passed": True},
+                    "H2": {"passed": True},
+                    "H3": {"passed": True},
+                    "H4": {"passed": True},
+                },
                 "summary": {},
-                "runs": [{
-                    "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                    "cold_install": {"seconds": 5.0, "exit_code": 1, "status": "failed", "tail": "ERROR: network unreachable"},
-                    "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
-                }],
+                "runs": [
+                    {
+                        "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                        "cold_install": {
+                            "seconds": 5.0,
+                            "exit_code": 1,
+                            "status": "failed",
+                            "tail": "ERROR: network unreachable",
+                        },
+                        "warm_install": {"seconds": 1.0, "exit_code": 0, "status": "ok"},
+                    }
+                ],
             },
         },
     }
@@ -551,7 +605,12 @@ def test_failed_step_without_exit_code_fails_h3() -> None:
     failed_runs: list[dict[str, Any]] = [
         {
             "lock": {"seconds": 1.0, "exit_code": 0, "status": "ok", "tail": ""},
-            "cold_install": {"seconds": 300.0, "exit_code": None, "status": "failed", "tail": "Timed out after 300s"},
+            "cold_install": {
+                "seconds": 300.0,
+                "exit_code": None,
+                "status": "failed",
+                "tail": "Timed out after 300s",
+            },
             "warm_install": {"seconds": 0.5, "exit_code": 0, "status": "ok", "tail": ""},
         }
     ]

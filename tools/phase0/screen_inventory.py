@@ -10,6 +10,7 @@ function. The look of v1 is deliberately NOT recorded (v2 gets a new design).
 This is a TEXT SCAN of TypeScript, not a parser. It reads lines; it cannot follow variables or imports
 across files except for the simple import check used for orphan files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -194,7 +195,11 @@ def source_files(v1_dir: Path) -> list[Path]:
     files: list[Path] = []
     for folder in ("src", "components"):
         for suffix in SOURCE_SUFFIXES:
-            files += [path for path in (v1_dir / FRONTEND / folder).rglob(f"*{suffix}") if "node_modules" not in path.parts]
+            files += [
+                path
+                for path in (v1_dir / FRONTEND / folder).rglob(f"*{suffix}")
+                if "node_modules" not in path.parts
+            ]
     return sorted(files)
 
 
@@ -214,7 +219,7 @@ def call_text(lines: list[str], start_index: int) -> str:
     """
     depth = 0
     collected: list[str] = []
-    for line in lines[start_index:start_index + MAX_CALL_LINES]:
+    for line in lines[start_index : start_index + MAX_CALL_LINES]:
         collected.append(line)
         depth += line.count("(") - line.count(")")
         if depth <= 0:
@@ -295,8 +300,15 @@ def discover_frontend_calls(v1_dir: Path) -> list[FrontendCall]:
             if is_comment_line(line):
                 continue
             for match in API_PATH_PATTERN.finditer(line):
-                calls.append(FrontendCall(normalise_frontend_path(match.group(1)), match.group(1), relative,
-                                          index + 1, method_of_call(lines, index)))
+                calls.append(
+                    FrontendCall(
+                        normalise_frontend_path(match.group(1)),
+                        match.group(1),
+                        relative,
+                        index + 1,
+                        method_of_call(lines, index),
+                    )
+                )
     return calls
 
 
@@ -321,7 +333,7 @@ def discover_non_literal_calls(v1_dir: Path) -> list[tuple[str, int, str]]:
             match = CALL_START_PATTERN.search(line)
             if match is None or is_comment_line(line):
                 continue
-            argument = line[match.end():].lstrip()
+            argument = line[match.end() :].lstrip()
             if argument[:1] not in ("'", '"', "`") and not argument.startswith("method"):
                 found.append((relative, index + 1, line.strip()))
     return found
@@ -479,7 +491,11 @@ def check_unused_evidence(item: UnusedEvidence, v1_dir: Path) -> str | None:
         target = v1_dir / item.name
         if not target.is_file():
             return f"orphan_file {item.name}: file not found"
-        return f"orphan_file {item.name}: is imported by another file" if is_imported_anywhere(v1_dir, target) else None
+        return (
+            f"orphan_file {item.name}: is imported by another file"
+            if is_imported_anywhere(v1_dir, target)
+            else None
+        )
     defined = v1_dir / item.defined_in
     if not defined.is_file():
         return f"unreferenced_identifier {item.name}: defined_in {item.defined_in} not found"
@@ -488,7 +504,9 @@ def check_unused_evidence(item: UnusedEvidence, v1_dir: Path) -> str | None:
     return None
 
 
-def parse_evidence_list(raw: object, label: str, allow_negative: bool = False) -> list[Evidence | UnusedEvidence]:
+def parse_evidence_list(
+    raw: object, label: str, allow_negative: bool = False
+) -> list[Evidence | UnusedEvidence]:
     """WHAT: Validates a list of evidence items: code items as in feature_truth, plus (if allowed) the negative
     kinds unreferenced_identifier {name, defined_in} and orphan_file {name}.
     WHY: Every claim in screens.yaml needs verifiable evidence.
@@ -536,7 +554,14 @@ def load_screens(path: Path) -> dict:
         a file with pages, unused_calls, reviewed_non_literal_calls, hard_coded_data, must_keep, rebuild_in_v2 -> that dict
     """
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    required = ["pages", "unused_calls", "reviewed_non_literal_calls", "hard_coded_data", "must_keep", "rebuild_in_v2"]
+    required = [
+        "pages",
+        "unused_calls",
+        "reviewed_non_literal_calls",
+        "hard_coded_data",
+        "must_keep",
+        "rebuild_in_v2",
+    ]
     if not isinstance(document, dict):
         raise ScreenInventoryError(f"{path}: expected a mapping")
     for key in required:
@@ -562,8 +587,13 @@ def split_call_reference(reference: str) -> tuple[str, str]:
     return "", normalise_frontend_path(reference)
 
 
-def check_coverage(document: dict, pages: list[Page], calls: list[FrontendCall],
-                   non_literal: list[tuple[str, int, str]], feature_status: dict[str, str]) -> list[str]:
+def check_coverage(
+    document: dict,
+    pages: list[Page],
+    calls: list[FrontendCall],
+    non_literal: list[tuple[str, int, str]],
+    feature_status: dict[str, str],
+) -> list[str]:
     """WHAT: Checks completeness: every page has an entry; every discovered call path appears in some action's
     api_calls or in unused_calls; every api_calls reference and its method exist among the discovered calls;
     every non-literal call is acknowledged; every referenced feature id exists; must_keep entries link only to
@@ -666,7 +696,10 @@ def check_non_literal(document: dict, non_literal: list[tuple[str, int, str]]) -
     reviewed = {(item.get("file"), item.get("line")) for item in document["reviewed_non_literal_calls"]}
     found = {(file, line) for file, line, _ in non_literal}
     problems = [f"non-literal call not reviewed: {file}:{line}" for file, line in sorted(found - reviewed)]
-    problems += [f"reviewed non-literal call not found: {file}:{line}" for file, line in sorted(reviewed - found, key=str)]
+    problems += [
+        f"reviewed non-literal call not found: {file}:{line}"
+        for file, line in sorted(reviewed - found, key=str)
+    ]
     return problems
 
 
@@ -688,14 +721,19 @@ def check_feature_links(document: dict, feature_status: dict[str, str]) -> list[
         ids = list(page.get("linked_features") or [])
         for action in page.get("user_actions") or []:
             ids += action.get("features") or []
-        problems += [f"{page.get('route')}: unknown feature id {feature_id}" for feature_id in ids if feature_id not in feature_status]
+        problems += [
+            f"{page.get('route')}: unknown feature id {feature_id}"
+            for feature_id in ids
+            if feature_id not in feature_status
+        ]
     problems += check_list_entries(document, "must_keep", MUST_KEEP_STATUSES, "rebuild_in_v2", feature_status)
     problems += check_list_entries(document, "rebuild_in_v2", REBUILD_STATUSES, "must_keep", feature_status)
     return problems
 
 
-def check_list_entries(document: dict, list_name: str, allowed: list[str], other_list: str,
-                       feature_status: dict[str, str]) -> list[str]:
+def check_list_entries(
+    document: dict, list_name: str, allowed: list[str], other_list: str, feature_status: dict[str, str]
+) -> list[str]:
     """WHAT: Checks the entries of must_keep or rebuild_in_v2: the feature id exists with an allowed status, and
     the named page and action really exist in screens.yaml (unless the page is one of NON_PAGE_SCOPES).
     WHY: A mocked feature listed as must_keep would claim v1 behaviour that is fake, and a list entry that
@@ -712,8 +750,10 @@ def check_list_entries(document: dict, list_name: str, allowed: list[str], other
     Example:
         must_keep linking to auto-po (mocked) -> ["must_keep '...': feature auto-po is mocked; list it under rebuild_in_v2"]
     """
-    actions_by_route = {page.get("route"): {action.get("name") for action in page.get("user_actions") or []}
-                        for page in document["pages"]}
+    actions_by_route = {
+        page.get("route"): {action.get("name") for action in page.get("user_actions") or []}
+        for page in document["pages"]
+    }
     problems: list[str] = []
     for entry in document[list_name]:
         label = f"{list_name} '{entry.get('action')}'"
@@ -721,7 +761,9 @@ def check_list_entries(document: dict, list_name: str, allowed: list[str], other
         if status is None:
             problems.append(f"{label}: unknown feature id {entry.get('feature')}")
         elif status not in allowed:
-            problems.append(f"{label}: feature {entry.get('feature')} is {status}; list it under {other_list}")
+            problems.append(
+                f"{label}: feature {entry.get('feature')} is {status}; list it under {other_list}"
+            )
         page = entry.get("page")
         if page not in NON_PAGE_SCOPES and entry.get("action") not in actions_by_route.get(page, set()):
             problems.append(f"{label}: no action with that name on page {page}")
@@ -748,11 +790,28 @@ def collect_evidence(document: dict) -> list[tuple[str, list[Evidence | UnusedEv
     for page in document["pages"]:
         route = page.get("route")
         for action in page.get("user_actions") or []:
-            pairs.append((f"{route} action '{action.get('name')}'", parse_evidence_list(action.get("evidence"), f"{route} action '{action.get('name')}'")))
+            pairs.append(
+                (
+                    f"{route} action '{action.get('name')}'",
+                    parse_evidence_list(action.get("evidence"), f"{route} action '{action.get('name')}'"),
+                )
+            )
         for shown in page.get("data_shown") or []:
-            pairs.append((f"{route} data '{shown.get('what')}'", parse_evidence_list(shown.get("evidence"), f"{route} data '{shown.get('what')}'")))
+            pairs.append(
+                (
+                    f"{route} data '{shown.get('what')}'",
+                    parse_evidence_list(shown.get("evidence"), f"{route} data '{shown.get('what')}'"),
+                )
+            )
     for item in document["unused_calls"]:
-        pairs.append((f"unused call {item.get('call')}", parse_evidence_list(item.get("evidence"), f"unused call {item.get('call')}", allow_negative=True)))
+        pairs.append(
+            (
+                f"unused call {item.get('call')}",
+                parse_evidence_list(
+                    item.get("evidence"), f"unused call {item.get('call')}", allow_negative=True
+                ),
+            )
+        )
     for item in document["hard_coded_data"] + document["reviewed_non_literal_calls"]:
         label = f"{item.get('where') or item.get('file')}:{item.get('line', '')}"
         pairs.append((label, parse_evidence_list(item.get("evidence"), label)))
@@ -784,8 +843,13 @@ def check_evidence(document: dict, v1_dir: Path) -> list[str]:
     return problems
 
 
-def render_screens(document: dict, matches: list[CallMatch], any_route_group: bool,
-                   non_literal: list[tuple[str, int, str]], feature_status: dict[str, str]) -> str:
+def render_screens(
+    document: dict,
+    matches: list[CallMatch],
+    any_route_group: bool,
+    non_literal: list[tuple[str, int, str]],
+    feature_status: dict[str, str],
+) -> str:
     """WHAT: Renders screens.md: a page-by-page summary, the dead-call table (computed from the match results)
     plus the declared unused calls, the hard-coded-data table, the must_keep list and the "rebuild properly in
     v2" list, and the non-literal calls to check by hand.
@@ -802,9 +866,18 @@ def render_screens(document: dict, matches: list[CallMatch], any_route_group: bo
     Example:
         8 pages and 2 dead calls -> a page section per route and a 2-row dead-call table
     """
-    lines = ["# v1 screen and function inventory", "", "_Generated by tools/phase0/screen_inventory.py. Do not edit by hand._", "",
-             "Records what each screen does, not how it looks (v2 gets a new design).", "",
-             f"Route groups in the app folder: {'yes' if any_route_group else 'none'}.", "", "## Pages", ""]
+    lines = [
+        "# v1 screen and function inventory",
+        "",
+        "_Generated by tools/phase0/screen_inventory.py. Do not edit by hand._",
+        "",
+        "Records what each screen does, not how it looks (v2 gets a new design).",
+        "",
+        f"Route groups in the app folder: {'yes' if any_route_group else 'none'}.",
+        "",
+        "## Pages",
+        "",
+    ]
     for page in document["pages"]:
         lines += render_page(page, feature_status)
     lines += render_call_tables(document, matches, non_literal)
@@ -824,13 +897,22 @@ def render_page(page: dict, feature_status: dict[str, str]) -> list[str]:
     Example:
         a page with 2 actions -> a heading, the purpose and a 2-row actions table
     """
-    lines = [f"### {page['route']}  (`{page['file']}`)", "", page["purpose"], "",
-             "| action | where | API calls | features |", "|---|---|---|---|"]
+    lines = [
+        f"### {page['route']}  (`{page['file']}`)",
+        "",
+        page["purpose"],
+        "",
+        "| action | where | API calls | features |",
+        "|---|---|---|---|",
+    ]
     for action in page.get("user_actions") or []:
         where = action["evidence"][0]
         place = f"{where.get('file')}:{where.get('line')}"
         calls = ", ".join(action.get("api_calls") or []) or "none (local only)"
-        features = ", ".join(f"{fid} ({feature_status.get(fid)})" for fid in action.get("features") or []) or "UI only"
+        features = (
+            ", ".join(f"{fid} ({feature_status.get(fid)})" for fid in action.get("features") or [])
+            or "UI only"
+        )
         lines.append(f"| {action['name']} | {place} | {calls} | {features} |")
     lines += ["", "Data shown:", ""]
     for shown in page.get("data_shown") or []:
@@ -840,7 +922,9 @@ def render_page(page: dict, feature_status: dict[str, str]) -> list[str]:
     return lines
 
 
-def render_call_tables(document: dict, matches: list[CallMatch], non_literal: list[tuple[str, int, str]]) -> list[str]:
+def render_call_tables(
+    document: dict, matches: list[CallMatch], non_literal: list[tuple[str, int, str]]
+) -> list[str]:
     """WHAT: Renders the dead-call table (frontend calls with no backend route), the method problems, the
     declared unused calls with reasons, the hard-coded-data table and the non-literal calls to check by hand.
     WHY: These are the places where v1's frontend and backend disagree or fake data.
@@ -856,17 +940,43 @@ def render_call_tables(document: dict, matches: list[CallMatch], non_literal: li
     """
     dead = [match for match in matches if match.status == "dead"]
     problems = [match for match in matches if match.status == "method mismatch"]
-    lines = ["## Dead calls (frontend calls with no backend route)", "", "| path | method | where |", "|---|---|---|"]
-    lines += [f"| {m.call.path} | {m.call.method} | {m.call.file}:{m.call.line} |" for m in dead] or ["| none | | |"]
-    lines += ["", "## Method mismatches", "", "| path | frontend method | backend routes | where |", "|---|---|---|---|"]
-    lines += [f"| {m.call.path} | {m.call.method} | {', '.join(m.backend_routes)} | {m.call.file}:{m.call.line} |" for m in problems] or ["| none | | | |"]
+    lines = [
+        "## Dead calls (frontend calls with no backend route)",
+        "",
+        "| path | method | where |",
+        "|---|---|---|",
+    ]
+    lines += [f"| {m.call.path} | {m.call.method} | {m.call.file}:{m.call.line} |" for m in dead] or [
+        "| none | | |"
+    ]
+    lines += [
+        "",
+        "## Method mismatches",
+        "",
+        "| path | frontend method | backend routes | where |",
+        "|---|---|---|---|",
+    ]
+    lines += [
+        f"| {m.call.path} | {m.call.method} | {', '.join(m.backend_routes)} | {m.call.file}:{m.call.line} |"
+        for m in problems
+    ] or ["| none | | | |"]
     lines += ["", "## Calls no screen can reach (unused_calls)", "", "| call | reason |", "|---|---|"]
     lines += [f"| {item['call']} | {item['reason']} |" for item in document["unused_calls"]] or ["| none | |"]
     lines += ["", "## Hard-coded data", "", "| where | what | effect |", "|---|---|---|"]
-    lines += [f"| {item['where']} | {item['what']} | {item['effect']} |" for item in document["hard_coded_data"]]
-    lines += ["", "## Calls whose URL is not a plain string (checked by hand)", "", "| where | note |", "|---|---|"]
+    lines += [
+        f"| {item['where']} | {item['what']} | {item['effect']} |" for item in document["hard_coded_data"]
+    ]
+    lines += [
+        "",
+        "## Calls whose URL is not a plain string (checked by hand)",
+        "",
+        "| where | note |",
+        "|---|---|",
+    ]
     notes = {(item["file"], item["line"]): item["reason"] for item in document["reviewed_non_literal_calls"]}
-    lines += [f"| {file}:{line} | {notes.get((file, line), 'NOT REVIEWED')} |" for file, line, _ in non_literal]
+    lines += [
+        f"| {file}:{line} | {notes.get((file, line), 'NOT REVIEWED')} |" for file, line, _ in non_literal
+    ]
     return lines
 
 
@@ -884,9 +994,21 @@ def render_lists(document: dict, feature_status: dict[str, str]) -> list[str]:
         one must_keep entry -> a row "pos: add item | pos-checkout (working) | reason"
     """
     lines = ["", "## must_keep for v2", "", "| action | feature | reason |", "|---|---|---|"]
-    lines += [f"| {e['page']}: {e['action']} | {e['feature']} ({feature_status.get(e['feature'])}) | {e['reason']} |" for e in document["must_keep"]]
-    lines += ["", "## Rebuild properly in v2 (v1 version is mocked or missing)", "", "| action | feature | reason |", "|---|---|---|"]
-    lines += [f"| {e['page']}: {e['action']} | {e['feature']} ({feature_status.get(e['feature'])}) | {e['reason']} |" for e in document["rebuild_in_v2"]]
+    lines += [
+        f"| {e['page']}: {e['action']} | {e['feature']} ({feature_status.get(e['feature'])}) | {e['reason']} |"
+        for e in document["must_keep"]
+    ]
+    lines += [
+        "",
+        "## Rebuild properly in v2 (v1 version is mocked or missing)",
+        "",
+        "| action | feature | reason |",
+        "|---|---|---|",
+    ]
+    lines += [
+        f"| {e['page']}: {e['action']} | {e['feature']} ({feature_status.get(e['feature'])}) | {e['reason']} |"
+        for e in document["rebuild_in_v2"]
+    ]
     return lines
 
 
@@ -913,15 +1035,21 @@ def audit(v1_dir: Path, directory: Path, features_path: Path, out_directory: Pat
     calls = discover_frontend_calls(v1_dir)
     non_literal = discover_non_literal_calls(v1_dir)
     matches = match_calls_to_routes(calls, [item.key for item in discover_inventory(v1_dir)])
-    problems = check_coverage(document, pages, calls, non_literal, feature_status) + check_evidence(document, v1_dir)
+    problems = check_coverage(document, pages, calls, non_literal, feature_status) + check_evidence(
+        document, v1_dir
+    )
     for problem in problems:
         print("PROBLEM:", problem)
     if problems:
         return 1
     out_directory.mkdir(parents=True, exist_ok=True)
-    (out_directory / "screens.md").write_text(render_screens(document, matches, any_group, non_literal, feature_status), encoding="utf-8")
-    print(f"OK: {len(pages)} pages, {len({c.path for c in calls})} distinct call paths, "
-          f"{sum(1 for m in matches if m.status == 'dead')} dead call(s), all evidence verified")
+    (out_directory / "screens.md").write_text(
+        render_screens(document, matches, any_group, non_literal, feature_status), encoding="utf-8"
+    )
+    print(
+        f"OK: {len(pages)} pages, {len({c.path for c in calls})} distinct call paths, "
+        f"{sum(1 for m in matches if m.status == 'dead')} dead call(s), all evidence verified"
+    )
     return 0
 
 
@@ -943,7 +1071,11 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/screens")
     parser.add_argument("--features", default="docs/phase0/feature-truth/features.yaml")
-    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="folder to render into (default: the same as --dir); inputs are always read from --dir",
+    )
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="screen_inventory_"))
     try:

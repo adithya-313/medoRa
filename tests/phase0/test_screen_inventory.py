@@ -3,6 +3,7 @@
 # TERM: orphan file - a source file that no other frontend file imports.
 # TERM: fixture tree - a tiny fake v1 folder written into pytest's temp folder for one test.
 """Unit tests for tools/phase0/screen_inventory.py. Tiny fixtures; no network, no git, no Docker."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,8 +24,13 @@ from tools.phase0.screen_inventory import (
     page_route,
 )
 
-BACKEND = ["GET /api/v1/suppliers", "POST /api/v1/suppliers", "GET /api/v1/suppliers/{supplier_id}/orders",
-           "POST /api/v1/purchase-orders/receive", "GET /api/v1/purchase-orders/{po_id}"]
+BACKEND = [
+    "GET /api/v1/suppliers",
+    "POST /api/v1/suppliers",
+    "GET /api/v1/suppliers/{supplier_id}/orders",
+    "POST /api/v1/purchase-orders/receive",
+    "GET /api/v1/purchase-orders/{po_id}",
+]
 STATUS = {"f-working": "working", "f-mocked": "mocked", "f-broken": "broken", "f-missing": "missing"}
 
 
@@ -74,11 +80,21 @@ def base_document() -> dict:
         base_document()["pages"][0]["route"] -> "/pos"
     """
     action = {"name": "Search", "api_calls": ["GET /api/v1/suppliers"], "features": ["f-working"]}
-    page = {"route": "/pos", "file": "frontend/src/app/pos/page.tsx", "user_actions": [action],
-            "data_shown": [], "linked_features": ["f-working"]}
-    return {"pages": [page], "unused_calls": [], "reviewed_non_literal_calls": [], "hard_coded_data": [],
-            "must_keep": [{"page": "/pos", "action": "Search", "feature": "f-working", "reason": "r"}],
-            "rebuild_in_v2": []}
+    page = {
+        "route": "/pos",
+        "file": "frontend/src/app/pos/page.tsx",
+        "user_actions": [action],
+        "data_shown": [],
+        "linked_features": ["f-working"],
+    }
+    return {
+        "pages": [page],
+        "unused_calls": [],
+        "reviewed_non_literal_calls": [],
+        "hard_coded_data": [],
+        "must_keep": [{"page": "/pos", "action": "Search", "feature": "f-working", "reason": "r"}],
+        "rebuild_in_v2": [],
+    }
 
 
 def test_route_mapping_from_folder_paths() -> None:
@@ -110,7 +126,9 @@ def test_discover_pages_reports_route_groups(tmp_path: Path) -> None:
     Example:
         pages "/", "/history", "(g)/pos" -> routes ["/", "/history", "/pos"], group True
     """
-    root = write_frontend(tmp_path, {"src/app/page.tsx": "x", "src/app/history/page.tsx": "x", "src/app/(g)/pos/page.tsx": "x"})
+    root = write_frontend(
+        tmp_path, {"src/app/page.tsx": "x", "src/app/history/page.tsx": "x", "src/app/(g)/pos/page.tsx": "x"}
+    )
     pages, any_group = discover_pages(root)
     assert [page.route for page in pages] == ["/", "/history", "/pos"] and any_group is True
 
@@ -127,7 +145,10 @@ def test_template_literal_and_query_string_are_normalised() -> None:
     Example:
         "/api/v1/suppliers/${id}/orders?x=1" -> "/api/v1/suppliers/{param}/orders"
     """
-    assert normalise_frontend_path("/api/v1/suppliers/${supplierId}/orders?limit=${n}") == "/api/v1/suppliers/{param}/orders"
+    assert (
+        normalise_frontend_path("/api/v1/suppliers/${supplierId}/orders?limit=${n}")
+        == "/api/v1/suppliers/{param}/orders"
+    )
     assert normalise_frontend_path("/api/v1/audit-logs?${params.toString()}") == "/api/v1/audit-logs"
     assert normalise_frontend_path("/api/v1/notifications/") == "/api/v1/notifications"
     assert normalise_backend_path("/api/v1/purchase-orders/{po_id}") == "/api/v1/purchase-orders/{param}"
@@ -157,7 +178,11 @@ def test_call_discovery_reads_paths_methods_and_skips_comments(tmp_path: Path) -
     )
     root = write_frontend(tmp_path, {"src/services/x.ts": text})
     found = {(call.path, call.method) for call in discover_frontend_calls(root)}
-    assert found == {("/api/v1/suppliers", "POST"), ("/api/v1/settings", "PUT"), ("/api/v1/suppliers/{param}/orders", "GET")}
+    assert found == {
+        ("/api/v1/suppliers", "POST"),
+        ("/api/v1/settings", "PUT"),
+        ("/api/v1/suppliers/{param}/orders", "GET"),
+    }
     assert [line for _, line, _ in discover_non_literal_calls(root)] == [8]
 
 
@@ -174,9 +199,13 @@ def test_dead_call_and_method_mismatch_and_undetermined_method() -> None:
     Example:
         POST /api/v1/purchase-orders/receive matches the literal route, not GET /{po_id}
     """
-    calls = [make_call("/api/v1/nothing", "GET"), make_call("/api/v1/suppliers", "PUT"),
-             make_call("/api/v1/suppliers", METHOD_NOT_DETERMINED), make_call("/api/v1/suppliers", "POST"),
-             make_call("/api/v1/purchase-orders/receive", "POST")]
+    calls = [
+        make_call("/api/v1/nothing", "GET"),
+        make_call("/api/v1/suppliers", "PUT"),
+        make_call("/api/v1/suppliers", METHOD_NOT_DETERMINED),
+        make_call("/api/v1/suppliers", "POST"),
+        make_call("/api/v1/purchase-orders/receive", "POST"),
+    ]
     results = [match.status for match in match_calls_to_routes(calls, BACKEND)]
     assert results == ["dead", "method mismatch", "method not determined", "matched", "matched"]
     last = match_calls_to_routes([calls[-1]], BACKEND)[0]
@@ -198,13 +227,20 @@ def test_coverage_fails_for_missing_page_uncovered_call_and_unknown_feature() ->
     pages = [Page("/pos", "frontend/src/app/pos/page.tsx")]
     calls = [make_call("/api/v1/suppliers", "GET")]
     assert check_coverage(base_document(), pages, calls, [], STATUS) == []
-    missing_page = check_coverage(base_document(), pages + [Page("/history", "frontend/src/app/history/page.tsx")], calls, [], STATUS)
+    missing_page = check_coverage(
+        base_document(), pages + [Page("/history", "frontend/src/app/history/page.tsx")], calls, [], STATUS
+    )
     assert missing_page == ["page not in screens.yaml: /history (frontend/src/app/history/page.tsx)"]
-    uncovered = check_coverage(base_document(), pages, calls + [make_call("/api/v1/other", "GET")], [], STATUS)
+    uncovered = check_coverage(
+        base_document(), pages, calls + [make_call("/api/v1/other", "GET")], [], STATUS
+    )
     assert any("call not covered" in problem and "/api/v1/other" in problem for problem in uncovered)
     document = base_document()
     document["pages"][0]["user_actions"][0]["features"] = ["f-ghost"]
-    assert any("unknown feature id f-ghost" in problem for problem in check_coverage(document, pages, calls, [], STATUS))
+    assert any(
+        "unknown feature id f-ghost" in problem
+        for problem in check_coverage(document, pages, calls, [], STATUS)
+    )
     unreviewed = check_coverage(base_document(), pages, calls, [("a.ts", 5, "fetch(url)")], STATUS)
     assert any("non-literal call not reviewed: a.ts:5" in problem for problem in unreviewed)
 
@@ -225,7 +261,9 @@ def test_must_keep_rejects_mocked_and_unknown_actions() -> None:
     calls = [make_call("/api/v1/suppliers", "GET")]
     document = base_document()
     document["must_keep"].append({"page": "/pos", "action": "Search", "feature": "f-mocked", "reason": "r"})
-    document["must_keep"].append({"page": "/pos", "action": "Ghost action", "feature": "f-working", "reason": "r"})
+    document["must_keep"].append(
+        {"page": "/pos", "action": "Ghost action", "feature": "f-working", "reason": "r"}
+    )
     document["rebuild_in_v2"].append({"page": "none", "action": "x", "feature": "f-working", "reason": "r"})
     problems = check_coverage(document, pages, calls, [], STATUS)
     assert any("feature f-mocked is mocked; list it under rebuild_in_v2" in problem for problem in problems)
@@ -245,13 +283,32 @@ def test_orphan_file_and_unreferenced_identifier_checks(tmp_path: Path) -> None:
     Example:
         components/Used.tsx imported by a page -> the orphan claim for Used.tsx fails
     """
-    root = write_frontend(tmp_path, {
-        "src/app/pos/page.tsx": "import Used from '@/components/Used';" + chr(10) + "useIt();" + chr(10),
-        "src/components/Used.tsx": "export default 1;",
-        "components/Lonely.tsx": "export default 2;",
-        "src/services/api.ts": "export const api = { usedFn: 1, unusedFn: 2 };",
-    })
-    assert check_unused_evidence(UnusedEvidence("orphan_file", "frontend/components/Lonely.tsx", ""), root) is None
-    assert "imported by another file" in (check_unused_evidence(UnusedEvidence("orphan_file", "frontend/src/components/Used.tsx", ""), root) or "")
-    assert check_unused_evidence(UnusedEvidence("unreferenced_identifier", "unusedFn", "frontend/src/services/api.ts"), root) is None
-    assert "used outside" in (check_unused_evidence(UnusedEvidence("unreferenced_identifier", "useIt", "frontend/src/services/api.ts"), root) or "")
+    root = write_frontend(
+        tmp_path,
+        {
+            "src/app/pos/page.tsx": "import Used from '@/components/Used';" + chr(10) + "useIt();" + chr(10),
+            "src/components/Used.tsx": "export default 1;",
+            "components/Lonely.tsx": "export default 2;",
+            "src/services/api.ts": "export const api = { usedFn: 1, unusedFn: 2 };",
+        },
+    )
+    assert (
+        check_unused_evidence(UnusedEvidence("orphan_file", "frontend/components/Lonely.tsx", ""), root)
+        is None
+    )
+    assert "imported by another file" in (
+        check_unused_evidence(UnusedEvidence("orphan_file", "frontend/src/components/Used.tsx", ""), root)
+        or ""
+    )
+    assert (
+        check_unused_evidence(
+            UnusedEvidence("unreferenced_identifier", "unusedFn", "frontend/src/services/api.ts"), root
+        )
+        is None
+    )
+    assert "used outside" in (
+        check_unused_evidence(
+            UnusedEvidence("unreferenced_identifier", "useIt", "frontend/src/services/api.ts"), root
+        )
+        or ""
+    )
