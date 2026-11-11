@@ -29,9 +29,12 @@ def test_parse_name_status_standard_lines() -> None:
 
 
 def test_parse_name_status_rename_retains_old_path() -> None:
-    """Rename lines with three fields retain the old path."""
+    """Rename lines with three fields return both the old and new paths."""
     diff_text = "R100\ttests/old_test.py\ttests/new_test.py\n"
-    assert parse_name_status(diff_text) == [("R100", "tests/old_test.py")]
+    assert parse_name_status(diff_text) == [
+        ("R100", "tests/old_test.py"),
+        ("R100", "tests/new_test.py"),
+    ]
 
 
 def test_parse_name_status_malformed_line_raises_value_error() -> None:
@@ -92,12 +95,43 @@ def test_decide_gate_script_change() -> None:
     assert decide(changes) == ["tools/ci/test_change_gate.py"]
 
 
+def test_decide_pytest_ini_change() -> None:
+    """Any modification to pytest.ini requires review."""
+    changes = [("M", "pytest.ini")]
+    assert decide(changes) == ["pytest.ini"]
+
+
 def test_decide_rename_out_of_tests() -> None:
     """Renaming a test file out of tests/ keeps old path and triggers review."""
     diff_text = "R100\ttests/unit/test_moved.py\tmisc/test_moved.py\n"
     parsed = parse_name_status(diff_text)
-    assert parsed == [("R100", "tests/unit/test_moved.py")]
+    assert parsed == [
+        ("R100", "tests/unit/test_moved.py"),
+        ("R100", "misc/test_moved.py"),
+    ]
     assert decide(parsed) == ["tests/unit/test_moved.py"]
+
+
+def test_decide_rename_into_workflows() -> None:
+    """Renaming any file into .github/workflows/ flags the workflow path for review."""
+    diff_text = "R100\tscripts/ci.sh\t.github/workflows/ci.yml\n"
+    parsed = parse_name_status(diff_text)
+    assert parsed == [
+        ("R100", "scripts/ci.sh"),
+        ("R100", ".github/workflows/ci.yml"),
+    ]
+    assert decide(parsed) == [".github/workflows/ci.yml"]
+
+
+def test_decide_rename_from_src_into_tests() -> None:
+    """Renaming a file into tests/ flags the new test path for review."""
+    diff_text = "R100\tsrc/helpers.py\ttests/test_helpers.py\n"
+    parsed = parse_name_status(diff_text)
+    assert parsed == [
+        ("R100", "src/helpers.py"),
+        ("R100", "tests/test_helpers.py"),
+    ]
+    assert decide(parsed) == ["tests/test_helpers.py"]
 
 
 def test_main_exit_0_on_clean_diff(monkeypatch: pytest.MonkeyPatch) -> None:

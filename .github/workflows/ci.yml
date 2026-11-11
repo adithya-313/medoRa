@@ -93,8 +93,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          git diff --name-status "origin/${{ github.base_ref }}...HEAD" > "$RUNNER_TEMP/diff.txt"
           set +e
-          PATHS_OUTPUT=$(git diff --name-status origin/${{ github.base_ref }}...HEAD | uv run python tools/ci/test_change_gate.py)
+          PATHS_OUTPUT=$(uv run python tools/ci/test_change_gate.py < "$RUNNER_TEMP/diff.txt")
           GATE_STATUS=$?
           set -e
 

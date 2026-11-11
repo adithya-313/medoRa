@@ -16,7 +16,8 @@ def parse_name_status(text: str) -> list[tuple[str, str]]:
         text: Raw output from git diff.
 
     Returns:
-        A list of (status, path) pairs. For renames, the old path is retained.
+        A list of (status, path) pairs. For renames, both the old path and
+        new path are included as separate entries with the rename status.
 
     Raises:
         ValueError: If any line does not conform to expected git diff name-status format.
@@ -44,6 +45,7 @@ def parse_name_status(text: str) -> list[tuple[str, str]]:
             if not old_path or not new_path:
                 raise ValueError(f"Malformed rename line with empty path: {line!r}")
             results.append((status, old_path.replace("\\", "/")))
+            results.append((status, new_path.replace("\\", "/")))
         else:
             if len(parts) != 2:
                 raise ValueError(f"Malformed diff line (expected 2 fields, got {len(parts)}): {line!r}")
@@ -62,10 +64,11 @@ def decide(changes: list[tuple[str, str]]) -> list[str]:
     - Status M, D, or R* on a path under tests/
     - ANY status on a path under .github/workflows/
     - ANY status on tools/ci/test_change_gate.py
+    - ANY status on pytest.ini
 
     Does NOT require review for:
     - Status A under tests/
-    - Changes outside tests/, .github/workflows/, and the gate script itself.
+    - Changes outside tests/, .github/workflows/, pytest.ini, and the gate script itself.
 
     Args:
         changes: List of (status, path) pairs.
@@ -85,6 +88,11 @@ def decide(changes: list[tuple[str, str]]) -> list[str]:
 
         # The test change gate script itself requires review on any change
         if path == "tools/ci/test_change_gate.py":
+            needs_review.add(path)
+            continue
+
+        # pytest.ini configuration requires review on any change
+        if path == "pytest.ini":
             needs_review.add(path)
             continue
 
