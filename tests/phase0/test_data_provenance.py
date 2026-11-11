@@ -3,6 +3,7 @@
 # TERM: coverage - every discovered file and host has exactly one entry in provenance.yaml.
 # TERM: sha256 - a 64-character fingerprint of a file's bytes.
 """Unit tests for tools/phase0/data_provenance.py. Tiny fixtures; local git only; no network."""
+
 from __future__ import annotations
 
 import subprocess
@@ -27,12 +28,16 @@ from tools.phase0.data_provenance import (
     parse_entry,
 )
 
-GOOD_LICENCE = {"value": "public domain", "evidence_url": "https://example.org/terms", "retrieved_on": "2026-10-21",
-                "quote": "is public domain"}
+GOOD_LICENCE = {
+    "value": "public domain",
+    "evidence_url": "https://example.org/terms",
+    "retrieved_on": "2026-10-21",
+    "quote": "is public domain",
+}
 CODE_SOURCE = {"type": "code", "file": "a.py", "line": 1, "contains": "x"}
 
 
-def raw_entry(**changes: object) -> dict:
+def raw_entry(**changes: object) -> dict[str, object]:
     """WHAT: Builds a valid raw provenance.yaml file entry as a dict, with optional field replacements.
     WHY: Each validation test changes exactly one field of an otherwise valid entry.
 
@@ -43,9 +48,14 @@ def raw_entry(**changes: object) -> dict:
     Example:
         raw_entry(licence={"value": "x"}) -> the valid entry with a different licence block
     """
-    entry = {"path": "data/a.csv", "kind": "dataset", "source": [CODE_SOURCE], "licence": dict(GOOD_LICENCE),
-             "personal_data": {"value": "no", "reason": "product columns only"},
-             "production_use": {"value": "not-for-production", "reason": "test"}}
+    entry: dict[str, object] = {
+        "path": "data/a.csv",
+        "kind": "dataset",
+        "source": [CODE_SOURCE],
+        "licence": dict(GOOD_LICENCE),
+        "personal_data": {"value": "no", "reason": "product columns only"},
+        "production_use": {"value": "not-for-production", "reason": "test"},
+    }
     entry.update(changes)
     return entry
 
@@ -61,7 +71,9 @@ def make_entry(key: str) -> Entry:
     Example:
         make_entry("data/a.csv") -> Entry(key="data/a.csv", kind="dataset", ...)
     """
-    return Entry(key, "dataset", [], Licence(UNKNOWN_LICENCE, "", "", ""), "no", "r", "not-for-production", "r")
+    return Entry(
+        key, "dataset", [], Licence(UNKNOWN_LICENCE, "", "", ""), "no", "r", "not-for-production", "r"
+    )
 
 
 def test_csv_quoted_line_break_counts_as_one_row(tmp_path: Path) -> None:
@@ -76,7 +88,10 @@ def test_csv_quoted_line_break_counts_as_one_row(tmp_path: Path) -> None:
         4 text lines, 2 records -> (2, ["id", "note"])
     """
     csv_path = tmp_path / "a.csv"
-    csv_path.write_text('id,note' + chr(10) + '1,"line one' + chr(10) + 'line two"' + chr(10) + '2,plain' + chr(10), encoding="utf-8")
+    csv_path.write_text(
+        "id,note" + chr(10) + '1,"line one' + chr(10) + 'line two"' + chr(10) + "2,plain" + chr(10),
+        encoding="utf-8",
+    )
     assert count_csv(csv_path, ",") == (2, ["id", "note"])
     assert measure_file(csv_path).row_count == 2
 
@@ -211,9 +226,15 @@ def test_discovery_filters_files_and_groups_urls(tmp_path: Path) -> None:
     Example:
         tracked data/a.csv, frontend/node_modules/x.json, package.json -> ["data/a.csv"]
     """
-    files = {"data/a.csv": "x", "frontend/node_modules/x.json": "{}", "frontend/package.json": "{}",
-             "notes.txt": "x", "app/main.py": 'U = "https://api.fda.gov/drug"  # http://localhost:8080 https://example.com/a',
-             "scripts/s.py": "# https://api.fda.gov/other", "requirements.txt": "pytrends==4.9.2" + chr(10)}
+    files = {
+        "data/a.csv": "x",
+        "frontend/node_modules/x.json": "{}",
+        "frontend/package.json": "{}",
+        "notes.txt": "x",
+        "app/main.py": 'U = "https://api.fda.gov/drug"  # http://localhost:8080 https://example.com/a',
+        "scripts/s.py": "# https://api.fda.gov/other",
+        "requirements.txt": "pytrends==4.9.2" + chr(10),
+    }
     for relative, text in files.items():
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -243,11 +264,17 @@ def test_git_evidence_must_name_the_first_adding_commit(tmp_path: Path) -> None:
     identity = ["-c", "user.name=t", "-c", "user.email=t@example.org"]
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True, timeout=60)
     subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, timeout=60)
-    subprocess.run(["git"] + identity + ["commit", "-q", "-m", "add data"], cwd=tmp_path, check=True, timeout=60)
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True, check=True, timeout=60).stdout.strip()
+    subprocess.run(
+        ["git"] + identity + ["commit", "-q", "-m", "add data"], cwd=tmp_path, check=True, timeout=60
+    )
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True, check=True, timeout=60
+    ).stdout.strip()
     assert check_git_evidence(GitEvidence(head[:7], "add data"), "data/a.csv", tmp_path) is None
     assert "not" in (check_git_evidence(GitEvidence(head[:7], "other subject"), "data/a.csv", tmp_path) or "")
-    assert "no commit" in (check_git_evidence(GitEvidence(head[:7], "add data"), "data/missing.csv", tmp_path) or "")
+    assert "no commit" in (
+        check_git_evidence(GitEvidence(head[:7], "add data"), "data/missing.csv", tmp_path) or ""
+    )
 
 
 def test_clone_arguments_disable_line_ending_conversion() -> None:
@@ -264,5 +291,9 @@ def test_clone_arguments_disable_line_ending_conversion() -> None:
     """
     shallow = clone_arguments("v1-final", Path("t"), True)
     full = clone_arguments("v1-legacy", Path("t"), False)
-    assert "core.autocrlf=false" in shallow and "--depth" in shallow and shallow[shallow.index("--branch") + 1] == "v1-final"
+    assert (
+        "core.autocrlf=false" in shallow
+        and "--depth" in shallow
+        and shallow[shallow.index("--branch") + 1] == "v1-final"
+    )
     assert "core.autocrlf=false" in full and "--depth" not in full

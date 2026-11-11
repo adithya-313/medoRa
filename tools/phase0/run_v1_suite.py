@@ -7,6 +7,7 @@
 
 One-shot local script: it never edits, skips or filters v1 tests, and never retries.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,9 +22,9 @@ import sys
 import tempfile
 import time
 import xml.etree.ElementTree as ElementTree
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 # sourced: the repository and tag created in Part B of this task.
 V1_REPO_URL = "https://github.com/adithya-313/prv3"
@@ -334,8 +335,17 @@ def run_pytest(venv: Path, project_dir: Path, run_label: str, out_dir: Path) -> 
         run_pytest(venv, proj, "no-services", out) -> RunResult(return_code=1, wall_seconds=312.4, ...)
     """
     junit_path = out_dir / "junit.xml"
-    arguments = [str(venv_python(venv)), "-m", "pytest", "-p", "no:cacheprovider", "-rA",
-                 f"--junitxml={junit_path}", "--ignore=tests/benchmarks", "--ignore=tests/load"]
+    arguments = [
+        str(venv_python(venv)),
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "-rA",
+        f"--junitxml={junit_path}",
+        "--ignore=tests/benchmarks",
+        "--ignore=tests/load",
+    ]
     started = time.monotonic()
     timed_out = False
     try:
@@ -433,11 +443,17 @@ def check_totals(rows: list[TestRow], case_count: int, totals: dict[str, int], x
         3 failed rows but failures="2" -> JunitParseError("... failed rows 3 != failures 2")
     """
     counted = {outcome: sum(1 for row in rows if row.outcome == outcome) for outcome in VALID_OUTCOMES}
-    pairs = [("test cases", case_count, totals["tests"]), ("failed rows", counted["failed"], totals["failures"]),
-             ("error rows", counted["error"], totals["errors"]), ("skipped rows", counted["skipped"], totals["skipped"])]
+    pairs = [
+        ("test cases", case_count, totals["tests"]),
+        ("failed rows", counted["failed"], totals["failures"]),
+        ("error rows", counted["error"], totals["errors"]),
+        ("skipped rows", counted["skipped"], totals["skipped"]),
+    ]
     mismatches = [f"{label} {found} != {expected}" for label, found, expected in pairs if found != expected]
     if mismatches:
-        raise JunitParseError(f"junit totals do not match parsed rows in {xml_path}: " + "; ".join(mismatches))
+        raise JunitParseError(
+            f"junit totals do not match parsed rows in {xml_path}: " + "; ".join(mismatches)
+        )
 
 
 def parse_junit(xml_path: Path) -> list[TestRow]:
@@ -493,7 +509,9 @@ def summarise(rows: list[TestRow]) -> Summary:
             raise ValueError(f"unknown outcome: {row.outcome}")
         counts[row.outcome] += 1
     distinct_names = len({(row.file, row.name) for row in rows})
-    return Summary(len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"], distinct_names)
+    return Summary(
+        len(rows), counts["passed"], counts["failed"], counts["error"], counts["skipped"], distinct_names
+    )
 
 
 def sha256_of_file(path: Path) -> str:
@@ -526,8 +544,10 @@ def render_markdown(rows: list[TestRow], summary: Summary, meta: RunMeta) -> str
     lines = [f"# v1 test baseline ({meta.run_label})", ""]
     if meta.note:
         lines += [f"**Note:** {meta.note}", ""]
-    lines += [f"- rows (one per result): {summary.total}, distinct (file, name) pairs: {summary.distinct_names}, passed: {summary.passed}, failed: {summary.failed}, "
-              f"error: {summary.error}, skipped: {summary.skipped}"]
+    lines += [
+        f"- rows (one per result): {summary.total}, distinct (file, name) pairs: {summary.distinct_names}, passed: {summary.passed}, failed: {summary.failed}, "
+        f"error: {summary.error}, skipped: {summary.skipped}"
+    ]
     for key, value in dataclasses.asdict(meta).items():
         lines.append(f"- {key}: {value}")
     lines += ["", "| file | test | outcome | seconds | reason |", "|---|---|---|---|---|"]
@@ -703,15 +723,28 @@ def build_meta(
         wall=312.44 -> RunMeta(..., wall_seconds=312.4, ...)
     """
     version = run_command([str(venv_python(venv)), "--version"], None, SHORT_COMMAND_TIMEOUT_SECONDS)
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     os_name = f"{platform.system()} {platform.release()} ({platform.version()})"
-    return RunMeta(args.tag, commit, args.run_label, timestamp, os_name,
-                   version.stdout.strip(), round(wall, 1), sha, note)
+    return RunMeta(
+        args.tag,
+        commit,
+        args.run_label,
+        timestamp,
+        os_name,
+        version.stdout.strip(),
+        round(wall, 1),
+        sha,
+        note,
+    )
 
 
 def record_outcome(
-    args: argparse.Namespace, commit: str, venv: Path, out_dir: Path,
-    result: RunResult | None, note: str,
+    args: argparse.Namespace,
+    commit: str,
+    venv: Path,
+    out_dir: Path,
+    result: RunResult | None,
+    note: str,
 ) -> None:
     """WHAT: Parses the junit XML (if one exists), summarises, and writes the result files.
     WHY: A crash or failed install must still leave honest evidence behind.
@@ -743,9 +776,7 @@ def record_outcome(
     write_results(rows, summarise(rows), meta, out_dir)
 
 
-def run_with_services(
-    args: argparse.Namespace, project_dir: Path, venv: Path, out_dir: Path
-) -> RunResult:
+def run_with_services(args: argparse.Namespace, project_dir: Path, venv: Path, out_dir: Path) -> RunResult:
     """WHAT: Runs pytest, starting only v1's database and Redis first when the label is with-db.
     WHY: Run 2 measures what changes when real services exist; they are always stopped after.
 

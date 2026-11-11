@@ -10,6 +10,7 @@ provenance.yaml holds what people know (source, licence, personal data, producti
 This tool computes everything measurable (size, SHA-256, rows, columns) and checks that every discovered
 file and host has exactly one entry and that every citation still holds. Standard library plus PyYAML.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,7 +20,6 @@ import hashlib
 import json
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -32,11 +32,31 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools.phase0.feature_truth import Evidence, FeatureTruthError, check_one_evidence, parse_evidence  # noqa: E402
 from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, V1_REPO_URL, make_writable_and_retry, run_command  # noqa: E402
 
-DATA_EXTENSIONS = [".csv", ".tsv", ".json", ".jsonl", ".parquet", ".xlsx", ".sql", ".db", ".sqlite", ".pkl",
-                   ".pt", ".bin", ".safetensors", ".npy", ".log", ".png", ".jpg"]
+DATA_EXTENSIONS = [
+    ".csv",
+    ".tsv",
+    ".json",
+    ".jsonl",
+    ".parquet",
+    ".xlsx",
+    ".sql",
+    ".db",
+    ".sqlite",
+    ".pkl",
+    ".pt",
+    ".bin",
+    ".safetensors",
+    ".npy",
+    ".log",
+    ".png",
+    ".jpg",
+]
 # Listed in the report so a reader knows what was deliberately left out of the file inventory.
-EXCLUSIONS = ["any path containing node_modules", "package.json and package-lock.json (any folder)",
-              "tsconfig.json (any folder)"]
+EXCLUSIONS = [
+    "any path containing node_modules",
+    "package.json and package-lock.json (any folder)",
+    "tsconfig.json (any folder)",
+]
 IGNORED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 # sourced: client libraries in requirements.txt that call an outside service without a URL in the code.
 HIDDEN_URL_LIBRARIES = {"pytrends": "Google Trends (unofficial client, not a Google API)"}
@@ -256,7 +276,11 @@ def discover_data_files(v1_dir: Path) -> list[str]:
     found: list[str] = []
     for relative in listing.split(chr(0)):
         name = relative.rsplit("/", 1)[-1]
-        excluded = "node_modules" in relative or name in ("package.json", "package-lock.json", "tsconfig.json")
+        excluded = "node_modules" in relative or name in (
+            "package.json",
+            "package-lock.json",
+            "tsconfig.json",
+        )
         if relative and not excluded and Path(relative).suffix.lower() in DATA_EXTENSIONS:
             found.append(relative)
     return sorted(found)
@@ -309,7 +333,9 @@ def discover_external_urls(v1_dir: Path) -> dict[str, list[UrlHit]]:
     for folder in ("app", "scripts"):
         for path in sorted((v1_dir / folder).rglob("*.py")):
             relative = path.relative_to(v1_dir).as_posix()
-            for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
+            for number, line in enumerate(
+                path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1
+            ):
                 for match in URL_PATTERN.finditer(line):
                     url = match.group(0).rstrip(".")
                     if not is_ignored_host(host_of(url)):
@@ -339,11 +365,17 @@ def parse_licence(raw: object, key: str) -> Licence:
     """
     if not isinstance(raw, dict) or not raw.get("value"):
         raise ProvenanceError(f"{key}: licence needs a value")
-    licence = Licence(raw["value"], raw.get("evidence_url", "") or "", raw.get("retrieved_on", "") or "",
-                      raw.get("quote", "") or "")
+    licence = Licence(
+        raw["value"],
+        raw.get("evidence_url", "") or "",
+        raw.get("retrieved_on", "") or "",
+        raw.get("quote", "") or "",
+    )
     evidence_fields = [licence.evidence_url, licence.retrieved_on, licence.quote]
     if licence.value == UNKNOWN_LICENCE and any(evidence_fields):
-        raise ProvenanceError(f"{key}: an unknown licence must leave evidence_url, retrieved_on and quote empty")
+        raise ProvenanceError(
+            f"{key}: an unknown licence must leave evidence_url, retrieved_on and quote empty"
+        )
     if licence.value != UNKNOWN_LICENCE and not all(evidence_fields):
         raise ProvenanceError(f"{key}: licence '{licence.value}' needs evidence_url, retrieved_on and quote")
     return licence
@@ -393,7 +425,13 @@ def parse_entry(raw: object) -> Entry:
     keys = [name for name in ("path", "url", "library") if raw.get(name)]
     if len(keys) != 1:
         raise ProvenanceError(f"entry needs exactly one of path, url, library: {raw!r}")
-    key = f"library:{raw['library']}" if keys[0] == "library" else host_of(raw["url"]) if keys[0] == "url" else raw["path"]
+    key = (
+        f"library:{raw['library']}"
+        if keys[0] == "library"
+        else host_of(raw["url"])
+        if keys[0] == "url"
+        else raw["path"]
+    )
     entry = build_entry(raw, key, is_file=keys[0] == "path")
     validate_entry_rules(entry, is_file=keys[0] == "path")
     return entry
@@ -420,11 +458,23 @@ def build_entry(raw: dict, key: str, is_file: bool) -> Entry:
     personal = raw["personal_data"]
     production = raw["production_use"]
     if not isinstance(personal, dict) or not isinstance(production, dict):
-        raise ProvenanceError(f"{key}: personal_data and production_use must be mappings with value and reason")
+        raise ProvenanceError(
+            f"{key}: personal_data and production_use must be mappings with value and reason"
+        )
     sources = [parse_source_item(item, key) for item in raw["source"] or []]
-    return Entry(key, raw["kind"], sources, parse_licence(raw["licence"], key), str(personal.get("value")),
-                 str(personal.get("reason", "")), str(production.get("value")), str(production.get("reason", "")),
-                 str(raw.get("terms_url", "") or ""), str(raw.get("auth_needed", "") or ""), str(raw.get("note", "") or ""))
+    return Entry(
+        key,
+        raw["kind"],
+        sources,
+        parse_licence(raw["licence"], key),
+        str(personal.get("value")),
+        str(personal.get("reason", "")),
+        str(production.get("value")),
+        str(production.get("reason", "")),
+        str(raw.get("terms_url", "") or ""),
+        str(raw.get("auth_needed", "") or ""),
+        str(raw.get("note", "") or ""),
+    )
 
 
 def validate_entry_rules(entry: Entry, is_file: bool) -> None:
@@ -447,7 +497,9 @@ def validate_entry_rules(entry: Entry, is_file: bool) -> None:
     if not entry.source:
         raise ProvenanceError(f"{entry.key}: needs at least one source evidence item")
     if entry.personal_data not in PERSONAL_DATA_VALUES or not entry.personal_data_reason:
-        raise ProvenanceError(f"{entry.key}: personal_data needs a value in {PERSONAL_DATA_VALUES} and a reason")
+        raise ProvenanceError(
+            f"{entry.key}: personal_data needs a value in {PERSONAL_DATA_VALUES} and a reason"
+        )
     if entry.production_use not in PRODUCTION_USES or not entry.production_reason:
         raise ProvenanceError(f"{entry.key}: production_use needs a value in {PRODUCTION_USES} and a reason")
     if entry.production_use == "allowed" and entry.licence.value == UNKNOWN_LICENCE:
@@ -541,14 +593,18 @@ def check_git_evidence(item: GitEvidence, path: str, history_dir: Path) -> str |
     Example:
         item.commit "4709bcb" and the real first-add commit 4709bcb... with the same subject -> None
     """
-    listing = git_output(["log", "--diff-filter=A", "--follow", "--format=%H%x09%s", "--",
-                          f"sentinel_flow_mvp/{path}"], history_dir)
+    listing = git_output(
+        ["log", "--diff-filter=A", "--follow", "--format=%H%x09%s", "--", f"sentinel_flow_mvp/{path}"],
+        history_dir,
+    )
     lines = [line for line in listing.splitlines() if line]
     if not lines:
         return f"{path}: git found no commit that added this file"
     first_hash, _, first_subject = lines[-1].partition(chr(9))
     if not first_hash.startswith(item.commit) or first_subject != item.message:
-        return f"{path}: first added by {first_hash[:7]} '{first_subject}', not {item.commit} '{item.message}'"
+        return (
+            f"{path}: first added by {first_hash[:7]} '{first_subject}', not {item.commit} '{item.message}'"
+        )
     return None
 
 
@@ -578,7 +634,9 @@ def check_evidence(entries: list[Entry], v1_dir: Path, history_dir: Path) -> lis
     return problems
 
 
-def render_provenance(entries: list[Entry], measurements: dict[str, Measurement], hits: dict[str, list[UrlHit]]) -> str:
+def render_provenance(
+    entries: list[Entry], measurements: dict[str, Measurement], hits: dict[str, list[UrlHit]]
+) -> str:
     """WHAT: Renders provenance.md: a summary by production_use, the exclusions, one table per kind
     (file facts from the measurements, never from the YAML), and a "Needs manual verification" list.
     WHY: This is the human-readable audit; it is generated, never edited by hand.
@@ -592,19 +650,37 @@ def render_provenance(entries: list[Entry], measurements: dict[str, Measurement]
     Example:
         2 entries (one not-for-production, one discard) -> a summary with those counts and two table rows
     """
-    lines = ["# v1 data provenance", "", "_Generated by tools/phase0/data_provenance.py. Do not edit by hand._", "",
-             "## Summary by production use", ""]
+    lines = [
+        "# v1 data provenance",
+        "",
+        "_Generated by tools/phase0/data_provenance.py. Do not edit by hand._",
+        "",
+        "## Summary by production use",
+        "",
+    ]
     for use in PRODUCTION_USES:
         lines.append(f"- {use}: {sum(1 for entry in entries if entry.production_use == use)}")
     lines += ["", "Left out of the file inventory: " + "; ".join(EXCLUSIONS) + "."]
     for kind in KINDS:
         of_kind = [entry for entry in entries if entry.kind == kind]
         if of_kind:
-            lines += ["", f"## {kind}", "", "| item | facts (computed) | licence | personal data | production use |", "|---|---|---|---|---|"]
+            lines += [
+                "",
+                f"## {kind}",
+                "",
+                "| item | facts (computed) | licence | personal data | production use |",
+                "|---|---|---|---|---|",
+            ]
             lines += [render_row(entry, measurements, hits) for entry in of_kind]
     lines += ["", "## Needs manual verification", ""]
-    lines += [f"- {entry.key}: licence {entry.licence.value}" for entry in entries if entry.licence.value == UNKNOWN_LICENCE]
-    lines += [f"- {entry.key}: personal data unknown" for entry in entries if entry.personal_data == "unknown"]
+    lines += [
+        f"- {entry.key}: licence {entry.licence.value}"
+        for entry in entries
+        if entry.licence.value == UNKNOWN_LICENCE
+    ]
+    lines += [
+        f"- {entry.key}: personal data unknown" for entry in entries if entry.personal_data == "unknown"
+    ]
     return chr(10).join(lines) + chr(10)
 
 
@@ -629,9 +705,15 @@ def render_row(entry: Entry, measurements: dict[str, Measurement], hits: dict[st
         facts = f"{fact.bytes} bytes{rows}{columns}, sha256 {fact.sha256[:16]}"
     else:
         facts = f"{len(hits.get(entry.key, []))} place(s) in the code"
-    licence = entry.licence.value if entry.licence.value == UNKNOWN_LICENCE else f"{entry.licence.value} ([source]({entry.licence.evidence_url}))"
-    return (f"| {entry.key} | {facts} | {licence} | {entry.personal_data} | "
-            f"{entry.production_use}: {entry.production_reason.replace('|', '/')} |")
+    licence = (
+        entry.licence.value
+        if entry.licence.value == UNKNOWN_LICENCE
+        else f"{entry.licence.value} ([source]({entry.licence.evidence_url}))"
+    )
+    return (
+        f"| {entry.key} | {facts} | {licence} | {entry.personal_data} | "
+        f"{entry.production_use}: {entry.production_reason.replace('|', '/')} |"
+    )
 
 
 def clone_arguments(branch_or_tag: str, target_dir: Path, shallow: bool) -> list[str]:
@@ -649,7 +731,11 @@ def clone_arguments(branch_or_tag: str, target_dir: Path, shallow: bool) -> list
         ("v1-final", Path("t"), True) -> ["git", "-c", "core.autocrlf=false", "clone", "--depth", "1", "--branch", "v1-final", URL, "t"]
     """
     depth = ["--depth", "1"] if shallow else []
-    return ["git", "-c", "core.autocrlf=false", "clone"] + depth + ["--branch", branch_or_tag, V1_REPO_URL, str(target_dir)]
+    return (
+        ["git", "-c", "core.autocrlf=false", "clone"]
+        + depth
+        + ["--branch", branch_or_tag, V1_REPO_URL, str(target_dir)]
+    )
 
 
 def clone_exact(branch_or_tag: str, target_dir: Path, shallow: bool) -> Path:
@@ -708,7 +794,11 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Audit v1's data files and external services.")
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
     parser.add_argument("--dir", default="docs/phase0/data-provenance")
-    parser.add_argument("--out", default=None, help="folder to render into (default: the same as --dir); inputs are always read from --dir")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="folder to render into (default: the same as --dir); inputs are always read from --dir",
+    )
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="data_provenance_"))
     try:
@@ -746,7 +836,9 @@ def audit(v1_dir: Path, history_dir: Path, directory: Path, out_directory: Path)
         return 1
     measurements = {path: measure_file(v1_dir / path) for path in files}
     out_directory.mkdir(parents=True, exist_ok=True)
-    (out_directory / "provenance.md").write_text(render_provenance(entries, measurements, hits), encoding="utf-8")
+    (out_directory / "provenance.md").write_text(
+        render_provenance(entries, measurements, hits), encoding="utf-8"
+    )
     serializable = {path: dataclasses.asdict(measurement) for path, measurement in measurements.items()}
     (out_directory / "measurements.json").write_text(json.dumps(serializable, indent=2), encoding="utf-8")
     print(f"OK: {len(files)} files and {len(hits)} hosts/libraries covered, all evidence verified")

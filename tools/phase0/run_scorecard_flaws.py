@@ -8,6 +8,7 @@ that every flaw test failed with an AssertionError and the positive control pass
 
 No database or Redis is needed, so Docker Compose is not started. Nothing is installed anywhere.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,15 +18,23 @@ import re
 import shutil
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Run as `python tools/phase0/run_scorecard_flaws.py`, so the repo root must be importable.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.run_v1_suite import (  # noqa: E402
-    JunitParseError, TestRow, V1_DEFAULT_TAG, clone_v1, make_writable_and_retry, parse_junit,
-    read_commit_hash, run_command, sha256_of_file)
+    V1_DEFAULT_TAG,
+    JunitParseError,
+    TestRow,
+    clone_v1,
+    make_writable_and_retry,
+    parse_junit,
+    read_commit_hash,
+    run_command,
+    sha256_of_file,
+)
 from tools.phase0.run_v1_suite_docker import ENV_IMAGE_NAME, image_id  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -131,11 +140,19 @@ def render_results(rows: list[TestRow], meta: dict[str, str], problems: list[str
     Example:
         all 8 flaws failing correctly -> "Verdict: OK ..." followed by an 8-row table
     """
-    verdict = "OK: every flaw test failed with an AssertionError and the positive control passed" if not problems \
+    verdict = (
+        "OK: every flaw test failed with an AssertionError and the positive control passed"
+        if not problems
         else "NOT OK: " + str(len(problems)) + " verification problem(s)"
-    lines = ["# v1 vendor-scorecard flaw tests", "", f"Verdict: {verdict}", "",
-             "| flaw | what is wrong | v1 lines | what v1 returned vs what is correct | outcome |",
-             "|---|---|---|---|---|"]
+    )
+    lines = [
+        "# v1 vendor-scorecard flaw tests",
+        "",
+        f"Verdict: {verdict}",
+        "",
+        "| flaw | what is wrong | v1 lines | what v1 returned vs what is correct | outcome |",
+        "|---|---|---|---|---|",
+    ]
     for row in rows:
         flaw_id = flaw_id_of(row.name)
         if flaw_id is not None and flaw_id in FLAWS:
@@ -166,8 +183,11 @@ def check_saved_image() -> str:
     current = image_id(ENV_IMAGE_NAME)
     if current != recorded:
         raise RuntimeError(f"image ID {current} differs from the recorded {recorded}; stopping")
-    probe = run_command(["docker", "run", "--rm", ENV_IMAGE_NAME, "python", "-m", "pip", "show", "pytest"],
-                        None, RUN_TIMEOUT_SECONDS)
+    probe = run_command(
+        ["docker", "run", "--rm", ENV_IMAGE_NAME, "python", "-m", "pip", "show", "pytest"],
+        None,
+        RUN_TIMEOUT_SECONDS,
+    )
     if probe.returncode != 0:
         raise RuntimeError("pytest is not installed in the saved image; stopping (nothing is installed)")
     return current
@@ -189,10 +209,28 @@ def run_in_container(project_dir: Path, out_dir: Path) -> None:
     Example:
         a normal run -> out_dir/junit.xml with 9 test cases
     """
-    arguments = ["docker", "run", "--rm", "-v", f"{project_dir.as_posix()}:/work:ro",
-                 "-v", f"{FLAWS_DIR.as_posix()}:/flaws:ro", "-v", f"{out_dir.resolve().as_posix()}:/out",
-                 "-w", "/work", ENV_IMAGE_NAME, "python", "-m", "pytest", "-p", "no:cacheprovider", "-rA",
-                 "--junitxml=/out/junit.xml", "/flaws"]
+    arguments = [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{project_dir.as_posix()}:/work:ro",
+        "-v",
+        f"{FLAWS_DIR.as_posix()}:/flaws:ro",
+        "-v",
+        f"{out_dir.resolve().as_posix()}:/out",
+        "-w",
+        "/work",
+        ENV_IMAGE_NAME,
+        "python",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "-rA",
+        "--junitxml=/out/junit.xml",
+        "/flaws",
+    ]
     finished = run_command(arguments, None, RUN_TIMEOUT_SECONDS)
     (out_dir / "pytest.log").write_text(finished.stdout + finished.stderr, encoding="utf-8")
     if not (out_dir / "junit.xml").exists():
@@ -245,8 +283,14 @@ def verify_and_report(out_dir: Path, tag: str, commit: str, image: str) -> int:
     Example:
         a junit file whose totals do not reconcile -> results.md says NOT OK and the result is 1
     """
-    meta = {"tag": tag, "commit": commit, "image_id": image, "timestamp": datetime.now(timezone.utc).isoformat(),
-            "machine": platform.platform(), "junit_sha256": sha256_of_file(out_dir / "junit.xml")}
+    meta = {
+        "tag": tag,
+        "commit": commit,
+        "image_id": image,
+        "timestamp": datetime.now(UTC).isoformat(),
+        "machine": platform.platform(),
+        "junit_sha256": sha256_of_file(out_dir / "junit.xml"),
+    }
     try:
         rows = parse_junit(out_dir / "junit.xml")
         problems = verify_rows(rows)

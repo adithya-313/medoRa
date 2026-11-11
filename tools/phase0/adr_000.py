@@ -14,6 +14,7 @@ Meaning of the decisions (also printed in the ADR):
   drop        v2 does not have it.
   defer-v3    postponed to v3 by the owner.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,13 +31,25 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.phase0.data_provenance import Entry, clone_exact, load_entries  # noqa: E402
-from tools.phase0.feature_truth import Feature, check_one_evidence, load_features, load_test_outcomes, parse_evidence  # noqa: E402
-from tools.phase0.feature_truth import FeatureTruthError  # noqa: E402
+from tools.phase0.feature_truth import (  # noqa: E402
+    Feature,
+    FeatureTruthError,  # noqa: E402
+    check_one_evidence,
+    load_features,
+    load_test_outcomes,
+    parse_evidence,
+)
 from tools.phase0.run_v1_suite import V1_DEFAULT_TAG, make_writable_and_retry  # noqa: E402
 
 DECISIONS = ["keep", "rebuild", "drop", "defer-v3"]
 KINDS = ["feature", "data", "module", "service", "screen-action"]
-REFERENCE_ARTIFACTS = ["features.yaml", "provenance.yaml", "screens.yaml", "v1-test-results", "scorecard-flaws"]
+REFERENCE_ARTIFACTS = [
+    "features.yaml",
+    "provenance.yaml",
+    "screens.yaml",
+    "v1-test-results",
+    "scorecard-flaws",
+]
 # policy: the owner gave these decisions on 2026-10-20/21; the exact day of each was not recorded.
 OWNER_DECISION_DATE = "2026-10-20/21"
 # policy: the owner also gave rulings on 2026-10-22 (the clinical safety judge and the accepted proposals).
@@ -47,12 +60,21 @@ EARLY_PHASE_MAX = 3
 # sourced: items that must have a decision besides features, data and screen actions. Each is a module path,
 # compose service or package group named in the Task 7 brief.
 REQUIRED_MODULES_AND_SERVICES = {
-    "app/services/kafka_producer.py": "module", "redpanda": "service", "app/services/sgwa_service.py": "module",
-    "app/api/v1/federated.py": "module", "app/services/compute_hypervisor.py": "module",
-    "app/services/lora_training_worker.py": "module", "app/services/drift_service.py": "module",
-    "app/services/regional_router.py": "module", "app/services/aegis_service.py": "module",
-    "app/services/velocity_service.py": "module", "worker": "service", "celery-beat": "service",
-    "frontend": "service", "requirements.txt:nvidia-*": "module"}
+    "app/services/kafka_producer.py": "module",
+    "redpanda": "service",
+    "app/services/sgwa_service.py": "module",
+    "app/api/v1/federated.py": "module",
+    "app/services/compute_hypervisor.py": "module",
+    "app/services/lora_training_worker.py": "module",
+    "app/services/drift_service.py": "module",
+    "app/services/regional_router.py": "module",
+    "app/services/aegis_service.py": "module",
+    "app/services/velocity_service.py": "module",
+    "worker": "service",
+    "celery-beat": "service",
+    "frontend": "service",
+    "requirements.txt:nvidia-*": "module",
+}
 
 
 class AdrError(ValueError):
@@ -146,7 +168,9 @@ def parse_reference(raw: object, item: str) -> Reference:
             raise AdrError(str(error)) from error
         return Reference("code", raw)
     if raw.get("artifact") not in REFERENCE_ARTIFACTS:
-        raise AdrError(f"{item}: evidence needs artifact in {REFERENCE_ARTIFACTS}, type code, or type owner-decision: {raw!r}")
+        raise AdrError(
+            f"{item}: evidence needs artifact in {REFERENCE_ARTIFACTS}, type code, or type owner-decision: {raw!r}"
+        )
     return Reference("artifact", raw)
 
 
@@ -185,7 +209,12 @@ def parse_decision(raw: object, phases: dict[int, str]) -> Decision:
     item = raw["item"]
     if raw.get("kind") not in KINDS or raw.get("decision") not in DECISIONS:
         raise AdrError(f"{item}: kind must be in {KINDS} and decision in {DECISIONS}")
-    if not isinstance(raw.get("reason"), str) or not raw["reason"] or not isinstance(raw.get("evidence"), list) or not raw["evidence"]:
+    if (
+        not isinstance(raw.get("reason"), str)
+        or not raw["reason"]
+        or not isinstance(raw.get("evidence"), list)
+        or not raw["evidence"]
+    ):
         raise AdrError(f"{item}: needs a text reason and a non-empty evidence list")
     for text_field in ("confirm", "ruling"):
         if raw.get(text_field) is not None and not isinstance(raw[text_field], str):
@@ -200,8 +229,17 @@ def parse_decision(raw: object, phases: dict[int, str]) -> Decision:
     if security is not None and (not is_whole_number(security) or security not in phases):
         raise AdrError(f"{item}: security_phase {security!r} is not in the phase map")
     references = [parse_reference(entry, item) for entry in raw["evidence"]]
-    return Decision(item, raw["kind"], raw["decision"], raw["reason"], phase, references, security,
-                    raw.get("confirm") or "", raw.get("ruling") or "")
+    return Decision(
+        item,
+        raw["kind"],
+        raw["decision"],
+        raw["reason"],
+        phase,
+        references,
+        security,
+        raw.get("confirm") or "",
+        raw.get("ruling") or "",
+    )
 
 
 def load_decisions(path: Path, phases: dict[int, str]) -> tuple[list[Decision], list[dict]]:
@@ -219,7 +257,11 @@ def load_decisions(path: Path, phases: dict[int, str]) -> tuple[list[Decision], 
         a file with 2 decisions and 1 owner decision -> ([Decision, Decision], [{...}])
     """
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if not isinstance(document, dict) or not isinstance(document.get("decisions"), list) or not isinstance(document.get("owner_decisions"), list):
+    if (
+        not isinstance(document, dict)
+        or not isinstance(document.get("decisions"), list)
+        or not isinstance(document.get("owner_decisions"), list)
+    ):
         raise AdrError(f"{path}: expected 'owner_decisions' and 'decisions' lists")
     return [parse_decision(raw, phases) for raw in document["decisions"]], document["owner_decisions"]
 
@@ -331,6 +373,60 @@ def has_owner_reference(decision: Decision) -> bool:
     return any(reference.kind == "owner-decision" for reference in decision.evidence)
 
 
+def find_feature(artifacts: Artifacts, item_id: str) -> Feature | None:
+    """Find a feature by its item id among loaded artifacts.
+
+    Args:
+        artifacts: loaded artifacts containing features.
+        item_id: identifier of the feature to find.
+
+    Returns:
+        The matching Feature, or None if not found.
+    """
+    for candidate in artifacts.features:
+        if candidate.id == item_id:
+            return candidate
+    return None
+
+
+def check_feature_keep_rule(decision: Decision, feature: Feature) -> list[str]:
+    """Verify that non-working features are not marked as keep.
+
+    Only features with a 'working' status may be kept in v2.
+    """
+    if decision.decision == "keep" and feature.status != "working":
+        return [f"{decision.item}: a {feature.status} feature cannot be 'keep' (only working ones can)"]
+    return []
+
+
+def check_feature_security_findings(decision: Decision, feature: Feature) -> list[str]:
+    """Verify that features with security findings are rebuilt in an early phase and cite all findings.
+
+    A feature with security findings must have decision 'rebuild', specify a security_phase
+    less than or equal to EARLY_PHASE_MAX, and cite every finding title in its artifact evidence.
+    """
+    if not feature.findings:
+        return []
+    problems: list[str] = []
+    if (
+        decision.decision != "rebuild"
+        or decision.security_phase is None
+        or decision.security_phase > EARLY_PHASE_MAX
+    ):
+        problems.append(
+            f"{decision.item}: has security findings, so it needs decision rebuild and security_phase <= {EARLY_PHASE_MAX}"
+        )
+    cited_titles: list[str] = []
+    for reference in decision.evidence:
+        is_own_artifact_reference = reference.kind == "artifact" and reference.data.get("id") == decision.item
+        if is_own_artifact_reference and reference.data.get("finding"):
+            cited_titles.append(reference.data["finding"])
+    for finding in feature.findings:
+        if finding.title not in cited_titles:
+            problems.append(f"{decision.item}: security finding not cited: {finding.title}")
+    return problems
+
+
 def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     """WHAT: Rules for a feature decision: "keep" only for a working feature (mocked and missing can never be
     kept); a feature with security findings must be a rebuild with security_phase in an early phase, and every
@@ -345,27 +441,12 @@ def check_feature_rules(decision: Decision, artifacts: Artifacts) -> list[str]:
     Example:
         keep on a mocked feature -> ["auto-po: a mocked feature cannot be 'keep'"]
     """
-    feature = None
-    for candidate in artifacts.features:
-        if candidate.id == decision.item:
-            feature = candidate
-            break
+    feature = find_feature(artifacts, decision.item)
     if feature is None:
         return []
     problems: list[str] = []
-    if decision.decision == "keep" and feature.status != "working":
-        problems.append(f"{decision.item}: a {feature.status} feature cannot be 'keep' (only working ones can)")
-    if feature.findings:
-        if decision.decision != "rebuild" or decision.security_phase is None or decision.security_phase > EARLY_PHASE_MAX:
-            problems.append(f"{decision.item}: has security findings, so it needs decision rebuild and security_phase <= {EARLY_PHASE_MAX}")
-        cited_titles: list[str] = []
-        for reference in decision.evidence:
-            is_own_artifact_reference = reference.kind == "artifact" and reference.data.get("id") == decision.item
-            if is_own_artifact_reference and reference.data.get("finding"):
-                cited_titles.append(reference.data["finding"])
-        for finding in feature.findings:
-            if finding.title not in cited_titles:
-                problems.append(f"{decision.item}: security finding not cited: {finding.title}")
+    problems.extend(check_feature_keep_rule(decision, feature))
+    problems.extend(check_feature_security_findings(decision, feature))
     return problems
 
 
@@ -391,18 +472,36 @@ def check_rules(decisions: list[Decision], artifacts: Artifacts) -> list[str]:
     for decision in decisions:
         if decision.kind == "feature":
             problems += check_feature_rules(decision, artifacts)
-        if decision.kind in ("data", "service") and decision.decision == "keep" and production.get(decision.item) in ("not-for-production", "discard"):
+        if (
+            decision.kind in ("data", "service")
+            and decision.decision == "keep"
+            and production.get(decision.item) in ("not-for-production", "discard")
+        ):
             problems.append(f"{decision.item}: {production[decision.item]} items cannot be 'keep'")
         if decision.kind == "screen-action":
             feature_decision = by_item.get(actions.get(decision.item, ""))
-            if feature_decision is not None and feature_decision.decision == "drop" and decision.decision != "drop":
-                problems.append(f"{decision.item}: its feature {feature_decision.item} is dropped, so the action must be dropped too")
-            if decision.item in must_keep_items and decision.decision == "drop" and not has_owner_reference(decision):
-                problems.append(f"{decision.item}: a must_keep action can only be dropped with an owner-decision reference")
+            if (
+                feature_decision is not None
+                and feature_decision.decision == "drop"
+                and decision.decision != "drop"
+            ):
+                problems.append(
+                    f"{decision.item}: its feature {feature_decision.item} is dropped, so the action must be dropped too"
+                )
+            if (
+                decision.item in must_keep_items
+                and decision.decision == "drop"
+                and not has_owner_reference(decision)
+            ):
+                problems.append(
+                    f"{decision.item}: a must_keep action can only be dropped with an owner-decision reference"
+                )
     return problems
 
 
-def check_reference(decision: Decision, reference: Reference, artifacts: Artifacts, v1_dir: Path, results_dir: Path) -> str | None:
+def check_reference(
+    decision: Decision, reference: Reference, artifacts: Artifacts, v1_dir: Path, results_dir: Path
+) -> str | None:
     """WHAT: Resolves one evidence reference: code items against the v1 clone; artifact items against the
     named artifact (feature id, provenance key, screen page and action, test id in a run, or text in a run file).
     WHY: A dangling reference is not evidence.
@@ -421,13 +520,23 @@ def check_reference(decision: Decision, reference: Reference, artifacts: Artifac
     if reference.kind == "owner-decision":
         return None
     if reference.kind == "code":
-        return check_one_evidence(decision.item, parse_evidence(reference.data, decision.item), v1_dir, results_dir, {})
+        return check_one_evidence(
+            decision.item, parse_evidence(reference.data, decision.item), v1_dir, results_dir, {}
+        )
     data = reference.data
     name = data["artifact"]
     if name == "features.yaml":
-        return None if any(feature.id == data.get("id") for feature in artifacts.features) else f"{decision.item}: features.yaml has no feature '{data.get('id')}'"
+        return (
+            None
+            if any(feature.id == data.get("id") for feature in artifacts.features)
+            else f"{decision.item}: features.yaml has no feature '{data.get('id')}'"
+        )
     if name == "provenance.yaml":
-        return None if any(entry.key == data.get("key") for entry in artifacts.provenance) else f"{decision.item}: provenance.yaml has no item '{data.get('key')}'"
+        return (
+            None
+            if any(entry.key == data.get("key") for entry in artifacts.provenance)
+            else f"{decision.item}: provenance.yaml has no item '{data.get('key')}'"
+        )
     if name == "screens.yaml":
         return check_screen_reference(decision, data, artifacts)
     return check_test_reference(decision, data, results_dir)
@@ -470,14 +579,22 @@ def check_test_reference(decision: Decision, data: dict, results_dir: Path) -> s
     run = "../scorecard-flaws" if data["artifact"] == "scorecard-flaws" else data.get("run", "")
     if data.get("test_id"):
         outcomes = load_test_outcomes(results_dir, run)
-        return None if data["test_id"] in outcomes else f"{decision.item}: test {data['test_id']} not found in run {run}"
+        return (
+            None
+            if data["test_id"] in outcomes
+            else f"{decision.item}: test {data['test_id']} not found in run {run}"
+        )
     target = results_dir / run / str(data.get("file", ""))
-    if target.is_file() and str(data.get("contains", "")) in target.read_text(encoding="utf-8", errors="replace"):
+    if target.is_file() and str(data.get("contains", "")) in target.read_text(
+        encoding="utf-8", errors="replace"
+    ):
         return None
     return f"{decision.item}: {data.get('file')} in run {run} does not contain {data.get('contains')!r}"
 
 
-def check_evidence(decisions: list[Decision], artifacts: Artifacts, v1_dir: Path, results_dir: Path) -> list[str]:
+def check_evidence(
+    decisions: list[Decision], artifacts: Artifacts, v1_dir: Path, results_dir: Path
+) -> list[str]:
     """WHAT: Resolves every evidence reference of every decision and returns ALL problems.
     WHY: A reviewer should fix every dangling reference in one pass.
 
@@ -559,14 +676,24 @@ def reference_text(reference: Reference) -> str:
         {"artifact": "features.yaml", "id": "pos-checkout"} -> "[features.yaml#pos-checkout](../phase0/feature-truth/features.yaml)"
     """
     data = reference.data
-    links = {"features.yaml": "../phase0/feature-truth/features.yaml", "provenance.yaml": "../phase0/data-provenance/provenance.yaml",
-             "screens.yaml": "../phase0/screens/screens.yaml", "v1-test-results": "../phase0/v1-test-results/",
-             "scorecard-flaws": "../phase0/scorecard-flaws/results.md"}
+    links = {
+        "features.yaml": "../phase0/feature-truth/features.yaml",
+        "provenance.yaml": "../phase0/data-provenance/provenance.yaml",
+        "screens.yaml": "../phase0/screens/screens.yaml",
+        "v1-test-results": "../phase0/v1-test-results/",
+        "scorecard-flaws": "../phase0/scorecard-flaws/results.md",
+    }
     if reference.kind == "owner-decision":
         return f"owner-decision {data['date']}"
     if reference.kind == "code":
         return f"v1 {data['file']}:{data['line']}"
-    detail = data.get("id") or data.get("key") or data.get("test_id") or f"{data.get('page', '')} {data.get('action', '')}".strip() or data.get("file", "")
+    detail = (
+        data.get("id")
+        or data.get("key")
+        or data.get("test_id")
+        or f"{data.get('page', '')} {data.get('action', '')}".strip()
+        or data.get("file", "")
+    )
     return f"[{data['artifact']}#{detail}]({links[data['artifact']]})"
 
 
@@ -587,12 +714,18 @@ def render_decision_table(decisions: list[Decision], which: str, phases: dict[in
     chosen = [decision for decision in decisions if decision.decision == which]
     lines = ["", f"### {which} ({len(chosen)})", ""]
     if not chosen:
-        return lines + ["None from v1. (Deferrals with no v1 counterpart are listed under the given owner decisions.)"]
+        return lines + [
+            "None from v1. (Deferrals with no v1 counterpart are listed under the given owner decisions.)"
+        ]
     lines += ["| item | kind | reason | v2 phase | evidence |", "|---|---|---|---|---|"]
-    for decision in sorted(chosen, key=lambda each: (each.v2_phase if each.v2_phase is not None else 99, each.item)):
+    for decision in sorted(
+        chosen, key=lambda each: (each.v2_phase if each.v2_phase is not None else 99, each.item)
+    ):
         evidence = "<br>".join(reference_text(reference) for reference in decision.evidence)
         reason = decision.reason.replace("|", "/")
-        lines.append(f"| {decision.item.replace('|', '/')} | {decision.kind} | {reason} | {phase_label(decision.v2_phase, phases)} | {evidence} |")
+        lines.append(
+            f"| {decision.item.replace('|', '/')} | {decision.kind} | {reason} | {phase_label(decision.v2_phase, phases)} | {evidence} |"
+        )
     return lines
 
 
@@ -610,17 +743,24 @@ def render_context(artifacts: Artifacts, owner_decisions: list[dict]) -> list[st
         64 features -> "- 64 features ..." line with the status split
     """
     n = compute_headline(artifacts)
-    lines = ["## Context", "", "Phase 0 froze and audited v1 (prv3 tag v1-final). What it found, from the checked artifacts:", "",
-             f"- Features: {n['features']} in total: {n['status_working']} working, {n['status_mocked']} mocked, {n['status_broken']} broken, "
-             f"{n['status_missing']} missing, {n['status_untested']} untested. {n['security_findings']} security findings are recorded.",
-             f"- Tests (docker-with-db baseline): {n['docker-with-db_passed']} passed, {n['docker-with-db_failed']} failed, "
-             f"{n['docker-with-db_error']} errors, {n['docker-with-db_skipped']} skipped. The health_risk suite adds {n['docker-with-db-health-risk_passed']} passed.",
-             f"- Vendor scorecard: {n['flaws_failed_as_designed']} designed flaw tests fail on v1 as intended; {n['flaw_controls_passed']} positive control passes.",
-             f"- Data: {n['data_items']} items audited; {n['data_allowed']} allowed for production, {n['data_test-fixture-only']} test-fixture-only, "
-             f"{n['data_not-for-production']} not-for-production, {n['data_discard']} to discard.",
-             f"- Screens: {n['pages']} pages; {n['must_keep_actions']} actions to keep, {n['rebuild_actions']} to rebuild properly; "
-             f"{n['unused_calls']} frontend calls reach no screen; {n['hard_coded_items']} hard-coded items in the UI.", "",
-             "Given owner decisions (stated as given, not re-argued here):", ""]
+    lines = [
+        "## Context",
+        "",
+        "Phase 0 froze and audited v1 (prv3 tag v1-final). What it found, from the checked artifacts:",
+        "",
+        f"- Features: {n['features']} in total: {n['status_working']} working, {n['status_mocked']} mocked, {n['status_broken']} broken, "
+        f"{n['status_missing']} missing, {n['status_untested']} untested. {n['security_findings']} security findings are recorded.",
+        f"- Tests (docker-with-db baseline): {n['docker-with-db_passed']} passed, {n['docker-with-db_failed']} failed, "
+        f"{n['docker-with-db_error']} errors, {n['docker-with-db_skipped']} skipped. The health_risk suite adds {n['docker-with-db-health-risk_passed']} passed.",
+        f"- Vendor scorecard: {n['flaws_failed_as_designed']} designed flaw tests fail on v1 as intended; {n['flaw_controls_passed']} positive control passes.",
+        f"- Data: {n['data_items']} items audited; {n['data_allowed']} allowed for production, {n['data_test-fixture-only']} test-fixture-only, "
+        f"{n['data_not-for-production']} not-for-production, {n['data_discard']} to discard.",
+        f"- Screens: {n['pages']} pages; {n['must_keep_actions']} actions to keep, {n['rebuild_actions']} to rebuild properly; "
+        f"{n['unused_calls']} frontend calls reach no screen; {n['hard_coded_items']} hard-coded items in the UI.",
+        "",
+        "Given owner decisions (stated as given, not re-argued here):",
+        "",
+    ]
     lines += [f"- {entry['text']} ({entry['date']})" for entry in owner_decisions]
     return lines
 
@@ -642,15 +782,35 @@ def render_consequences(decisions: list[Decision], artifacts: Artifacts) -> list
     for decision in decisions:
         if decision.v2_phase is not None:
             counts[decision.v2_phase] = counts.get(decision.v2_phase, 0) + 1
-    lines = ["## Consequences", "", "Items each v2 phase must build or rebuild (keep and rebuild decisions):", "", "| phase | items |", "|---|---|"]
+    lines = [
+        "## Consequences",
+        "",
+        "Items each v2 phase must build or rebuild (keep and rebuild decisions):",
+        "",
+        "| phase | items |",
+        "|---|---|",
+    ]
     lines += [f"| {phase_label(number, artifacts.phases)} | {counts[number]} |" for number in sorted(counts)]
     secure = [decision for decision in decisions if decision.security_phase is not None]
-    lines += ["", f"Identity and tenancy come first ({phase_label(EARLY_PHASE_MAX, artifacts.phases)}) because {len(secure)} features carry "
-              f"{compute_headline(artifacts)['security_findings']} security findings:", ""]
-    lines += [f"- {decision.item}: " + "; ".join(reference.data["finding"] for reference in decision.evidence if reference.data.get("finding")) for decision in secure]
+    lines += [
+        "",
+        f"Identity and tenancy come first ({phase_label(EARLY_PHASE_MAX, artifacts.phases)}) because {len(secure)} features carry "
+        f"{compute_headline(artifacts)['security_findings']} security findings:",
+        "",
+    ]
+    lines += [
+        f"- {decision.item}: "
+        + "; ".join(
+            reference.data["finding"] for reference in decision.evidence if reference.data.get("finding")
+        )
+        for decision in secure
+    ]
     drops = [decision for decision in decisions if decision.decision == "drop"]
-    lines += ["", f"{len(drops)} items are dropped, so v2 starts without the Kafka event mesh, federated aggregation, the compute hypervisor, "
-              "the CUDA package stack and the generated files and logs listed above."]
+    lines += [
+        "",
+        f"{len(drops)} items are dropped, so v2 starts without the Kafka event mesh, federated aggregation, the compute hypervisor, "
+        "the CUDA package stack and the generated files and logs listed above.",
+    ]
     return lines
 
 
@@ -667,18 +827,29 @@ def render_alternatives(artifacts: Artifacts) -> list[str]:
         39 untested + 5 broken features -> those counts appear in the 'rewrite in place' argument
     """
     n = compute_headline(artifacts)
-    return ["## Alternatives considered", "",
-            "1. **Rewrite v1 in place.** Evidence against: " + f"only {n['status_working']} of {n['features']} features are proven working, "
-            f"{n['status_untested']} have no test, {n['status_mocked']} are mocked and {n['status_missing']} are missing; "
-            f"the baseline suite has {n['docker-with-db_failed']} failures and {n['docker-with-db_error']} errors; "
-            f"the vendor scorecard has {n['flaws_failed_as_designed']} proven flaws; and v1's requirements do not install on Windows. "
-            "An in-place rewrite would have to fix, test and re-secure almost everything while keeping a fragile base running.",
-            "", "2. **Fresh repo (chosen).** v2 starts empty. v1 stays frozen and read-only as a reference. The checked Phase 0 artifacts "
-            "decide what v2 carries over: working behaviour and its tests are kept as the specification, everything else is rebuilt test-first "
-            "or dropped, so nothing is copied across unexamined."]
+    return [
+        "## Alternatives considered",
+        "",
+        "1. **Rewrite v1 in place.** Evidence against: "
+        + f"only {n['status_working']} of {n['features']} features are proven working, "
+        f"{n['status_untested']} have no test, {n['status_mocked']} are mocked and {n['status_missing']} are missing; "
+        f"the baseline suite has {n['docker-with-db_failed']} failures and {n['docker-with-db_error']} errors; "
+        f"the vendor scorecard has {n['flaws_failed_as_designed']} proven flaws; and v1's requirements do not install on Windows. "
+        "An in-place rewrite would have to fix, test and re-secure almost everything while keeping a fragile base running.",
+        "",
+        "2. **Fresh repo (chosen).** v2 starts empty. v1 stays frozen and read-only as a reference. The checked Phase 0 artifacts "
+        "decide what v2 carries over: working behaviour and its tests are kept as the specification, everything else is rebuilt test-first "
+        "or dropped, so nothing is copied across unexamined.",
+    ]
 
 
-def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts: Artifacts, adr_date: str, status: str = "Proposed") -> str:
+def render_adr(
+    decisions: list[Decision],
+    owner_decisions: list[dict],
+    artifacts: Artifacts,
+    adr_date: str,
+    status: str = "Proposed",
+) -> str:
     """WHAT: Renders ADR-000 in standard ADR form: Title, Status (Proposed), Context, Decision (tables), Consequences,
     Alternatives considered, Why no benchmark, and the Owner to confirm list.
     WHY: The final, human-readable record; generated, never edited by hand.
@@ -694,19 +865,50 @@ def render_adr(decisions: list[Decision], owner_decisions: list[dict], artifacts
     Example:
         decisions plus artifacts -> text starting "# ADR-000: What v2 carries over from v1"
     """
-    lines = ["# ADR-000: What v2 carries over from v1", "", "_Generated by tools/phase0/adr_000.py from docs/adr/decisions-000.yaml. Do not edit by hand._",
-             "", "## Status", "", status, "", "## Date", "", adr_date, ""]
+    lines = [
+        "# ADR-000: What v2 carries over from v1",
+        "",
+        "_Generated by tools/phase0/adr_000.py from docs/adr/decisions-000.yaml. Do not edit by hand._",
+        "",
+        "## Status",
+        "",
+        status,
+        "",
+        "## Date",
+        "",
+        adr_date,
+        "",
+    ]
     lines += render_context(artifacts, owner_decisions)
-    lines += ["", "## Decision", "", "Meaning: **keep** = v2 carries the behaviour and the tests that prove it (only for working features); "
-              "**rebuild** = v2 builds it again, test-first, in the stated phase; **drop** = v2 does not have it; **defer-v3** = postponed by the owner."]
+    lines += [
+        "",
+        "## Decision",
+        "",
+        "Meaning: **keep** = v2 carries the behaviour and the tests that prove it (only for working features); "
+        "**rebuild** = v2 builds it again, test-first, in the stated phase; **drop** = v2 does not have it; **defer-v3** = postponed by the owner.",
+    ]
     for which in DECISIONS:
         lines += render_decision_table(decisions, which, artifacts.phases)
     lines += [""] + render_consequences(decisions, artifacts) + [""] + render_alternatives(artifacts)
-    lines += ["", "## Why no benchmark", "", "This ADR is a scope decision (what to carry over), not a technology choice, so there is nothing to benchmark. "
-              "The benchmark-before-choosing rule applies from ADR-001 onward.", "", "## Owner rulings", ""]
-    lines += [f"- {decision.item}: {decision.ruling}" for decision in decisions if decision.ruling] or ["None."]
+    lines += [
+        "",
+        "## Why no benchmark",
+        "",
+        "This ADR is a scope decision (what to carry over), not a technology choice, so there is nothing to benchmark. "
+        "The benchmark-before-choosing rule applies from ADR-001 onward.",
+        "",
+        "## Owner rulings",
+        "",
+    ]
+    lines += [f"- {decision.item}: {decision.ruling}" for decision in decisions if decision.ruling] or [
+        "None."
+    ]
     lines += ["", "## Owner to confirm", ""]
-    lines += [f"- {decision.item}: {decision.confirm}" for decision in decisions if decision.confirm and not decision.ruling] or ["None outstanding."]
+    lines += [
+        f"- {decision.item}: {decision.confirm}"
+        for decision in decisions
+        if decision.confirm and not decision.ruling
+    ] or ["None outstanding."]
     return chr(10).join(lines) + chr(10)
 
 
@@ -726,12 +928,22 @@ def load_artifacts(root: Path) -> Artifacts:
     docs = root / "docs"
     summaries = {}
     for run in ("docker-with-db", "docker-with-db-health-risk"):
-        summaries[run] = json.loads((docs / "phase0/v1-test-results" / run / "results.json").read_text(encoding="utf-8"))["summary"]
+        summaries[run] = json.loads(
+            (docs / "phase0/v1-test-results" / run / "results.json").read_text(encoding="utf-8")
+        )["summary"]
     flaw_text = (docs / "phase0/scorecard-flaws/results.md").read_text(encoding="utf-8")
-    flaws = {"failed": flaw_text.count("| failed |"), "passed": 1 if "Positive control (test_positive_control): passed" in flaw_text else 0}
-    return Artifacts(load_features(docs / "phase0/feature-truth/features.yaml"), load_entries(docs / "phase0/data-provenance/provenance.yaml"),
-                     yaml.safe_load((docs / "phase0/screens/screens.yaml").read_text(encoding="utf-8")),
-                     load_phase_map(docs / "plan/phase-map.yaml"), summaries, flaws)
+    flaws = {
+        "failed": flaw_text.count("| failed |"),
+        "passed": 1 if "Positive control (test_positive_control): passed" in flaw_text else 0,
+    }
+    return Artifacts(
+        load_features(docs / "phase0/feature-truth/features.yaml"),
+        load_entries(docs / "phase0/data-provenance/provenance.yaml"),
+        yaml.safe_load((docs / "phase0/screens/screens.yaml").read_text(encoding="utf-8")),
+        load_phase_map(docs / "plan/phase-map.yaml"),
+        summaries,
+        flaws,
+    )
 
 
 def audit(root: Path, v1_dir: Path, out_directory: Path) -> int:
@@ -762,7 +974,9 @@ def audit(root: Path, v1_dir: Path, out_directory: Path) -> int:
     adr_text = render_adr(decisions, owner_decisions, artifacts, adr_date, adr_status)
     out_directory.mkdir(parents=True, exist_ok=True)
     (out_directory / "ADR-000-v1-carry-over.md").write_text(adr_text, encoding="utf-8")
-    print(f"OK: {len(decisions)} decisions cover every feature, data item, screen action, module and service; all evidence verified")
+    print(
+        f"OK: {len(decisions)} decisions cover every feature, data item, screen action, module and service; all evidence verified"
+    )
     return 0
 
 
@@ -780,7 +994,11 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description="Check and render ADR-000.")
     parser.add_argument("--tag", default=V1_DEFAULT_TAG)
-    parser.add_argument("--out", default=None, help="folder to render the ADR into (default: docs/adr); inputs are always read from docs/")
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="folder to render the ADR into (default: docs/adr); inputs are always read from docs/",
+    )
     args = parser.parse_args(argv)
     work_root = Path(tempfile.mkdtemp(prefix="adr_000_"))
     try:

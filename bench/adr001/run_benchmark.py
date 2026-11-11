@@ -3,6 +3,7 @@
 # TERM: warm install - an installation executed immediately into a clean environment with caches retained.
 # TERM: cold lock - dependency resolution executed after cache clearing with any prior lockfile deleted.
 """ADR-001 dependency manager benchmark harness for medoRa."""
+
 from __future__ import annotations
 
 import ctypes
@@ -143,7 +144,7 @@ def write_poetry_project(project_dir: Path, packages: list[str]) -> Path:
         'version = "0.1.0"\n'
         'requires-python = ">=3.12,<3.13"\n\n'
         "[tool.poetry]\n"
-        'package-mode = false\n\n'
+        "package-mode = false\n\n"
         "[tool.poetry.dependencies]\n"
         f"{deps_lines}\n"
     )
@@ -430,10 +431,7 @@ def is_cache_clean(cache_dir: Path) -> tuple[bool, str]:
     if not cache_dir.exists():
         return True, "Cache directory does not exist (empty)"
     package_exts = (".whl", ".tar.gz", ".zip")
-    pkg_files = [
-        f for f in cache_dir.rglob("*")
-        if f.is_file() and f.name.endswith(package_exts)
-    ]
+    pkg_files = [f for f in cache_dir.rglob("*") if f.is_file() and f.name.endswith(package_exts)]
     if pkg_files:
         return False, f"Cache contains {len(pkg_files)} package files (e.g. {pkg_files[0].name})"
     return True, "Cache is empty or contains no package files"
@@ -559,8 +557,13 @@ def run_install_step(
     if tool == "uv":
         exe = repo_root / "bench/adr001/.tools/uv/Scripts/uv.exe"
         cmd = [
-            str(exe), "sync", "--frozen", "--no-install-project", "--active",
-            "--directory", str(project_dir),
+            str(exe),
+            "sync",
+            "--frozen",
+            "--no-install-project",
+            "--active",
+            "--directory",
+            str(project_dir),
         ]
         return run_subprocess_timed(cmd, INSTALL_TIMEOUT_SECONDS, env={"VIRTUAL_ENV": str(venv_path)})
     if tool == "poetry":
@@ -631,7 +634,8 @@ def evaluate_decision(results_data: dict[str, Any]) -> tuple[str, str]:
     best_warm = min(qualifying, key=lambda c: c["summary"]["median_warm_install_seconds"])
     min_warm_sec = best_warm["summary"]["median_warm_install_seconds"]
     tied = [
-        c for c in qualifying
+        c
+        for c in qualifying
         if (c["summary"]["median_warm_install_seconds"] - min_warm_sec) / min_warm_sec <= TIE_THRESHOLD_RATIO
     ]
     if len(tied) == 1:
@@ -688,18 +692,24 @@ def get_system_ram_gb() -> str:
         get_system_ram_gb() -> "16.0 GB"
     """
     if sys.platform == "win32":
+
         class MemoryStatus(ctypes.Structure):
             _fields_ = [
-                ("length", ctypes.c_ulong), ("load", ctypes.c_ulong),
-                ("total_phys", ctypes.c_ulonglong), ("avail_phys", ctypes.c_ulonglong),
-                ("total_page", ctypes.c_ulonglong), ("avail_page", ctypes.c_ulonglong),
-                ("total_virt", ctypes.c_ulonglong), ("avail_virt", ctypes.c_ulonglong),
+                ("length", ctypes.c_ulong),
+                ("load", ctypes.c_ulong),
+                ("total_phys", ctypes.c_ulonglong),
+                ("avail_phys", ctypes.c_ulonglong),
+                ("total_page", ctypes.c_ulonglong),
+                ("avail_page", ctypes.c_ulonglong),
+                ("total_virt", ctypes.c_ulonglong),
+                ("avail_virt", ctypes.c_ulonglong),
                 ("avail_ext", ctypes.c_ulonglong),
             ]
+
         status = MemoryStatus()
         status.length = ctypes.sizeof(MemoryStatus)
         if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
-            return f"{status.total_phys / (1024 ** 3):.1f} GB"
+            return f"{status.total_phys / (1024**3):.1f} GB"
     return "Unknown"
 
 
@@ -907,7 +917,11 @@ def render_adr(results_data: dict[str, Any]) -> str:
     rep_table = render_repetition_details(results_data)
     footer = render_adr_footer(winner, rationale)
     warnings = check_cold_warm_divergence(results_data["tools"])
-    warn_text = ("\n\n### Divergence Warnings\n\n" + "\n\n".join(f"> [!WARNING]\n> {w}" for w in warnings)) if warnings else ""
+    warn_text = (
+        ("\n\n### Divergence Warnings\n\n" + "\n\n".join(f"> [!WARNING]\n> {w}" for w in warnings))
+        if warnings
+        else ""
+    )
     env_line = f"Host environment: {meta['os']}, CPU: {meta['cpu']}, RAM: {meta['ram']}, Python: {meta['python_version']}.\n\n"
     return (
         f"{header}## Benchmark Results\n\n{env_line}{table}{warn_text}\n\n"
@@ -930,7 +944,9 @@ def run_h1_check(tool: str, project_dir: Path, repo_root: Path) -> tuple[bool, s
     """
     if tool == "pip":
         return False, "", "", "Baseline pip does not lock dependencies"
-    lock_file_name = "uv.lock" if tool == "uv" else ("poetry.lock" if tool == "poetry" else "requirements.txt")
+    lock_file_name = (
+        "uv.lock" if tool == "uv" else ("poetry.lock" if tool == "poetry" else "requirements.txt")
+    )
     lock_path = project_dir / lock_file_name
     if lock_path.is_file():
         lock_path.unlink()
@@ -961,7 +977,9 @@ def delete_project_lockfile(tool: str, project_dir: Path) -> None:
     Example:
         delete_project_lockfile("uv", Path("work/project_uv")) -> None
     """
-    lock_file_name = "uv.lock" if tool == "uv" else ("poetry.lock" if tool == "poetry" else "requirements.txt")
+    lock_file_name = (
+        "uv.lock" if tool == "uv" else ("poetry.lock" if tool == "poetry" else "requirements.txt")
+    )
     lock_path = project_dir / lock_file_name
     if lock_path.is_file():
         lock_path.unlink()
@@ -1000,16 +1018,22 @@ def execute_cold_install(
     create_target_venv(cold_venv)
     if not clean_ok:
         return {
-            "seconds": None, "exit_code": None, "status": "not_measured",
+            "seconds": None,
+            "exit_code": None,
+            "status": "not_measured",
             "reason": f"Cache clean unverified: {clean_msg}",
             "tail": f"Cache clean unverified: {clean_msg}",
-            "bytes_before": b_before, "bytes_after": b_after,
+            "bytes_before": b_before,
+            "bytes_after": b_after,
         }
     c_time, c_code, c_tail = run_install_step(tool, project_dir, cold_venv, repo_root)
     return {
-        "seconds": c_time, "exit_code": c_code,
-        "status": "ok" if c_code == 0 else "failed", "tail": c_tail,
-        "bytes_before": b_before, "bytes_after": b_after,
+        "seconds": c_time,
+        "exit_code": c_code,
+        "status": "ok" if c_code == 0 else "failed",
+        "tail": c_tail,
+        "bytes_before": b_before,
+        "bytes_after": b_after,
     }
 
 
@@ -1046,9 +1070,19 @@ def run_tool_repetition(
     create_target_venv(warm_venv)
     w_time, w_code, w_tail = run_install_step(tool, project_dir, warm_venv, repo_root)
     return {
-        "lock": {"seconds": lock_time, "exit_code": lock_code, "status": "ok" if lock_code == 0 else "failed", "tail": lock_tail},
+        "lock": {
+            "seconds": lock_time,
+            "exit_code": lock_code,
+            "status": "ok" if lock_code == 0 else "failed",
+            "tail": lock_tail,
+        },
         "cold_install": cold_res,
-        "warm_install": {"seconds": w_time, "exit_code": w_code, "status": "ok" if w_code == 0 else "failed", "tail": w_tail},
+        "warm_install": {
+            "seconds": w_time,
+            "exit_code": w_code,
+            "status": "ok" if w_code == 0 else "failed",
+            "tail": w_tail,
+        },
     }
 
 
@@ -1155,15 +1189,18 @@ def summarize_tool_runs(tool: str, rep_results: list[dict[str, Any]]) -> dict[st
         summarize_tool_runs("uv", results) -> {"median_warm_install_seconds": 1.2, ...}
     """
     lock_times = [
-        r["lock"]["seconds"] for r in rep_results
+        r["lock"]["seconds"]
+        for r in rep_results
         if r["lock"]["status"] == "ok" and r["lock"]["seconds"] is not None
     ]
     cold_times = [
-        r["cold_install"]["seconds"] for r in rep_results
+        r["cold_install"]["seconds"]
+        for r in rep_results
         if r["cold_install"]["status"] == "ok" and r["cold_install"]["seconds"] is not None
     ]
     warm_times = [
-        r["warm_install"]["seconds"] for r in rep_results
+        r["warm_install"]["seconds"]
+        for r in rep_results
         if r["warm_install"]["status"] == "ok" and r["warm_install"]["seconds"] is not None
     ]
     has_lock = any(r.get("lock", {}).get("status") in ("ok", "failed") for r in rep_results)
@@ -1173,10 +1210,14 @@ def summarize_tool_runs(tool: str, rep_results: list[dict[str, Any]]) -> dict[st
         "median_lock_seconds": compute_median(lock_times) if lock_times else (0.0 if has_lock else None),
         "min_lock_seconds": min(lock_times) if lock_times else (0.0 if has_lock else None),
         "max_lock_seconds": max(lock_times) if lock_times else (0.0 if has_lock else None),
-        "median_cold_install_seconds": compute_median(cold_times) if cold_times else (0.0 if has_cold else None),
+        "median_cold_install_seconds": compute_median(cold_times)
+        if cold_times
+        else (0.0 if has_cold else None),
         "min_cold_install_seconds": min(cold_times) if cold_times else (0.0 if has_cold else None),
         "max_cold_install_seconds": max(cold_times) if cold_times else (0.0 if has_cold else None),
-        "median_warm_install_seconds": compute_median(warm_times) if warm_times else (0.0 if has_warm else None),
+        "median_warm_install_seconds": compute_median(warm_times)
+        if warm_times
+        else (0.0 if has_warm else None),
         "min_warm_install_seconds": min(warm_times) if warm_times else (0.0 if has_warm else None),
         "max_warm_install_seconds": max(warm_times) if warm_times else (0.0 if has_warm else None),
     }
@@ -1248,7 +1289,7 @@ def execute_benchmark(
         summary = summarize_tool_runs(tool, tool_runs[tool])
         final_tools[tool] = {"hard_rules": hard_rules, "summary": summary, "runs": tool_runs[tool]}
     results: dict[str, Any] = {
-        "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),
+        "date": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d"),
         "seed": seed,
         "repetitions": repetitions,
         "input_spec_sha256": spec_sha,
@@ -1274,7 +1315,11 @@ def upgrade_single_run(tool_name: str, run: dict[str, Any]) -> dict[str, Any]:
     """
     cold = run.get("cold_install", {})
     tail_text = cold.get("tail", "")
-    if cold.get("status") == "failed" and isinstance(tail_text, str) and tail_text.startswith("Cache clean unverified"):
+    if (
+        cold.get("status") == "failed"
+        and isinstance(tail_text, str)
+        and tail_text.startswith("Cache clean unverified")
+    ):
         cold["status"] = "not_measured"
         cold["exit_code"] = None
         cold["seconds"] = None

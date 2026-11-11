@@ -9,6 +9,7 @@ Nothing here reads stored results as if they were live. The only stored data use
 docker-no-services counts, as the baseline for G5, and (b) the committed renders in docs/, as the baseline
 for the drift check. Every number in the report comes from a command run now.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -20,9 +21,9 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 from tools.phase0.run_scorecard_flaws import CONTROL_TEST_NAME, FLAWS, flaw_id_of, verify_rows
 from tools.phase0.run_v1_suite import JunitParseError, TestRow, parse_junit, summarise
@@ -48,11 +49,33 @@ UNAVAILABLE = "unavailable"
 TIMESTAMP_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}|\b\d{2}:\d{2}:\d{2}\b")
 # Each checker: (check id, title, script, files it renders: (rendered name inside --out, committed path in docs/)).
 CHECKERS = [
-    ("feature_truth", "Feature-truth table", "tools/phase0/feature_truth.py", [("feature-truth.md", "docs/phase0/feature-truth/feature-truth.md")]),
-    ("data_provenance", "Data provenance audit", "tools/phase0/data_provenance.py",
-     [("provenance.md", "docs/phase0/data-provenance/provenance.md"), ("measurements.json", "docs/phase0/data-provenance/measurements.json")]),
-    ("screen_inventory", "Screen and function inventory", "tools/phase0/screen_inventory.py", [("screens.md", "docs/phase0/screens/screens.md")]),
-    ("adr_000", "ADR-000 carry-over decisions", "tools/phase0/adr_000.py", [("ADR-000-v1-carry-over.md", "docs/adr/ADR-000-v1-carry-over.md")]),
+    (
+        "feature_truth",
+        "Feature-truth table",
+        "tools/phase0/feature_truth.py",
+        [("feature-truth.md", "docs/phase0/feature-truth/feature-truth.md")],
+    ),
+    (
+        "data_provenance",
+        "Data provenance audit",
+        "tools/phase0/data_provenance.py",
+        [
+            ("provenance.md", "docs/phase0/data-provenance/provenance.md"),
+            ("measurements.json", "docs/phase0/data-provenance/measurements.json"),
+        ],
+    ),
+    (
+        "screen_inventory",
+        "Screen and function inventory",
+        "tools/phase0/screen_inventory.py",
+        [("screens.md", "docs/phase0/screens/screens.md")],
+    ),
+    (
+        "adr_000",
+        "ADR-000 carry-over decisions",
+        "tools/phase0/adr_000.py",
+        [("ADR-000-v1-carry-over.md", "docs/adr/ADR-000-v1-carry-over.md")],
+    ),
 ]
 
 
@@ -164,14 +187,39 @@ class SubprocessRunner:
         """
         started = time.monotonic()
         try:
-            finished = subprocess.run(arguments, cwd=self.working_dir, capture_output=True, text=True, encoding="utf-8",
-                                      errors="replace", timeout=timeout_seconds, shell=False, check=False)
+            finished = subprocess.run(
+                arguments,
+                cwd=self.working_dir,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout_seconds,
+                shell=False,
+                check=False,
+            )
         except subprocess.TimeoutExpired as error:
             partial = decode_partial(error.stdout)
-            return CommandResult(arguments, None, partial, time.monotonic() - started, True, f"timed out after {timeout_seconds} s")
+            return CommandResult(
+                arguments,
+                None,
+                partial,
+                time.monotonic() - started,
+                True,
+                f"timed out after {timeout_seconds} s",
+            )
         except OSError as error:
-            return CommandResult(arguments, None, "", time.monotonic() - started, False, f"{type(error).__name__}: {error}")
-        return CommandResult(arguments, finished.returncode, finished.stdout + finished.stderr, time.monotonic() - started, False, "")
+            return CommandResult(
+                arguments, None, "", time.monotonic() - started, False, f"{type(error).__name__}: {error}"
+            )
+        return CommandResult(
+            arguments,
+            finished.returncode,
+            finished.stdout + finished.stderr,
+            time.monotonic() - started,
+            False,
+            "",
+        )
 
 
 def decode_partial(value: str | bytes | None) -> str:
@@ -232,11 +280,29 @@ def collect_facts(runner: Runner, started: str) -> list[Fact]:
         tree = Fact("Working tree", UNAVAILABLE, False)
     else:
         tree = Fact("Working tree", "dirty (uncommitted changes)" if status.output.strip() else "clean", True)
-    cpu_command = ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_Processor | Select-Object -First 1).Name"]
-    ram_command = ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory"]
+    cpu_command = [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "(Get-CimInstance Win32_Processor | Select-Object -First 1).Name",
+    ]
+    ram_command = [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory",
+    ]
     ram = probe(runner, "RAM (bytes)", ram_command)
-    return [commit, tree, Fact("Started (UTC)", started, True), Fact("OS", platform.platform(), True), probe(runner, "CPU", cpu_command), ram,
-            probe(runner, "Python", [sys.executable, "--version"]), probe(runner, "Docker", ["docker", "--version"])]
+    return [
+        commit,
+        tree,
+        Fact("Started (UTC)", started, True),
+        Fact("OS", platform.platform(), True),
+        probe(runner, "CPU", cpu_command),
+        ram,
+        probe(runner, "Python", [sys.executable, "--version"]),
+        probe(runner, "Docker", ["docker", "--version"]),
+    ]
 
 
 def tail(text: str, count: int = OUTPUT_TAIL_LINES) -> str:
@@ -285,7 +351,9 @@ def compare_render(committed_path: Path, rendered_path: Path, label: str) -> Dri
         one changed line -> Drift(file="x.md", differing_lines=[("-old", "content changed"), ("+new", "content changed")])
     """
     if not rendered_path.is_file():
-        return Drift(label, str(committed_path), [("(no render was produced)", "checker did not write this file")])
+        return Drift(
+            label, str(committed_path), [("(no render was produced)", "checker did not write this file")]
+        )
     committed = committed_path.read_text(encoding="utf-8").splitlines()
     rendered = rendered_path.read_text(encoding="utf-8").splitlines()
     differing: list[tuple[str, str]] = []
@@ -353,7 +421,12 @@ def run_unit_suite(runner: Runner, temp_dir: Path) -> CheckResult:
         except JunitParseError as error:
             notes.append(f"the junit file could not be reconciled: {error}")
         else:
-            numbers = {"passed": str(summary.passed), "failed": str(summary.failed), "error": str(summary.error), "skipped": str(summary.skipped)}
+            numbers = {
+                "passed": str(summary.passed),
+                "failed": str(summary.failed),
+                "error": str(summary.error),
+                "skipped": str(summary.skipped),
+            }
             suite_passed = result.exit_code == 0 and summary.failed == 0 and summary.error == 0
             if suite_passed:
                 status = PASS
@@ -361,8 +434,19 @@ def run_unit_suite(runner: Runner, temp_dir: Path) -> CheckResult:
                 status = FAIL
     else:
         notes.append("pytest wrote no junit file")
-    return CheckResult("suite", "medoRa unit suite", "medoRa's own tests pass right now.", " ".join(command), result.exit_code, status,
-                       result.output, numbers, notes, [], result.seconds)
+    return CheckResult(
+        check_id="suite",
+        title="medoRa unit suite",
+        claim="medoRa's own tests pass right now.",
+        command=" ".join(command),
+        exit_code=result.exit_code,
+        status=status,
+        output=result.output,
+        numbers=numbers,
+        notes=notes,
+        drifts=[],
+        seconds=result.seconds,
+    )
 
 
 def run_checker(runner: Runner, temp_dir: Path, repo_root: Path, check: tuple) -> CheckResult:
@@ -392,9 +476,19 @@ def run_checker(runner: Runner, temp_dir: Path, repo_root: Path, check: tuple) -
                 drifts.append(drift)
     status = PASS if result.exit_code == 0 else FAIL
     last_line = last_nonempty_line(result.output)
-    return CheckResult(check_id, title, f"{title}: every item is covered and every piece of evidence verifies against a fresh v1-final clone.",
-                       " ".join(command), result.exit_code, status, result.output, {"result line": last_line, "files that drifted": str(len(drifts))},
-                       [], drifts, result.seconds)
+    return CheckResult(
+        check_id,
+        title,
+        f"{title}: every item is covered and every piece of evidence verifies against a fresh v1-final clone.",
+        " ".join(command),
+        result.exit_code,
+        status,
+        result.output,
+        {"result line": last_line, "files that drifted": str(len(drifts))},
+        [],
+        drifts,
+        result.seconds,
+    )
 
 
 def evaluate_flaw_rows(rows: list[TestRow]) -> tuple[bool, dict[str, str], list[str]]:
@@ -413,11 +507,18 @@ def evaluate_flaw_rows(rows: list[TestRow]) -> tuple[bool, dict[str, str], list[
     problems = verify_rows(rows)
     failed_with_assertion = 0
     for row in rows:
-        if flaw_id_of(row.name) in FLAWS and row.outcome == "failed" and row.reason.startswith("AssertionError"):
+        if (
+            flaw_id_of(row.name) in FLAWS
+            and row.outcome == "failed"
+            and row.reason.startswith("AssertionError")
+        ):
             failed_with_assertion += 1
     control_passed = any(row.name == CONTROL_TEST_NAME and row.outcome == "passed" for row in rows)
     control_text = "yes" if control_passed else "no"
-    numbers = {"flaws failed with AssertionError": str(failed_with_assertion), "positive control passed": control_text}
+    numbers = {
+        "flaws failed with AssertionError": str(failed_with_assertion),
+        "positive control passed": control_text,
+    }
     return (not problems and failed_with_assertion == len(FLAWS) and control_passed), numbers, problems
 
 
@@ -451,8 +552,19 @@ def run_scorecard_flaws(runner: Runner, temp_dir: Path) -> CheckResult:
     else:
         notes.append("the runner wrote no junit file")
     status = PASS if good and result.exit_code == 0 else FAIL
-    return CheckResult("scorecard_flaws", "Vendor-scorecard flaws", "8 designed flaw tests fail on v1 with an AssertionError and the positive control passes.",
-                       " ".join(command), result.exit_code, status, result.output, numbers, notes, [], result.seconds)
+    return CheckResult(
+        "scorecard_flaws",
+        "Vendor-scorecard flaws",
+        "8 designed flaw tests fail on v1 with an AssertionError and the positive control passes.",
+        " ".join(command),
+        result.exit_code,
+        status,
+        result.output,
+        numbers,
+        notes,
+        [],
+        result.seconds,
+    )
 
 
 def read_counts(results_json: Path) -> dict[str, int]:
@@ -502,15 +614,38 @@ def rerun_v1_suite(runner: Runner, repo_root: Path, temp_dir: Path) -> CheckResu
     Example:
         live 197/27/6/3 vs baseline 197/27/6/3 -> PASS
     """
-    title, claim = "v1 suite rerun", "v1's own test suite, run now in the saved image, gives the same counts as the recorded baseline."
+    title, claim = (
+        "v1 suite rerun",
+        "v1's own test suite, run now in the saved image, gives the same counts as the recorded baseline.",
+    )
     recorded = json.loads((repo_root / RECORDED_IMAGE_META).read_text(encoding="utf-8"))["env_image_id"]
-    inspect = runner(["docker", "image", "inspect", ENV_IMAGE_NAME, "--format", "{{.Id}}"], PROBE_TIMEOUT_SECONDS)
+    inspect = runner(
+        ["docker", "image", "inspect", ENV_IMAGE_NAME, "--format", "{{.Id}}"], PROBE_TIMEOUT_SECONDS
+    )
     if inspect.exit_code != 0:
-        return not_run(title, claim, f"the saved image {ENV_IMAGE_NAME} could not be inspected (is Docker running?): {tail(inspect.output, 3)}")
+        return not_run(
+            title,
+            claim,
+            f"the saved image {ENV_IMAGE_NAME} could not be inspected (is Docker running?): {tail(inspect.output, 3)}",
+        )
     if inspect.output.strip() != recorded:
-        return not_run(title, claim, f"image ID {inspect.output.strip()} differs from the recorded {recorded}; not rebuilding")
+        return not_run(
+            title,
+            claim,
+            f"image ID {inspect.output.strip()} differs from the recorded {recorded}; not rebuilding",
+        )
     out_root = temp_dir / "v1"
-    command = [sys.executable, "-m", "tools.phase0.run_v1_suite_docker", "--run-label", "docker-no-services", "--reuse-env-from", REUSE_ENV_FROM, "--out-root", str(out_root)]
+    command = [
+        sys.executable,
+        "-m",
+        "tools.phase0.run_v1_suite_docker",
+        "--run-label",
+        "docker-no-services",
+        "--reuse-env-from",
+        REUSE_ENV_FROM,
+        "--out-root",
+        str(out_root),
+    ]
     result = runner(command, V1_RERUN_TIMEOUT_SECONDS)
     live_path = out_root / "docker-no-services" / "results.json"
     if result.exit_code != 0 or not live_path.is_file():
@@ -528,9 +663,25 @@ def rerun_v1_suite(runner: Runner, repo_root: Path, temp_dir: Path) -> CheckResu
             seconds=result.seconds,
         )
     live, baseline = read_counts(live_path), read_counts(repo_root / BASELINE_RESULTS)
-    numbers = {f"live {name}": str(live[name]) for name in live} | {f"baseline {name} (committed docker-no-services)": str(baseline[name]) for name in baseline}
+    numbers: dict[str, str] = {}
+    for name in live:
+        numbers[f"live {name}"] = str(live[name])
+    for name in baseline:
+        numbers[f"baseline {name} (committed docker-no-services)"] = str(baseline[name])
     status = PASS if live == baseline else FAIL
-    return CheckResult("v1_rerun", title, claim, " ".join(command), result.exit_code, status, result.output, numbers, [], [], result.seconds)
+    return CheckResult(
+        check_id="v1_rerun",
+        title=title,
+        claim=claim,
+        command=" ".join(command),
+        exit_code=result.exit_code,
+        status=status,
+        output=result.output,
+        numbers=numbers,
+        notes=[],
+        drifts=[],
+        seconds=result.seconds,
+    )
 
 
 def drifted_files(checks: dict[str, CheckResult]) -> list[str]:
@@ -569,34 +720,74 @@ def compute_gates(checks: dict[str, CheckResult]) -> list[Gate]:
         ft_status = PASS
     else:
         ft_status = FAIL
-    g1 = Gate("G1", "Every feature has a status and verified evidence", ft_ok, ft_status, f"feature_truth exit {checks['feature_truth'].exit_code}")
+    g1 = Gate(
+        "G1",
+        "Every feature has a status and verified evidence",
+        ft_ok,
+        ft_status,
+        f"feature_truth exit {checks['feature_truth'].exit_code}",
+    )
 
     dp_ok = exited_zero(checks, "data_provenance")
     if dp_ok:
         dp_status = PASS
     else:
         dp_status = FAIL
-    g2 = Gate("G2", "Every data file has a provenance row", dp_ok, dp_status, f"data_provenance exit {checks['data_provenance'].exit_code}")
+    g2 = Gate(
+        "G2",
+        "Every data file has a provenance row",
+        dp_ok,
+        dp_status,
+        f"data_provenance exit {checks['data_provenance'].exit_code}",
+    )
 
     g3_parts: list[str] = []
     for k, v in checks["scorecard_flaws"].numbers.items():
         g3_parts.append(f"{k}: {v}")
     g3_detail = "; ".join(g3_parts)
-    g3 = Gate("G3", "Scorecard flaws fail on v1 as expected and the positive control passes", checks["scorecard_flaws"].status == PASS, checks["scorecard_flaws"].status, g3_detail)
+    g3 = Gate(
+        "G3",
+        "Scorecard flaws fail on v1 as expected and the positive control passes",
+        checks["scorecard_flaws"].status == PASS,
+        checks["scorecard_flaws"].status,
+        g3_detail,
+    )
 
     adr_ok = exited_zero(checks, "adr_000")
     if adr_ok:
         adr_status = PASS
     else:
         adr_status = FAIL
-    g4 = Gate("G4", "ADR-000 covers every item", adr_ok, adr_status, f"adr_000 exit {checks['adr_000'].exit_code}")
+    g4 = Gate(
+        "G4", "ADR-000 covers every item", adr_ok, adr_status, f"adr_000 exit {checks['adr_000'].exit_code}"
+    )
 
     g5_detail = "; ".join(checks["v1_rerun"].notes) or "see the v1 rerun section"
-    g5 = Gate("G5", "Live v1 counts equal the committed baseline", checks["v1_rerun"].status == PASS, checks["v1_rerun"].status, g5_detail)
+    g5 = Gate(
+        "G5",
+        "Live v1 counts equal the committed baseline",
+        checks["v1_rerun"].status == PASS,
+        checks["v1_rerun"].status,
+        g5_detail,
+    )
 
     drift_names = drifted_files(checks)
     g6_passed = checks["suite"].status == PASS and exited_zero(checks, "screen_inventory") and not drift_names
-    g6 = Gate("G6", "medoRa's own suite passes and no checker render drifted", g6_passed, PASS if g6_passed else FAIL, f"suite {checks['suite'].status}, screen_inventory exit {checks['screen_inventory'].exit_code}, drifted files: {len(drift_names)}")
+    if g6_passed:
+        g6_status = PASS
+    else:
+        g6_status = FAIL
+    suite_status = checks["suite"].status
+    screen_exit = checks["screen_inventory"].exit_code
+    drift_count = len(drift_names)
+    g6_detail = f"suite {suite_status}, screen_inventory exit {screen_exit}, drifted files: {drift_count}"
+    g6 = Gate(
+        "G6",
+        "medoRa's own suite passes and no checker render drifted",
+        g6_passed,
+        g6_status,
+        g6_detail,
+    )
 
     return [g1, g2, g3, g4, g5, g6]
 
@@ -632,7 +823,7 @@ def run_phase0(repo_root: Path, runner: Runner | None = None) -> Report:
     """
     run = runner or SubprocessRunner(repo_root)
     started_clock = time.monotonic()
-    started = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    started = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     facts = collect_facts(run, started)
     with tempfile.TemporaryDirectory(prefix="showcase_phase0_") as temp_name:
         temp_dir = Path(temp_name)

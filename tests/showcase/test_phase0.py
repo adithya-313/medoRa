@@ -4,6 +4,7 @@
 # TERM: escaping - turning < > & into harmless text so command output cannot run as page code.
 """Tests for the Phase 0 showcase. They call the real gate, drift, rerun and render functions and only fake the
 subprocess runner."""
+
 from __future__ import annotations
 
 import json
@@ -33,12 +34,26 @@ from showcase.render import render_report
 from tools.phase0.run_scorecard_flaws import CONTROL_TEST_NAME, FLAWS
 from tools.phase0.run_v1_suite import TestRow
 
-CHECK_IDS = ["suite", "feature_truth", "data_provenance", "screen_inventory", "adr_000", "scorecard_flaws", "v1_rerun"]
+CHECK_IDS = [
+    "suite",
+    "feature_truth",
+    "data_provenance",
+    "screen_inventory",
+    "adr_000",
+    "scorecard_flaws",
+    "v1_rerun",
+]
 RECORDED_ID = "sha256:recorded"
 BASELINE = {"passed": 197, "failed": 27, "error": 6, "skipped": 3}
 
 
-def make_check(check_id: str, exit_code: int | None = 0, status: str = PASS, drifts: list[Drift] | None = None, output: str = "ok") -> CheckResult:
+def make_check(
+    check_id: str,
+    exit_code: int | None = 0,
+    status: str = PASS,
+    drifts: list[Drift] | None = None,
+    output: str = "ok",
+) -> CheckResult:
     """WHAT: Builds a CheckResult with the given exit code, status, drifts and output.
     WHY: The gate tests start from an all-passing set and change one thing.
 
@@ -53,7 +68,19 @@ def make_check(check_id: str, exit_code: int | None = 0, status: str = PASS, dri
     Example:
         make_check("adr_000", exit_code=1, status="FAIL") -> a failed ADR check
     """
-    return CheckResult(check_id, f"title {check_id}", "claim", "cmd", exit_code, status, output, {"k": "v"}, [], drifts or [], 1.0)
+    return CheckResult(
+        check_id,
+        f"title {check_id}",
+        "claim",
+        "cmd",
+        exit_code,
+        status,
+        output,
+        {"k": "v"},
+        [],
+        drifts or [],
+        1.0,
+    )
 
 
 def passing_checks() -> dict[str, CheckResult]:
@@ -113,12 +140,19 @@ def test_drift_is_detected_and_reports_the_differing_lines(tmp_path: Path) -> No
     """
     committed = tmp_path / "committed.md"
     rendered = tmp_path / "rendered.md"
-    committed.write_text("same" + chr(10) + "generated 2026-10-22T18:20" + chr(10) + "old text" + chr(10), encoding="utf-8")
-    rendered.write_text("same" + chr(10) + "generated 2026-10-23T09:00" + chr(10) + "new text" + chr(10), encoding="utf-8")
+    committed.write_text(
+        "same" + chr(10) + "generated 2026-10-22T18:20" + chr(10) + "old text" + chr(10), encoding="utf-8"
+    )
+    rendered.write_text(
+        "same" + chr(10) + "generated 2026-10-23T09:00" + chr(10) + "new text" + chr(10), encoding="utf-8"
+    )
     drift = compare_render(committed, rendered, "x.md")
     assert drift is not None
     reasons = {line: reason for line, reason in drift.differing_lines}
-    assert reasons["-generated 2026-10-22T18:20"] == "run-specific timestamp" and reasons["+new text"] == "content changed"
+    assert (
+        reasons["-generated 2026-10-22T18:20"] == "run-specific timestamp"
+        and reasons["+new text"] == "content changed"
+    )
     rendered.write_text(committed.read_text(encoding="utf-8"), encoding="utf-8")
     assert compare_render(committed, rendered, "x.md") is None
     missing = compare_render(committed, tmp_path / "nothing.md", "x.md")
@@ -159,11 +193,17 @@ def test_checker_drift_fails_gate_g6(tmp_path: Path) -> None:
     (tmp_path / "docs" / "table.md").write_text("old" + chr(10), encoding="utf-8")
     entry = ("feature_truth", "Feature table", "tools/x.py", [("table.md", "docs/table.md")])
     check = run_checker(changed_render_runner, tmp_path / "temp", tmp_path, entry)
-    assert check.exit_code == 0 and len(check.drifts) == 1 and ("+new", "content changed") in check.drifts[0].differing_lines
+    assert (
+        check.exit_code == 0
+        and len(check.drifts) == 1
+        and ("+new", "content changed") in check.drifts[0].differing_lines
+    )
     checks = passing_checks()
     checks["feature_truth"] = check
     gates = compute_gates(checks)
-    assert [gate.gate_id for gate in gates if not gate.passed] == ["G6"] and "drifted files: 1" in gates[5].detail
+    assert [gate.gate_id for gate in gates if not gate.passed] == ["G6"] and "drifted files: 1" in gates[
+        5
+    ].detail
 
 
 def make_rerun_root(tmp_path: Path) -> Path:
@@ -180,8 +220,12 @@ def make_rerun_root(tmp_path: Path) -> Path:
     results = tmp_path / "docs" / "phase0" / "v1-test-results"
     (results / "docker-with-db").mkdir(parents=True)
     (results / "docker-no-services").mkdir(parents=True)
-    (results / "docker-with-db" / "meta.json").write_text(json.dumps({"env_image_id": RECORDED_ID}), encoding="utf-8")
-    (results / "docker-no-services" / "results.json").write_text(json.dumps({"summary": BASELINE}), encoding="utf-8")
+    (results / "docker-with-db" / "meta.json").write_text(
+        json.dumps({"env_image_id": RECORDED_ID}), encoding="utf-8"
+    )
+    (results / "docker-no-services" / "results.json").write_text(
+        json.dumps({"summary": BASELINE}), encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -249,10 +293,17 @@ def test_missing_image_makes_g5_not_run_and_fails_the_gate(tmp_path: Path) -> No
     gates = compute_gates(checks)
     assert gates[4].status == NOT_RUN and not gates[4].passed and exit_code_for(gates) == 1
     assert rerun_v1_suite(RerunRunner(0, RECORDED_ID, BASELINE), root, tmp_path / "t3").status == PASS
-    assert rerun_v1_suite(RerunRunner(0, RECORDED_ID, {**BASELINE, "failed": 28}), root, tmp_path / "t4").status == FAIL
+    assert (
+        rerun_v1_suite(RerunRunner(0, RECORDED_ID, {**BASELINE, "failed": 28}), root, tmp_path / "t4").status
+        == FAIL
+    )
 
 
-def flaw_rows(flaw_outcome: str = "failed", control_outcome: str = "passed", reason: str = "AssertionError: v1 returned x") -> list[TestRow]:
+def flaw_rows(
+    flaw_outcome: str = "failed",
+    control_outcome: str = "passed",
+    reason: str = "AssertionError: v1 returned x",
+) -> list[TestRow]:
     """WHAT: Builds junit rows for the eight flaw tests plus the control; the first flaw uses flaw_outcome.
     WHY: The flaw-check tests change one row at a time.
 
@@ -265,7 +316,16 @@ def flaw_rows(flaw_outcome: str = "failed", control_outcome: str = "passed", rea
     Example:
         flaw_rows("passed") -> the first flaw passed (the flaw is gone)
     """
-    names = ["test_f1_a", "test_f2_a", "test_f3_a", "test_f4_a", "test_f5_a", "test_f6_a", "test_f7_a", "test_f8_a"]
+    names = [
+        "test_f1_a",
+        "test_f2_a",
+        "test_f3_a",
+        "test_f4_a",
+        "test_f5_a",
+        "test_f6_a",
+        "test_f7_a",
+        "test_f8_a",
+    ]
     rows = [TestRow("flaws", name, "failed", 0.1, reason) for name in names]
     rows[0] = TestRow("flaws", names[0], flaw_outcome, 0.1, reason if flaw_outcome == "failed" else "")
     rows.append(TestRow("flaws", CONTROL_TEST_NAME, control_outcome, 0.1, ""))
@@ -314,7 +374,14 @@ def test_html_escapes_script_and_has_no_external_resources() -> None:
     check.notes = [attack]
     check.numbers = {attack: attack}
     checks = [check] + [make_check(check_id) for check_id in CHECK_IDS if check_id != "suite"]
-    report = Report([Fact("Commit", attack, True), Fact("Docker", "unavailable", False)], checks, compute_gates({c.check_id: c for c in checks}), True, "2026-10-22 18:00:00", 12.0)
+    report = Report(
+        [Fact("Commit", attack, True), Fact("Docker", "unavailable", False)],
+        checks,
+        compute_gates({c.check_id: c for c in checks}),
+        True,
+        "2026-10-22 18:00:00",
+        12.0,
+    )
     page = render_report(report)
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page
     assert "<script" not in page and "src=" not in page and "href=" not in page

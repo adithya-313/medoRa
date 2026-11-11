@@ -3,6 +3,7 @@
 # TERM: exit gate - the pass/fail conditions G1-G6 that decide whether Phase 0 is finished.
 """Render the Phase 0 showcase Report as one self-contained HTML page. Every piece of text that came from a
 command, a file or a person is HTML-escaped; the page contains no script and loads nothing from outside."""
+
 from __future__ import annotations
 
 import html
@@ -12,20 +13,20 @@ from showcase.phase0 import FAIL, NOT_RUN, PASS, UNAVAILABLE, CheckResult, Drift
 # Text explaining why each check cannot be faked. Static prose only; the page's numbers all come from live runs.
 HOW_VERIFIED = {
     "suite": "pytest runs in a fresh subprocess with its cache switched off. The counts are read from the junit file that run wrote, using the same "
-             "reconciling parser as the v1 baseline (it refuses a file whose totals do not add up). The suite includes sabotage tests that feed broken "
-             "data to every checker and expect each one to fail.",
+    "reconciling parser as the v1 baseline (it refuses a file whose totals do not add up). The suite includes sabotage tests that feed broken "
+    "data to every checker and expect each one to fail.",
     "feature_truth": "The checker clones the v1-final tag afresh, rediscovers every route, task, service, worker and page from the code, and re-checks "
-                     "every cited line and every cited test result. A citation that no longer holds, or an item with no feature, makes it exit non-zero.",
+    "every cited line and every cited test result. A citation that no longer holds, or an item with no feature, makes it exit non-zero.",
     "data_provenance": "The checker clones v1-final and the full history of v1-legacy, lists the git-tracked data files, and measures every size, "
-                       "SHA-256, row count and column list itself. Licences without fetched evidence are rejected; git claims are checked against git.",
+    "SHA-256, row count and column list itself. Licences without fetched evidence are rejected; git claims are checked against git.",
     "screen_inventory": "The checker re-scans the frontend code of a fresh clone, matches every API call to the backend route list found in the code, "
-                        "proves 'unused' claims with import and identifier scans, and re-verifies every cited line.",
+    "proves 'unused' claims with import and identifier scans, and re-verifies every cited line.",
     "adr_000": "The checker reloads every Phase 0 artifact and requires exactly one decision for every feature, data item, screen action, module and service. "
-               "It enforces the decision rules and resolves every evidence reference; the ADR's numbers are computed, not typed.",
+    "It enforces the decision rules and resolves every evidence reference; the ADR's numbers are computed, not typed.",
     "scorecard_flaws": "The flaw tests run inside the saved Docker image against a fresh v1-final clone. The page re-reads the junit file itself: each "
-                       "flaw test must have failed with an AssertionError (an error or a pass is rejected), and the positive control must have passed.",
+    "flaw test must have failed with an AssertionError (an error or a pass is rejected), and the positive control must have passed.",
     "v1_rerun": "v1's own suite runs again now, in the saved image (checked by image ID; nothing is rebuilt), with the cache off. Its live counts are "
-                "compared with the committed baseline, which is used only as the thing being compared against.",
+    "compared with the committed baseline, which is used only as the thing being compared against.",
 }
 
 STYLE = """
@@ -116,9 +117,14 @@ def render_drift(drift: Drift) -> str:
     Example:
         a drift with 2 lines -> a table of 2 rows (line, reason)
     """
-    rows = "".join(f"<tr><td><code>{esc(line)}</code></td><td>{esc(reason)}</td></tr>" for line, reason in drift.differing_lines)
-    return (f'<p class="red">DRIFT: {esc(drift.file)} differs from the committed {esc(drift.committed_path)}</p>'
-            f"<table><tr><th>differing line</th><th>why</th></tr>{rows}</table>")
+    rows = "".join(
+        f"<tr><td><code>{esc(line)}</code></td><td>{esc(reason)}</td></tr>"
+        for line, reason in drift.differing_lines
+    )
+    return (
+        f'<p class="red">DRIFT: {esc(drift.file)} differs from the committed {esc(drift.committed_path)}</p>'
+        f"<table><tr><th>differing line</th><th>why</th></tr>{rows}</table>"
+    )
 
 
 def render_check(check: CheckResult) -> str:
@@ -134,13 +140,17 @@ def render_check(check: CheckResult) -> str:
         a passing check -> a section with a green PASS tag and a <pre> of its output tail
     """
     tag = f'<span class="tag {status_class(check.status)}">{esc(check.status)}</span>'
-    numbers = "".join(f"<tr><th>{esc(key)}</th><td>{esc(value)}</td></tr>" for key, value in check.numbers.items())
+    numbers = "".join(
+        f"<tr><th>{esc(key)}</th><td>{esc(value)}</td></tr>" for key, value in check.numbers.items()
+    )
     notes = "".join(f'<p class="red">{esc(note)}</p>' for note in check.notes)
     drifts = "".join(render_drift(drift) for drift in check.drifts)
     exit_text = "none (did not finish)" if check.exit_code is None else str(check.exit_code)
-    return (f"<h2>{esc(check.title)} {tag}</h2><p><b>Claim:</b> {esc(check.claim)}</p>"
-            f"<p><b>Command:</b> <code>{esc(check.command)}</code> &nbsp; <b>exit code:</b> {esc(exit_text)} &nbsp; <b>seconds:</b> {check.seconds:.1f}</p>"
-            f"<table>{numbers}</table>{notes}{drifts}<pre>{esc(tail(check.output))}</pre>")
+    return (
+        f"<h2>{esc(check.title)} {tag}</h2><p><b>Claim:</b> {esc(check.claim)}</p>"
+        f"<p><b>Command:</b> <code>{esc(check.command)}</code> &nbsp; <b>exit code:</b> {esc(exit_text)} &nbsp; <b>seconds:</b> {check.seconds:.1f}</p>"
+        f"<table>{numbers}</table>{notes}{drifts}<pre>{esc(tail(check.output))}</pre>"
+    )
 
 
 def fact_value(facts: list[Fact], label: str) -> str:
@@ -179,8 +189,12 @@ def render_report(report: Report) -> str:
     facts = "".join(render_fact(fact) for fact in report.facts)
     gates = "".join(render_gate(gate) for gate in report.gates)
     sections = "".join(render_check(check) for check in report.checks)
-    how = "".join(f"<p><b>{esc(check.title)}.</b> {esc(HOW_VERIFIED[check.check_id])}</p>" for check in report.checks)
-    return ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>medoRa Phase 0 showcase</title>"
-            f"<style>{STYLE}</style></head><body><main><h1>medoRa Phase 0 showcase</h1>{banner}"
-            f"<h2>Machine</h2><table>{facts}</table><h2>Exit gate</h2><table><tr><th>gate</th><th>condition</th><th>status</th><th>detail</th></tr>{gates}</table>"
-            f"{sections}<h2>How this was verified</h2>{how}</main></body></html>")
+    how = "".join(
+        f"<p><b>{esc(check.title)}.</b> {esc(HOW_VERIFIED[check.check_id])}</p>" for check in report.checks
+    )
+    return (
+        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>medoRa Phase 0 showcase</title>'
+        f"<style>{STYLE}</style></head><body><main><h1>medoRa Phase 0 showcase</h1>{banner}"
+        f"<h2>Machine</h2><table>{facts}</table><h2>Exit gate</h2><table><tr><th>gate</th><th>condition</th><th>status</th><th>detail</th></tr>{gates}</table>"
+        f"{sections}<h2>How this was verified</h2>{how}</main></body></html>"
+    )

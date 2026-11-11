@@ -3,6 +3,7 @@
 # TERM: evidence - a citation (test result, code line or document text) that a script can re-check.
 # TERM: fixture tree - a tiny fake v1 folder written into pytest's temp folder for one test.
 """Unit tests for tools/phase0/feature_truth.py. Tiny fixture files only; no network, no git, no Docker."""
+
 from __future__ import annotations
 
 import json
@@ -24,9 +25,7 @@ from tools.phase0.feature_truth import (
 )
 
 MAIN_PY = (
-    "from app.api import good\n"
-    "def create(app):\n"
-    "    app.include_router(good.router, prefix='/api/v1/good')\n"
+    "from app.api import good\ndef create(app):\n    app.include_router(good.router, prefix='/api/v1/good')\n"
 )
 GOOD_PY = (
     "router = APIRouter(prefix='/sub')\n"
@@ -132,8 +131,12 @@ def test_coverage_catches_uncovered_and_duplicated_items() -> None:
     Example:
         routes A, B, C where A is in two features and C in none -> problems mention "duplicated" and "uncovered: GET /c"
     """
-    inventory = [InventoryItem("GET /a", "route", "a.py"), InventoryItem("GET /b", "route", "b.py"),
-                 InventoryItem("GET /c", "route", "c.py"), InventoryItem("pkg/__init__.py", "service", "pkg")]
+    inventory = [
+        InventoryItem("GET /a", "route", "a.py"),
+        InventoryItem("GET /b", "route", "b.py"),
+        InventoryItem("GET /c", "route", "c.py"),
+        InventoryItem("pkg/__init__.py", "service", "pkg"),
+    ]
     features = [make_feature("f1", ["GET /a", "GET /ghost"]), make_feature("f2", ["GET /a", "GET /b"])]
     problems = check_coverage(inventory, features, {"pkg/__init__.py": "package marker"})
     text = chr(10).join(problems)
@@ -214,7 +217,9 @@ def test_working_without_a_passing_test_is_rejected() -> None:
     with pytest.raises(FeatureTruthError, match="f1: 'working' needs mock_check"):
         parse_feature({**base, "evidence": [test_item]})
     with pytest.raises(FeatureTruthError, match="f1: missing field 'name'"):
-        parse_feature({"id": "f1", "area": "billing", "entry_points": [], "status": "missing", "evidence": [code_item]})
+        parse_feature(
+            {"id": "f1", "area": "billing", "entry_points": [], "status": "missing", "evidence": [code_item]}
+        )
     assert parse_feature({**base, "evidence": [test_item], "mock_check": "none"}).status == "working"
 
 
@@ -230,8 +235,11 @@ def test_render_table_counts_statuses() -> None:
     Example:
         2 working + 1 mocked -> "- working: 2" and "- mocked: 1" and "- broken: 0"
     """
-    features = [make_feature("a", ["GET /a"], "working"), make_feature("b", ["GET /b"], "working"),
-                make_feature("c", ["GET /c"], "mocked")]
+    features = [
+        make_feature("a", ["GET /a"], "working"),
+        make_feature("b", ["GET /b"], "working"),
+        make_feature("c", ["GET /c"], "mocked"),
+    ]
     text = render_table(features)
     assert "- working: 2" in text and "- mocked: 1" in text and "- broken: 0" in text
     assert "## billing" in text and "| c | name | mocked |" in text
@@ -253,7 +261,9 @@ def test_finding_citation_is_checked_and_rendered(tmp_path: Path) -> None:
     v1_dir = tmp_path / "v1"
     (v1_dir / "app").mkdir(parents=True)
     (v1_dir / "app/x.py").write_text("alpha" + chr(10) + "beta" + chr(10), encoding="utf-8")
-    good = Finding("security", "good finding", Evidence(kind="code", file="app/x.py", line=1, contains="alpha"))
+    good = Finding(
+        "security", "good finding", Evidence(kind="code", file="app/x.py", line=1, contains="alpha")
+    )
     bad = Finding("security", "bad finding", Evidence(kind="code", file="app/x.py", line=2, contains="alpha"))
     feature = make_feature("f1", ["GET /a"])
     feature.evidence = []  # only the findings are under test here
@@ -279,8 +289,15 @@ def test_table_starts_with_the_working_definition_and_bad_finding_names_the_feat
     """
     assert "working = passes on SQLite in tests; v1 production uses Postgres 15" in render_table([])
     code_item = {"type": "code", "file": "a.py", "line": 1, "contains": "x"}
-    raw = {"id": "f9", "name": "n", "area": "billing", "entry_points": ["GET /a"], "status": "untested",
-           "evidence": [code_item], "findings": [{"title": "no category"}]}
+    raw = {
+        "id": "f9",
+        "name": "n",
+        "area": "billing",
+        "entry_points": ["GET /a"],
+        "status": "untested",
+        "evidence": [code_item],
+        "findings": [{"title": "no category"}],
+    }
     with pytest.raises(FeatureTruthError, match="f9: a finding needs"):
         parse_feature(raw)
 
@@ -299,9 +316,11 @@ def test_evidence_can_cite_a_junit_only_run_folder(tmp_path: Path) -> None:
     """
     run_dir = tmp_path / "results" / "flawrun"
     run_dir.mkdir(parents=True)
-    xml = ('<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1">'
-           '<testcase classname="t" name="test_x" time="0.1"><failure message="AssertionError: x">tb</failure>'
-           '</testcase></testsuite></testsuites>')
+    xml = (
+        '<testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1">'
+        '<testcase classname="t" name="test_x" time="0.1"><failure message="AssertionError: x">tb</failure>'
+        "</testcase></testsuite></testsuites>"
+    )
     (run_dir / "junit.xml").write_text(xml, encoding="utf-8")
     feature = make_feature("f1", ["GET /a"])
     feature.evidence = [Evidence(kind="test", run="flawrun", test_id="t::test_x", expect="failed")]

@@ -1,5 +1,6 @@
 # TERM: mask - replace a secret (here a password inside a URL) with **** so it is never printed or saved.
 """Unit tests for small helpers of the container runner. No Docker, no network."""
+
 from __future__ import annotations
 
 from pathlib import Path
