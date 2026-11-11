@@ -7,8 +7,11 @@ import json
 import logging
 import re
 import uuid
+from collections.abc import MutableMapping
 from contextvars import ContextVar
-from typing import TextIO
+from typing import Any, TextIO
+
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 REQUEST_ID_HEADER = "X-Request-ID"
 
@@ -59,7 +62,6 @@ class JsonFormatter(logging.Formatter):
         Returns:
             Single line of JSON with no raw newlines.
         """
-        # Convert created timestamp to UTC datetime with millisecond precision
         created_dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)
         millis = int(created_dt.microsecond / 1000)
         timestamp_str = f"{created_dt.strftime('%Y-%m-%dT%H:%M:%S')}.{millis:03d}Z"
@@ -99,3 +101,81 @@ def configure_logging(service: str, level: int = logging.INFO, stream: TextIO | 
     handler = logging.StreamHandler(stream)
     handler.setFormatter(JsonFormatter(service=service))
     root_logger.addHandler(handler)
+
+
+class RequestIdMiddleware:
+    """Pure ASGI middleware managing X-Request-ID in context and headers."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        """Initialize middleware wrapping an ASGI application.
+
+        Args:
+            app: The ASGI application to wrap.
+        """
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Process ASGI scope.
+
+        Extracts or generates X-Request-ID for HTTP scopes, stores it in
+        the current_request_id ContextVar, injects it into response headers,
+        and ensures context cleanup upon completion.
+
+        Args:
+            scope: ASGI scope dictionary.
+            receive: ASGI receive callable.
+            send: ASGI send callable.
+        """
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        raw_headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
+        incoming_id: str | None = None
+        for name, value in raw_headers:
+            if name.lower() == b"x-request-id":
+                try:
+                    candidate = value.decode("latin1")
+                    if is_valid_request_id(candidate):
+                        incoming_id = candidate
+                except UnicodeDecodeError:
+                    pass
+                break
+
+        request_id = incoming_id if incoming_id is not None else new_request_id()
+
+        async def send_with_request_id(message: MutableMapping[str, Any]) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.append((b"x-request-id", request_id.encode("latin1")))
+                message["headers"] = headers
+            await send(message)
+
+        token = current_request_id.set(request_id)
+        try:
+            await self.app(scope, receive, send_with_request_id)
+        finally:
+            current_request_id.reset(token)
+
+
+def outgoing_headers(extra: dict[str, str] | None = None) -> dict[str, str]:
+    """Prepare outbound HTTP headers with propagated request ID.
+
+    Includes X-Request-ID from current_request_id if active.
+    Never overwrites an explicit X-Request-ID passed by the caller in extra.
+
+    Args:
+        extra: Optional dictionary of existing headers to send.
+
+    Returns:
+        Header dictionary containing extra items and propagated X-Request-ID.
+    """
+    headers: dict[str, str] = dict(extra) if extra is not None else {}
+
+    has_explicit_id = any(k.lower() == REQUEST_ID_HEADER.lower() for k in headers)
+    if not has_explicit_id:
+        active_id = current_request_id.get()
+        if active_id is not None:
+            headers[REQUEST_ID_HEADER] = active_id
+
+    return headers
