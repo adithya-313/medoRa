@@ -134,12 +134,10 @@ class RequestIdMiddleware:
         incoming_id: str | None = None
         for name, value in raw_headers:
             if name.lower() == b"x-request-id":
-                try:
-                    candidate = value.decode("latin1")
-                    if is_valid_request_id(candidate):
-                        incoming_id = candidate
-                except UnicodeDecodeError:
-                    pass
+                # latin-1 maps every byte to a character, so decoding cannot fail; validation rejects anything unsafe.
+                candidate = value.decode("latin1")
+                if is_valid_request_id(candidate):
+                    incoming_id = candidate
                 break
 
         request_id = incoming_id if incoming_id is not None else new_request_id()
