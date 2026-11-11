@@ -24,6 +24,8 @@ from tools.phase0.feature_truth import (
     render_table,
 )
 
+pytestmark = pytest.mark.unit
+
 MAIN_PY = (
     "from app.api import good\ndef create(app):\n    app.include_router(good.router, prefix='/api/v1/good')\n"
 )

@@ -28,6 +28,8 @@ from tools.phase0.data_provenance import (
     parse_entry,
 )
 
+pytestmark = pytest.mark.unit
+
 GOOD_LICENCE = {
     "value": "public domain",
     "evidence_url": "https://example.org/terms",

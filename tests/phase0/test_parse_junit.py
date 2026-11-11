@@ -21,6 +21,8 @@ from tools.phase0.run_v1_suite import (
     summarise,
 )
 
+pytestmark = pytest.mark.unit
+
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
 

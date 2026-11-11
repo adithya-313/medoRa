@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tools.phase0.screen_inventory import (
     METHOD_NOT_DETERMINED,
     FrontendCall,
@@ -23,6 +25,8 @@ from tools.phase0.screen_inventory import (
     normalise_frontend_path,
     page_route,
 )
+
+pytestmark = pytest.mark.unit
 
 BACKEND = [
     "GET /api/v1/suppliers",

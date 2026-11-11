@@ -34,6 +34,8 @@ from showcase.render import render_report
 from tools.phase0.run_scorecard_flaws import CONTROL_TEST_NAME, FLAWS
 from tools.phase0.run_v1_suite import TestRow
 
+pytestmark = pytest.mark.unit
+
 CHECK_IDS = [
     "suite",
     "feature_truth",

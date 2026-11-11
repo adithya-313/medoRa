@@ -4,7 +4,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from tools.phase0.run_v1_suite_docker import parse_pip_sizes
+
+pytestmark = pytest.mark.unit
 
 
 def test_downloaded_and_cached_sizes_are_separated() -> None:
