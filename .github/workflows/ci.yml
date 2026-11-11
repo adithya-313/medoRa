@@ -4,6 +4,7 @@ on:
   push:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -61,3 +62,63 @@ jobs:
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-change-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Reset review on synchronize
+        if: github.event.action == 'synchronize'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
+          if echo "$LABELS" | grep -qx "test-change-reviewed"; then
+            gh pr edit "$PR_NUMBER" --remove-label "test-change-reviewed"
+          fi
+      - name: Evaluate test changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set +e
+          PATHS_OUTPUT=$(git diff --name-status origin/${{ github.base_ref }}...HEAD | uv run python tools/ci/test_change_gate.py)
+          GATE_STATUS=$?
+          set -e
+
+          if [ $GATE_STATUS -eq 0 ]; then
+            echo "Test change gate passed: no test or workflow modifications requiring review."
+            exit 0
+          elif [ $GATE_STATUS -eq 3 ]; then
+            echo "Test or workflow changes detected requiring review:"
+            echo "$PATHS_OUTPUT"
+
+            PR_LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
+            if ! echo "$PR_LABELS" | grep -qx "test-changed"; then
+              gh pr edit "$PR_NUMBER" --add-label "test-changed"
+            fi
+
+            FRESH_LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
+            if echo "$FRESH_LABELS" | grep -qx "test-change-reviewed"; then
+              echo "Changes have been reviewed and approved (test-change-reviewed present)."
+              exit 0
+            else
+              echo "Human review required. Failing until label 'test-change-reviewed' is applied."
+              exit 3
+            fi
+          else
+            echo "test_change_gate.py failed unexpectedly with exit code $GATE_STATUS"
+            exit $GATE_STATUS
+          fi
