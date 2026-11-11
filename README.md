@@ -8,6 +8,9 @@ Run the following commands to set up the development environment, execute tests,
 uv sync
 uv run pytest -p no:cacheprovider
 uv run python -m showcase run --phase 0
+npm ci
+npm run typecheck
+npm run lint
 ```
 
 Note: `requirements-dev.txt` is kept only for the Phase 0 v1 container.
@@ -28,6 +31,13 @@ Note: `requirements-dev.txt` is kept only for the Phase 0 v1 container.
 3. Run the Phase 0 showcase:
    ```bash
    uv run python -m showcase run --phase 0
+   ```
+
+4. Install JavaScript dependencies and run TypeScript/ESLint checks:
+   ```bash
+   npm ci
+   npm run typecheck
+   npm run lint
    ```
 
 > [!NOTE]

@@ -25,4 +25,16 @@ repos:
         language: system
         files: ^(pyproject\.toml|uv\.lock)$
         pass_filenames: false
+      - id: ts-typecheck
+        name: ts-typecheck
+        entry: npm run typecheck
+        language: system
+        files: ^(desktop|owner|admin)/.*\.ts$|^(tsconfig\.json|eslint\.config\.mjs|package(-lock)?\.json)$
+        pass_filenames: false
+      - id: ts-lint
+        name: ts-lint
+        entry: npm run lint
+        language: system
+        files: ^(desktop|owner|admin)/.*\.ts$|^(tsconfig\.json|eslint\.config\.mjs|package(-lock)?\.json)$
+        pass_filenames: false
 
