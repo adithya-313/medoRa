@@ -1,0 +1,129 @@
+{
+  "schema": "adr003-results-v1",
+  "date": "2026-11-12",
+  "image": "python:3.12",
+  "container": "medora-adr003-run",
+  "target_files": [
+    "cloud/experiments/assignment.py",
+    "cloud/experiments/analysis.py",
+    "tools/ci/test_change_gate.py"
+  ],
+  "unit_tests": [
+    "tests/cloud/test_experiment_assignment.py",
+    "tests/cloud/test_experiment_analysis.py",
+    "tests/ci/test_test_change_gate.py"
+  ],
+  "tool_versions": {
+    "mutmut": "3.8.1",
+    "cosmic-ray": "8.9.0",
+    "pytest-gremlins": "1.13.2"
+  },
+  "licence_urls": {
+    "mutmut": "https://github.com/boxed/mutmut/blob/main/LICENSE",
+    "cosmic-ray": "https://github.com/sixty-north/cosmic-ray/blob/main/LICENCE.txt",
+    "pytest-gremlins": "https://github.com/mikelane/pytest-gremlins/blob/main/LICENSE"
+  },
+  "install_ok": true,
+  "candidates": {
+    "mutmut": {
+      "version": "3.8.1",
+      "licence_url": "https://github.com/boxed/mutmut/blob/main/LICENSE",
+      "H1": true,
+      "H2": true,
+      "H3": false,
+      "H4": false,
+      "H5": true,
+      "M1": 35.374911914987024,
+      "M2": null,
+      "M3": null,
+      "M4": {
+        "native_windows": "no",
+        "exit_code": null,
+        "note": "native Windows attempt failed to run: [WinError 2] The system cannot find the file specified"
+      },
+      "H1_detail": "mutmut install/run check: mutmut, version 3.8.1",
+      "H2_detail": "mutmut runs pytest -m unit via [tool.mutmut] config; pytest.ini untouched",
+      "timings": [
+        49.67739099198661,
+        35.374911914987024,
+        24.43384902800608
+      ],
+      "M3_detail": "No mutants evaluated (killed + survived = 0)",
+      "H3_detail": "could not parse mutmut counts",
+      "demo_full_survivors": null,
+      "demo_weakened_survivors": null,
+      "demo_full_detail": "unparseable mutmut output (exit 1)",
+      "demo_weakened_detail": "unparseable mutmut output (exit 1)",
+      "H4_detail": "survivors(weakened)=None not > survivors(full)=None"
+    },
+    "cosmic-ray": {
+      "version": "8.9.0",
+      "licence_url": "https://github.com/sixty-north/cosmic-ray/blob/main/LICENCE.txt",
+      "H1": true,
+      "H2": true,
+      "H3": false,
+      "H4": false,
+      "H5": true,
+      "M1": 7.7079372810112545,
+      "M2": null,
+      "M3": null,
+      "M4": {
+        "native_windows": "no",
+        "exit_code": null,
+        "note": "native Windows attempt failed to run: [WinError 2] The system cannot find the file specified"
+      },
+      "H1_detail": "cosmic-ray install/run check: cosmic-ray, version 8.9.0",
+      "H2_detail": "cosmic-ray test command set to pytest -m unit; pytest.ini untouched",
+      "timings": [
+        7.783675415004836,
+        6.976714175005327,
+        7.7079372810112545
+      ],
+      "M3_detail": "No mutants evaluated (killed + survived = 0)",
+      "H3_detail": "could not parse cosmic-ray counts",
+      "demo_full_survivors": null,
+      "demo_weakened_survivors": null,
+      "H4_detail": "survivors(weakened)=None not > survivors(full)=None"
+    },
+    "pytest-gremlins": {
+      "version": "1.13.2",
+      "licence_url": "https://github.com/mikelane/pytest-gremlins/blob/main/LICENSE",
+      "H1": true,
+      "H2": true,
+      "H3": false,
+      "H4": false,
+      "H5": true,
+      "M1": 1800.659181177005,
+      "M2": null,
+      "M3": null,
+      "M4": {
+        "native_windows": "yes",
+        "exit_code": 0,
+        "note": "native Windows host attempt exited 0: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]"
+      },
+      "H1_detail": "pytest-gremlins install/run check: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]",
+      "H2_detail": "pytest --gremlins -m unit runs under the existing pytest.ini unchanged",
+      "timings": [
+        1801.1030803970061,
+        1800.6545061420038,
+        1800.659181177005
+      ],
+      "M3_detail": "No mutants evaluated (killed + survived = 0)",
+      "H3_detail": "FAIL: pytest-gremlins has no machine-readable timeout count; H3 requires killed/survived/timeout counts",
+      "demo_full_survivors": null,
+      "demo_weakened_survivors": null,
+      "H4_detail": "survivors(weakened)=None not > survivors(full)=None"
+    }
+  },
+  "decision": {
+    "winner": null,
+    "decision_detail": {
+      "reason": "No candidate passed all hard rules (H1-H5)"
+    },
+    "unit_threshold": {
+      "action": "stop",
+      "score": null,
+      "detail": "No winner score available"
+    }
+  }
+}
