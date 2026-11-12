@@ -22,13 +22,14 @@ CREATE TABLE IF NOT EXISTS experiments (
     id SERIAL PRIMARY KEY,
     experiment_key VARCHAR(255) NOT NULL UNIQUE,
     variants JSONB NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('draft', 'running', 'stopped')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Idempotent experiment exposure log.
+-- Idempotent experiment exposure log referencing experiments table.
 CREATE TABLE IF NOT EXISTS exposures (
     id BIGSERIAL PRIMARY KEY,
-    experiment_key VARCHAR(255) NOT NULL,
+    experiment_key VARCHAR(255) NOT NULL REFERENCES experiments (experiment_key),
     shop_id VARCHAR(255) NOT NULL,
     variant VARCHAR(255) NOT NULL,
     exposed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

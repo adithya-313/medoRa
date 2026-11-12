@@ -1,10 +1,11 @@
-"""Integration tests for Postgres experiment store and feature flags."""
+"""Integration tests for Postgres experiment store, lifecycle states, and feature flags."""
 
 from __future__ import annotations
 
 import psycopg
 import pytest
 
+from cloud.experiments.assignment import assign_variant
 from cloud.experiments.store import (
     apply_schema,
     create_experiment,
@@ -87,40 +88,40 @@ def test_feature_flag_global_and_override(postgres_url: str) -> None:
         assert is_flag_enabled(conn, flag, shop_id="shop-1") is True
 
 
-def test_feature_flag_missing_raises_value_error(postgres_url: str) -> None:
-    """Verify querying an unconfigured flag raises ValueError without silent fallbacks.
+def test_unknown_flag_returns_false(postgres_url: str) -> None:
+    """Verify querying an unconfigured flag returns False per specification.
 
     Purpose:
-        Enforces code honesty by rejecting missing flag keys instead of returning False/None.
+        Enforces specification rule that unknown flags evaluate to disabled (False).
 
     Inputs/Outputs:
         postgres_url: Testcontainer connection URL.
 
     Key Logic:
-        Queries a non-existent flag key; asserts ValueError is raised.
+        Queries a non-existent flag key with and without shop_id; asserts both return False.
 
     Errors:
-        AssertionError if ValueError is not raised.
+        AssertionError if unknown flag does not return False.
     """
     with psycopg.connect(postgres_url, autocommit=True) as conn:
         apply_schema(conn)
-        with pytest.raises(ValueError, match="not found in store"):
-            is_flag_enabled(conn, "completely_unknown_flag")
-        with pytest.raises(ValueError, match="not found in store"):
-            is_flag_enabled(conn, "completely_unknown_flag", shop_id="shop-1")
+        assert is_flag_enabled(conn, "completely_unknown_flag") is False
+        assert is_flag_enabled(conn, "completely_unknown_flag", shop_id="shop-1") is False
 
 
 def test_create_experiment_and_validation(postgres_url: str) -> None:
-    """Verify experiment registration and constraint validations.
+    """Verify experiment registration, lifecycle status check, and constraints.
 
     Purpose:
-        Tests storage of valid experiment variants and error handling for invalid configs.
+        Tests storage of experiment variants across valid statuses ('draft', 'running', 'stopped')
+        and error handling for invalid statuses and configurations.
 
     Inputs/Outputs:
         postgres_url: Testcontainer connection URL.
 
     Key Logic:
-        Registers a valid 3-way experiment.
+        Registers experiments under valid status values.
+        Attempts registration with invalid status (asserts ValueError).
         Attempts duplicate registration (asserts psycopg.Error).
         Attempts invalid variant weights (asserts ValueError).
 
@@ -132,56 +133,136 @@ def test_create_experiment_and_validation(postgres_url: str) -> None:
 
         key = "search-ranking-v1"
         variants = [("v1", 3333), ("v2", 3333), ("v3", 3334)]
-        create_experiment(conn, key, variants)
+        create_experiment(conn, key, variants, status="running")
+
+        # Other valid lifecycle statuses
+        create_experiment(conn, "exp-draft", [("A", 10000)], status="draft")
+        create_experiment(conn, "exp-stopped", [("A", 10000)], status="stopped")
+
+        # Invalid status fails with ValueError
+        with pytest.raises(ValueError, match="status must be one of"):
+            create_experiment(conn, "exp-invalid-status", [("A", 10000)], status="archived")
 
         # Duplicate key fails with database constraint error
         with pytest.raises(psycopg.Error):
-            create_experiment(conn, key, variants)
+            create_experiment(conn, key, variants, status="running")
 
         # Invalid weights fail with ValueError
         with pytest.raises(ValueError, match="must sum to exactly 10000"):
-            create_experiment(conn, "invalid-exp", [("A", 4000), ("B", 4000)])
+            create_experiment(conn, "invalid-exp", [("A", 4000), ("B", 4000)], status="running")
 
 
-def test_log_exposure_idempotence(postgres_url: str) -> None:
-    """Verify log_exposure records once and returns False on subsequent duplicate calls.
+def test_stopped_or_draft_experiment_raises(postgres_url: str) -> None:
+    """Verify log_exposure raises ValueError when experiment is not running.
 
     Purpose:
-        Guarantees idempotent exposure logging per shop and experiment.
+        Ensures traffic exposure is blocked for draft or stopped experiments.
 
     Inputs/Outputs:
         postgres_url: Testcontainer connection URL.
 
     Key Logic:
-        Logs first exposure; asserts return True.
-        Logs second exposure with same key and shop; asserts return False.
-        Queries database count to confirm only 1 row exists.
+        Registers draft and stopped experiments; asserts log_exposure raises ValueError.
 
     Errors:
-        AssertionError on non-idempotent behavior or incorrect counts.
+        AssertionError if ValueError is not raised for non-running experiments.
+    """
+    with psycopg.connect(postgres_url, autocommit=True) as conn:
+        apply_schema(conn)
+        create_experiment(conn, "exp-draft-gate", [("A", 5000), ("B", 5000)], status="draft")
+        create_experiment(conn, "exp-stopped-gate", [("A", 5000), ("B", 5000)], status="stopped")
+
+        with pytest.raises(ValueError, match="is not running"):
+            log_exposure(conn, "exp-draft-gate", "shop-00001")
+
+        with pytest.raises(ValueError, match="is not running"):
+            log_exposure(conn, "exp-stopped-gate", "shop-00001")
+
+
+def test_unknown_experiment_raises(postgres_url: str) -> None:
+    """Verify log_exposure raises ValueError when the experiment does not exist.
+
+    Purpose:
+        Ensures exposure logging fails clearly when referencing a non-existent experiment.
+
+    Inputs/Outputs:
+        postgres_url: Testcontainer connection URL.
+
+    Key Logic:
+        Attempts to log exposure for a non-existent experiment key.
+
+    Errors:
+        AssertionError if ValueError is not raised.
+    """
+    with psycopg.connect(postgres_url, autocommit=True) as conn:
+        apply_schema(conn)
+        with pytest.raises(ValueError, match="does not exist"):
+            log_exposure(conn, "nonexistent-exp", "shop-00001")
+
+
+def test_stored_variant_matches_assign_variant(postgres_url: str) -> None:
+    """Verify log_exposure computes variant with assign_variant and stores it idempotently.
+
+    Purpose:
+        Guarantees that stored variant in the database matches assign_variant deterministically
+        and repeated calls return the same stored variant without creating duplicate rows.
+
+    Inputs/Outputs:
+        postgres_url: Testcontainer connection URL.
+
+    Key Logic:
+        Registers running experiment.
+        Iterates over 50 shops; asserts returned variant matches assign_variant.
+        Calls log_exposure a second time; asserts identical return value.
+        Asserts total exposures count in DB equals exactly 50.
+
+    Errors:
+        AssertionError on variant mismatch or non-idempotent behavior.
     """
     with psycopg.connect(postgres_url, autocommit=True) as conn:
         apply_schema(conn)
 
         exp_key = "hero-banner-v2"
-        shop = "shop-987"
-        variant = "B"
+        variants = [("control", 5000), ("treatment", 5000)]
+        create_experiment(conn, exp_key, variants, status="running")
 
-        first_logged = log_exposure(conn, exp_key, shop, variant)
-        assert first_logged is True
+        for i in range(1, 51):
+            shop = f"shop-{i:05d}"
+            expected = assign_variant(exp_key, shop, variants)
+            first_stored = log_exposure(conn, exp_key, shop)
+            assert first_stored == expected
 
-        second_logged = log_exposure(conn, exp_key, shop, variant)
-        assert second_logged is False
-
-        # Attempting with a different variant for same shop still deduplicates
-        third_logged = log_exposure(conn, exp_key, shop, "A")
-        assert third_logged is False
+            second_stored = log_exposure(conn, exp_key, shop)
+            assert second_stored == expected
 
         with conn.cursor() as cur:
-            cur.execute(
-                "SELECT count(*) FROM exposures WHERE experiment_key = %s AND shop_id = %s;",
-                (exp_key, shop),
-            )
+            cur.execute("SELECT count(*) FROM exposures WHERE experiment_key = %s;", (exp_key,))
             row = cur.fetchone()
             assert row is not None
-            assert row[0] == 1
+            assert row[0] == 50
+
+
+def test_foreign_key_rejects_direct_insert_for_unknown_experiment(postgres_url: str) -> None:
+    """Verify database foreign key constraint rejects direct inserts referencing unknown experiment.
+
+    Purpose:
+        Validates referential integrity from exposures.experiment_key to experiments(experiment_key).
+
+    Inputs/Outputs:
+        postgres_url: Testcontainer connection URL.
+
+    Key Logic:
+        Executes a raw SQL insert targeting an unmapped experiment_key.
+        Asserts psycopg.errors.ForeignKeyViolation is raised.
+
+    Errors:
+        AssertionError if ForeignKeyViolation is not raised.
+    """
+    with psycopg.connect(postgres_url, autocommit=True) as conn:
+        apply_schema(conn)
+        with conn.cursor() as cur:
+            with pytest.raises(psycopg.errors.ForeignKeyViolation):
+                cur.execute(
+                    "INSERT INTO exposures (experiment_key, shop_id, variant) VALUES (%s, %s, %s);",
+                    ("nonexistent-exp-key", "shop-00001", "A"),
+                )
