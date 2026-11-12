@@ -1,12 +1,13 @@
-"""A/A experiment simulation, statistical validation, and false-positive rate evaluation."""
+"""A/A experiment simulation and statistical validation harness (10,000 shops)."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import random
+import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,191 +20,216 @@ from cloud.experiments.store import apply_schema, create_experiment, log_exposur
 
 SEED = 20261112
 POSTGRES_IMAGE = "postgres:17-alpine"
+NUM_SHOPS = 10000
+NUM_REPETITIONS = 1000
 
 
-def compute_sample_stats(values: list[float]) -> tuple[float, float, int]:
-    """Compute sample mean and unbiased sample variance for a list of values.
+def get_current_git_commit() -> str:
+    """Retrieve the current HEAD git commit hash."""
+    try:
+        out = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
+        return out.decode("utf-8").strip()
+    except Exception:
+        return "unknown"
+
+
+def generate_shop_outcomes(seed: int, shops: list[str]) -> dict[str, float]:
+    """Generate deterministic outcomes for each shop from a lognormal distribution.
 
     Purpose:
-        Provides sample descriptive statistics required for two-sample Welch's t-test.
+        Produces identical outcome per shop across runs and repetitions,
+        independent of variant allocation.
 
     Inputs/Outputs:
-        values: Non-empty list of floating point values (length >= 30).
-        Returns: Tuple of (mean, sample_variance, count).
+        seed: Random seed integer.
+        shops: List of unique shop ID strings.
+        Returns: Dict mapping shop_id to simulated metric value.
 
     Key Logic:
-        Calculates arithmetic mean, then computes sum of squared deviations
-        divided by (n - 1) for Bessel's correction.
-
-    Errors:
-        ValueError: If values contains fewer than 30 items.
+        Instantiates independent random.Random(f"{seed}:{shop_id}") per shop.
+        Draws from lognormvariate(8.0, 0.5).
     """
+    outcomes: dict[str, float] = {}
+    for shop_id in shops:
+        # Seeding per shop guarantees invariance across variants and experiment keys.
+        rng = random.Random(f"{seed}:{shop_id}")
+        outcomes[shop_id] = rng.lognormvariate(8.0, 0.5)
+    return outcomes
+
+
+def _sample_mean_and_variance(values: list[float]) -> tuple[float, float, int]:
+    """Calculate arithmetic mean and unbiased sample variance."""
     n = len(values)
     if n < 30:
-        raise ValueError(f"At least 30 values required for sample statistics, got {n}")
-
+        raise ValueError(f"At least 30 samples required, got {n}")
     mean = sum(values) / n
-    # Bessel's correction (n - 1) provides unbiased sample variance.
+    # Bessel's correction (n - 1) for unbiased sample variance.
     var = sum((x - mean) ** 2 for x in values) / (n - 1)
     return float(mean), float(var), n
 
 
 def run_single_experiment(
+    shops: list[str],
+    outcomes: dict[str, float],
     conn: psycopg.Connection[Any] | None = None,
-    num_shops: int = 1000,
 ) -> dict[str, Any]:
-    """Run a single simulated A/A experiment and evaluate SRM and Welch p-values.
+    """Execute single A/A experiment 'aa-single' over 10,000 shops.
 
     Purpose:
-        Simulates an A/A experiment over a cohort of shops, optionally persisting
-        assignments and exposures to PostgreSQL, and calculates statistical metrics.
+        Evaluates single-run SRM and Welch invariance, querying from PostgreSQL
+        when database connection is provided.
 
     Inputs/Outputs:
-        conn: Optional active psycopg Connection to persist exposures.
-        num_shops: Total number of shops to simulate (default 1000).
-        Returns: Dictionary of single-run metrics and p-values.
-
-    Key Logic:
-        Assigns shops to variant 'A' or 'B' (50/50 split).
-        Generates identically distributed lognormal metric values for all shops.
-        Optionally persists experiment definition and exposure records in Postgres.
-        Computes sample stats and tests for SRM and difference in means.
-
-    Errors:
-        ValueError: On invalid shop counts or statistical calculation error.
+        shops: 10,000 shop IDs.
+        outcomes: Precalculated outcomes mapping.
+        conn: Optional active database connection.
+        Returns: Dict containing single-run metrics, p-values, and pass booleans.
     """
-    rng = random.Random(SEED)
-    experiment_key = "aa-test-single"
-    variants = [("A", 5000), ("B", 5000)]
-    shop_ids = [f"shop-{i:05d}" for i in range(1, num_shops + 1)]
+    experiment_key = "aa-single"
+    variants: list[tuple[str, int]] = [("A", 5000), ("A-copy", 5000)]
 
     if conn is not None:
         apply_schema(conn)
-        create_experiment(conn, experiment_key, variants)
+        create_experiment(conn, experiment_key, variants, status="running")
+        for shop_id in shops:
+            log_exposure(conn, experiment_key, shop_id)
+
+        # Read back assignments directly from the database table.
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT shop_id, variant FROM exposures WHERE experiment_key = %s ORDER BY shop_id;",
+                (experiment_key,),
+            )
+            rows = cur.fetchall()
+
+        shop_variants: dict[str, str] = {row[0]: row[1] for row in rows}
+    else:
+        shop_variants = {shop_id: assign_variant(experiment_key, shop_id, variants) for shop_id in shops}
 
     vals_a: list[float] = []
-    vals_b: list[float] = []
+    vals_ac: list[float] = []
 
-    for shop_id in shop_ids:
-        variant = assign_variant(experiment_key, shop_id, variants)
-        if conn is not None:
-            log_exposure(conn, experiment_key, shop_id, variant)
-
-        # Lognormal distribution represents typical skewed e-commerce metrics (order volume, GMV).
-        metric_val = math.exp(rng.gauss(4.5, 0.5))
-        if variant == "A":
-            vals_a.append(metric_val)
+    for shop_id in shops:
+        assigned = shop_variants[shop_id]
+        val = outcomes[shop_id]
+        if assigned == "A":
+            vals_a.append(val)
+        elif assigned == "A-copy":
+            vals_ac.append(val)
         else:
-            vals_b.append(metric_val)
+            raise ValueError(f"Unexpected variant {assigned!r}")
 
-    mean_a, var_a, n_a = compute_sample_stats(vals_a)
-    mean_b, var_b, n_b = compute_sample_stats(vals_b)
+    mean_a, var_a, n_a = _sample_mean_and_variance(vals_a)
+    mean_ac, var_ac, n_ac = _sample_mean_and_variance(vals_ac)
 
-    srm_p = srm_p_value([n_a, n_b], [5000, 5000])
-    welch_p = welch_p_value(mean_a, var_a, n_a, mean_b, var_b, n_b)
+    srm_p = srm_p_value([n_a, n_ac], [5000, 5000])
+    welch_p = welch_p_value(mean_a, var_a, n_a, mean_ac, var_ac, n_ac)
+
+    single_srm_pass = bool(srm_p >= 0.01)
+    single_welch_pass = bool(welch_p >= 0.05)
+    single_pass = single_srm_pass and single_welch_pass
 
     return {
         "experiment_key": experiment_key,
-        "n_a": n_a,
-        "n_b": n_b,
+        "count_a": n_a,
+        "count_a_copy": n_ac,
         "mean_a": round(mean_a, 4),
         "var_a": round(var_a, 4),
-        "mean_b": round(mean_b, 4),
-        "var_b": round(var_b, 4),
+        "mean_a_copy": round(mean_ac, 4),
+        "var_a_copy": round(var_ac, 4),
         "srm_p_value": round(srm_p, 4),
         "welch_p_value": round(welch_p, 4),
+        "single_srm_pass": single_srm_pass,
+        "single_welch_pass": single_welch_pass,
+        "single_pass": single_pass,
     }
 
 
 def run_aa_repetitions(
+    shops: list[str],
+    outcomes: dict[str, float],
     num_reps: int = 1000,
-    num_shops: int = 1000,
-    alpha: float = 0.05,
 ) -> dict[str, Any]:
-    """Simulate repeated A/A experiments to verify nominal false positive rate.
+    """Execute 1,000 in-memory A/A repetitions 'aa-rep-0000'..'aa-rep-0999'.
 
     Purpose:
-        Validates that across 1,000 independent A/A experiments, the Type I error
-        rate (false positive rate at alpha=0.05) is consistent with statistical theory (~5%).
+        Verifies empirical Type I error calibration across 1,000 repetitions.
 
     Inputs/Outputs:
-        num_reps: Number of repetitions to run (default 1000).
-        num_shops: Number of shops per experiment (default 1000).
-        alpha: Significance threshold (default 0.05).
-        Returns: Summary dictionary containing empirical false positive rates.
-
-    Key Logic:
-        Iterates over repetitions using an independent seed per repetition.
-        Evaluates Welch p-value and SRM p-value for each iteration.
-        Calculates the proportion of experiments where p < alpha.
-
-    Errors:
-        ValueError: On invalid iteration or shop counts.
+        shops: 10,000 shop IDs.
+        outcomes: Precalculated outcomes mapping.
+        num_reps: Total repetitions (default 1000).
+        Returns: Dict containing false positive counts, rates, and pass booleans.
     """
-    variants = [("A", 5000), ("B", 5000)]
-    welch_false_positives = 0
-    srm_false_positives = 0
+    variants: list[tuple[str, int]] = [("A", 5000), ("A-copy", 5000)]
+    welch_fp_count = 0
+    srm_fp_count = 0
 
     for rep in range(num_reps):
-        rng = random.Random(SEED + rep + 1)
-        experiment_key = f"aa-rep-{rep:04d}"
+        exp_key = f"aa-rep-{rep:04d}"
 
-        vals_a: list[float] = []
-        vals_b: list[float] = []
+        count_a = 0
+        count_ac = 0
+        sum_a = 0.0
+        sum_ac = 0.0
+        sq_sum_a = 0.0
+        sq_sum_ac = 0.0
 
-        for i in range(1, num_shops + 1):
-            shop_id = f"shop-{i:05d}"
-            variant = assign_variant(experiment_key, shop_id, variants)
-            metric_val = math.exp(rng.gauss(4.5, 0.5))
+        for shop_id in shops:
+            variant = assign_variant(exp_key, shop_id, variants)
+            val = outcomes[shop_id]
             if variant == "A":
-                vals_a.append(metric_val)
+                count_a += 1
+                sum_a += val
+                sq_sum_a += val * val
             else:
-                vals_b.append(metric_val)
+                count_ac += 1
+                sum_ac += val
+                sq_sum_ac += val * val
 
-        mean_a, var_a, n_a = compute_sample_stats(vals_a)
-        mean_b, var_b, n_b = compute_sample_stats(vals_b)
+        mean_a = sum_a / count_a
+        var_a = (sq_sum_a - (sum_a * sum_a) / count_a) / (count_a - 1)
 
-        srm_p = srm_p_value([n_a, n_b], [5000, 5000])
-        welch_p = welch_p_value(mean_a, var_a, n_a, mean_b, var_b, n_b)
+        mean_ac = sum_ac / count_ac
+        var_ac = (sq_sum_ac - (sum_ac * sum_ac) / count_ac) / (count_ac - 1)
 
-        if welch_p < alpha:
-            welch_false_positives += 1
-        if srm_p < alpha:
-            srm_false_positives += 1
+        srm_p = srm_p_value([count_a, count_ac], [5000, 5000])
+        welch_p = welch_p_value(mean_a, var_a, count_a, mean_ac, var_ac, count_ac)
+
+        if welch_p < 0.05:
+            welch_fp_count += 1
+        if srm_p < 0.01:
+            srm_fp_count += 1
+
+    welch_rate = round(welch_fp_count / num_reps, 4)
+    srm_rate = round(srm_fp_count / num_reps, 4)
+
+    repetition_welch_pass = bool(0.029 <= welch_rate <= 0.071)
+    repetition_srm_pass = bool(srm_rate <= 0.02)
+    repetition_pass = repetition_welch_pass and repetition_srm_pass
 
     return {
         "num_reps": num_reps,
-        "num_shops_per_rep": num_shops,
-        "alpha": alpha,
-        "welch_false_positive_count": welch_false_positives,
-        "welch_false_positive_rate": round(welch_false_positives / num_reps, 4),
-        "srm_false_positive_count": srm_false_positives,
-        "srm_false_positive_rate": round(srm_false_positives / num_reps, 4),
+        "welch_alpha": 0.05,
+        "srm_alpha": 0.01,
+        "welch_false_positive_count": welch_fp_count,
+        "welch_false_positive_rate": welch_rate,
+        "srm_false_positive_count": srm_fp_count,
+        "srm_false_positive_rate": srm_rate,
+        "repetition_welch_pass": repetition_welch_pass,
+        "repetition_srm_pass": repetition_srm_pass,
+        "repetition_pass": repetition_pass,
     }
 
 
 def run_and_save(database: bool = False) -> dict[str, Any]:
-    """Execute A/A simulation harness and save results JSON.
-
-    Purpose:
-        Executes single experiment and multi-repetition simulation, writing
-        ml/experiments/results/aa_test.json.
-
-    Inputs/Outputs:
-        database: Whether to persist single experiment to PostgreSQL.
-        Returns: Full results dictionary.
-
-    Key Logic:
-        If database=True, connects to Postgres (or starts testcontainer if not set).
-        Executes single run, then 1000 repetitions.
-        Saves output JSON file.
-
-    Errors:
-        RuntimeError: If database connection fails.
-    """
+    """Run full A/A validation suite and write results to aa_test.json."""
     output_dir = Path("ml/experiments/results")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "aa_test.json"
+
+    shops = [f"shop-{i:05d}" for i in range(1, NUM_SHOPS + 1)]
+    outcomes = generate_shop_outcomes(SEED, shops)
 
     if database:
         db_url = os.environ.get("POSTGRES_URL")
@@ -215,40 +241,62 @@ def run_and_save(database: bool = False) -> dict[str, Any]:
 
         try:
             with psycopg.connect(db_url, autocommit=True) as conn:
-                single_results = run_single_experiment(conn=conn)
+                single_results = run_single_experiment(shops, outcomes, conn=conn)
         finally:
             if container is not None:
                 container.stop()
     else:
-        single_results = run_single_experiment(conn=None)
+        single_results = run_single_experiment(shops, outcomes, conn=None)
 
-    reps_results = run_aa_repetitions(num_reps=1000, num_shops=1000, alpha=0.05)
+    rep_results = run_aa_repetitions(shops, outcomes, num_reps=NUM_REPETITIONS)
 
-    full_results = {
+    overall_pass = single_results["single_pass"] and rep_results["repetition_pass"]
+
+    data: dict[str, Any] = {
         "seed": SEED,
+        "n_shops": NUM_SHOPS,
+        "timestamp_utc": datetime.now(UTC).isoformat(),
+        "git_commit": get_current_git_commit(),
         "single_run": single_results,
-        "repetitions": reps_results,
+        "repetitions": rep_results,
+        "pass_rules": {
+            "single_srm_pass": single_results["single_srm_pass"],
+            "single_welch_pass": single_results["single_welch_pass"],
+            "repetition_welch_pass": rep_results["repetition_welch_pass"],
+            "repetition_srm_pass": rep_results["repetition_srm_pass"],
+            "overall_pass": overall_pass,
+        },
+        "overall_pass": overall_pass,
     }
 
-    output_path.write_text(json.dumps(full_results, indent=2) + "\n", encoding="utf-8")
-    return full_results
+    output_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return data
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run A/A test simulation and validation.")
+    parser = argparse.ArgumentParser(description="Run A/A test validation harness.")
     parser.add_argument(
         "--database",
         action="store_true",
-        help="Persist single-run experiment and exposures to PostgreSQL",
+        help="Execute single run through PostgreSQL exposure store",
     )
     args = parser.parse_args()
 
-    results = run_and_save(database=args.database)
-    print("A/A Test Simulation Complete.")
-    print(f"Single run: A={results['single_run']['n_a']}, B={results['single_run']['n_b']}")
-    print(f"  SRM p-value: {results['single_run']['srm_p_value']}")
-    print(f"  Welch p-value: {results['single_run']['welch_p_value']}")
-    print("Repetitions (1000 runs):")
-    print(f"  Welch false positive rate: {results['repetitions']['welch_false_positive_rate']:.2%}")
-    print(f"  SRM false positive rate: {results['repetitions']['srm_false_positive_rate']:.2%}")
-    print("Saved results to ml/experiments/results/aa_test.json")
+    res = run_and_save(database=args.database)
+    print("A/A Test Completed.")
+    print(
+        f"Single: n_shops={res['n_shops']}, count A={res['single_run']['count_a']}, "
+        f"count A-copy={res['single_run']['count_a_copy']}, "
+        f"srm p={res['single_run']['srm_p_value']}, welch p={res['single_run']['welch_p_value']}"
+    )
+    print(
+        f"Reps: welch rate={res['repetitions']['welch_false_positive_rate']:.4f}, "
+        f"srm rate={res['repetitions']['srm_false_positive_rate']:.4f}"
+    )
+    print(
+        f"Pass booleans: single_srm={res['pass_rules']['single_srm_pass']}, "
+        f"single_welch={res['pass_rules']['single_welch_pass']}, "
+        f"rep_welch={res['pass_rules']['repetition_welch_pass']}, "
+        f"rep_srm={res['pass_rules']['repetition_srm_pass']}, "
+        f"overall={res['overall_pass']}"
+    )
