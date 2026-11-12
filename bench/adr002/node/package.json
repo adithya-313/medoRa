@@ -1,0 +1,10 @@
+{
+  "name": "medora-bench-adr002-node",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@growthbook/growthbook": "^2.0.0",
+    "unleash-client": "^6.12.2"
+  }
+}
