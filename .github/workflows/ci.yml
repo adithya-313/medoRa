@@ -28,6 +28,7 @@ jobs:
       - run: uv run mypy
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run test:ts
 
   unit:
     runs-on: ubuntu-latest
