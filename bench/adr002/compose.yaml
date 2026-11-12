@@ -1,0 +1,62 @@
+services:
+  unleash-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: unleash_password
+      POSTGRES_USER: unleash_user
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unleash_user -d db"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  unleash:
+    image: unleashorg/unleash-server:latest
+    ports:
+      - "4242:4242"
+    environment:
+      DATABASE_URL: postgres://unleash_user:unleash_password@unleash-db:5432/db
+      DATABASE_SSL: "false"
+      LOG_LEVEL: "warn"
+      INIT_ADMIN_API_TOKENS: "*:*.medora-admin-token-secret"
+      INIT_CLIENT_API_TOKENS: "default:development.medora-client-token-secret"
+    depends_on:
+      unleash-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4242/health || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  growthbook-db:
+    image: mongo:6
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    expose:
+      - "27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  growthbook:
+    image: growthbook/growthbook:latest
+    ports:
+      - "3010:3000"
+      - "3110:3100"
+    environment:
+      NODE_ENV: "production"
+      APP_ORIGIN: "http://localhost:3010"
+      API_HOST: "http://localhost:3110"
+      MONGODB_URI: "mongodb://root:password@growthbook-db:27017/growthbook?authSource=admin"
+      JWT_SECRET: "medora-adr002-jwt-secret-key-32charslong!"
+      ENCRYPTION_KEY: "medora-adr002-encryption-key-32c!"
+    depends_on:
+      growthbook-db:
+        condition: service_healthy

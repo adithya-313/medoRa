@@ -1,0 +1,87 @@
+{
+  "candidates": {
+    "homemade": {
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 0,
+      "M2": 0.0,
+      "M3": 8.88,
+      "M4": 1.0,
+      "M5": false,
+      "doc_urls": [
+        "https://github.com/adithya-313/medoRa/blob/main/bench/adr002/homemade.py"
+      ],
+      "details": {
+        "count_a": 5000,
+        "count_b": 5000,
+        "repetitions_ms": [
+          7.286500003829133,
+          8.327899995492771,
+          8.881100002327003,
+          9.25180000194814,
+          11.74610000452958
+        ]
+      }
+    },
+    "unleash": {
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 2,
+      "M2": 159.38,
+      "M3": 1155.61,
+      "M4": 0.872881,
+      "M5": false,
+      "doc_urls": [
+        "https://github.com/Unleash/unleash/blob/main/LICENSE",
+        "https://docs.getunleash.io/reference/strategy-variants",
+        "https://docs.getunleash.io/reference/architecture"
+      ],
+      "details": {
+        "count_a": 5008,
+        "count_b": 4992,
+        "repetitions_ms": [
+          980.3268999967258,
+          1003.3726999972714,
+          1155.6104999981471,
+          1182.3394000020926,
+          1302.7866999982507
+        ]
+      }
+    },
+    "growthbook": {
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 2,
+      "M2": 1954.36,
+      "M3": 225.74,
+      "M4": 0.0035,
+      "M5": true,
+      "doc_urls": [
+        "https://github.com/growthbook/growthbook/blob/main/LICENSE",
+        "https://docs.growthbook.io/features/rules",
+        "https://docs.growthbook.io/lib"
+      ],
+      "details": {
+        "count_a": 5146,
+        "count_b": 4854,
+        "repetitions_ms": [
+          209.56029999797465,
+          215.96539999882225,
+          225.74120000354014,
+          231.69559999951161,
+          311.6749999971944
+        ]
+      }
+    }
+  },
+  "decision": "homemade"
+}
