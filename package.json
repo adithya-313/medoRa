@@ -1,9 +1,11 @@
 {
   "name": "medora",
+  "type": "module",
   "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint desktop owner admin"
+    "lint": "eslint desktop owner admin",
+    "test:ts": "node --test desktop/src/experiments/assignment.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
