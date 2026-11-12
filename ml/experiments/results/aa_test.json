@@ -1,0 +1,23 @@
+{
+  "seed": 20261112,
+  "single_run": {
+    "experiment_key": "aa-test-single",
+    "n_a": 510,
+    "n_b": 490,
+    "mean_a": 101.6209,
+    "var_a": 2454.5247,
+    "mean_b": 101.4073,
+    "var_b": 2837.0874,
+    "srm_p_value": 0.5271,
+    "welch_p_value": 0.9477
+  },
+  "repetitions": {
+    "num_reps": 1000,
+    "num_shops_per_rep": 1000,
+    "alpha": 0.05,
+    "welch_false_positive_count": 49,
+    "welch_false_positive_rate": 0.049,
+    "srm_false_positive_count": 54,
+    "srm_false_positive_rate": 0.054
+  }
+}
