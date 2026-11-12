@@ -541,8 +541,11 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-dev = [
+adr002 = [
     { name = "growthbook" },
+    { name = "unleashclient" },
+]
+dev = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "psycopg", extra = ["binary"] },
@@ -550,7 +553,6 @@ dev = [
     { name = "ruff" },
     { name = "testcontainers" },
     { name = "types-pyyaml" },
-    { name = "unleashclient" },
 ]
 
 [package.metadata]
@@ -561,8 +563,11 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
+adr002 = [
     { name = "growthbook", specifier = ">=4.0.0" },
+    { name = "unleashclient", specifier = ">=6.9.1" },
+]
+dev = [
     { name = "mypy", specifier = ">=2.4.1" },
     { name = "pre-commit", specifier = ">=4.7.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.8" },
@@ -570,7 +575,6 @@ dev = [
     { name = "ruff", specifier = ">=0.17.4" },
     { name = "testcontainers", specifier = ">=4.15.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20261103" },
-    { name = "unleashclient", specifier = ">=6.9.1" },
 ]
 
 [[package]]

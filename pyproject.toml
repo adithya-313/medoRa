@@ -10,7 +10,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "growthbook>=4.0.0",
     "mypy>=2.4.1",
     "pre-commit>=4.7.0",
     "psycopg[binary]>=3.3.8",
@@ -18,6 +17,9 @@ dev = [
     "ruff>=0.17.4",
     "testcontainers>=4.15.0",
     "types-pyyaml>=6.0.12.20261103",
+]
+adr002 = [
+    "growthbook>=4.0.0",
     "unleashclient>=6.9.1",
 ]
 
@@ -48,4 +50,8 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 warn_return_any = true
 strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["UnleashClient.*", "growthbook.*"]
+ignore_missing_imports = true
 

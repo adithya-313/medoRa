@@ -11,9 +11,6 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from growthbook import Experiment, GrowthBook, Result, UserContext
-from UnleashClient import UnleashClient
-from UnleashClient.events import BaseEvent, UnleashEventType
 
 from bench.adr002.homemade import assign_variant
 
@@ -265,6 +262,7 @@ def evaluate_homemade(
             "https://github.com/adithya-313/medoRa/blob/main/bench/adr002/homemade.py",
         ],
         "details": {
+            "exposure_count": exposure_count,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
@@ -389,6 +387,9 @@ def evaluate_unleash(
     m2 = measure_containers_ram_mib(["medora-adr002-unleash-1", "medora-adr002-unleash-db-1"], samples=5)
 
     # Initialize UnleashClient with impression callback
+    from UnleashClient import UnleashClient
+    from UnleashClient.events import BaseEvent, UnleashEventType
+
     client_token = "default:development.medora-client-token-secret"
     exposure_count = 0
 
@@ -430,9 +431,9 @@ def evaluate_unleash(
     client.unleash_scheduler.resume()
     time.sleep(2.0)  # allow server health to recover
 
-    # H4: Exposure hook (verify impression callback registered 10,000 exposures)
+    # H4: Exposure hook (verify impression callback registered exactly 10,000 exposures)
     time.sleep(0.5)  # allow callback background worker thread to finish processing
-    h4 = exposure_count >= len(shop_ids)
+    h4 = exposure_count == len(shop_ids)
 
     # H5: Self-contained (runs entirely in local docker containers without SaaS dependencies)
     h5 = True
@@ -475,6 +476,7 @@ def evaluate_unleash(
             "https://docs.getunleash.io/reference/architecture",
         ],
         "details": {
+            "exposure_count": exposure_count,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
@@ -545,7 +547,7 @@ def _ensure_growthbook_feature(
     """
     api_headers = {"Authorization": f"Bearer {secret_key}"}
     feat_check = client.get(f"/api/v1/features/{experiment_key}", headers=api_headers)
-    if feat_check.status_code == 404:
+    if feat_check.status_code in (400, 404):
         create_res = client.post(
             "/api/v1/features",
             json={
@@ -731,6 +733,8 @@ def evaluate_growthbook(
     cached_features = res.json().get("features", {})
 
     # Online evaluation with exposure tracking callback
+    from growthbook import Experiment, GrowthBook, Result, UserContext
+
     exposure_count = 0
 
     def on_experiment_viewed(
@@ -810,6 +814,7 @@ def evaluate_growthbook(
             "https://docs.growthbook.io/lib",
         ],
         "details": {
+            "exposure_count": exposure_count,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
@@ -904,6 +909,8 @@ def generate_adr_markdown(results: dict[str, Any], output_path: Path) -> None:
             "  evaluation latency jitter.",
             "- **Zero Network Contention**: Tests evaluated in-process evaluation performance without network latency",
             "  or saturation on remote endpoints.",
+            "- **Offline Cache Scope**: offline was tested with the SDK process still alive (in-memory cache);",
+            "  offline evaluation after an app restart (on-disk cache) was not tested.",
         ]
     )
 

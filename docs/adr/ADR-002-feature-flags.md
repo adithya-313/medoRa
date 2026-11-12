@@ -16,16 +16,16 @@ pinned in `docs/adr/ADR-002-criteria.md` and benchmarked locally across three ca
 | Candidate | H1 Free Self-Hosted | H2 Offline | H3 Cross-Language | H4 Exposure Hook | H5 Self-Contained | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **homemade** | PASS | PASS | PASS | PASS | PASS | **ELIGIBLE** |
-| **unleash** | PASS | PASS | PASS | PASS | PASS | **ELIGIBLE** |
+| **unleash** | PASS | PASS | PASS | FAIL | PASS | **DISQUALIFIED** |
 | **growthbook** | PASS | PASS | PASS | PASS | PASS | **ELIGIBLE** |
 
 ## Measured Metrics (M1-M5)
 
 | Candidate | M1 Containers | M2 Server RAM (MiB) | M3 Latency (10k ops, ms) | M4 Balance (p-value) | M5 Stats Engine |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **homemade** | 0 | 0.00 | 8.88 | 1.0 | No |
-| **unleash** | 2 | 159.38 | 1155.61 | 0.872881 | No |
-| **growthbook** | 2 | 1954.36 | 225.74 | 0.0035 | Yes |
+| **homemade** | 0 | 0.00 | 8.03 | 1.0 | No |
+| **unleash** | 2 | 155.08 | 1058.97 | 0.872881 | No |
+| **growthbook** | 2 | 1920.17 | 226.36 | 0.0035 | Yes |
 
 ## Decision
 **Selected winner: `homemade`**.
@@ -56,4 +56,6 @@ Under the decision rule established before measurement:
   evaluation latency jitter.
 - **Zero Network Contention**: Tests evaluated in-process evaluation performance without network latency
   or saturation on remote endpoints.
+- **Offline Cache Scope**: offline was tested with the SDK process still alive (in-memory cache);
+  offline evaluation after an app restart (on-disk cache) was not tested.
 - **M4 Balance Flag (p < 0.01)**: The following candidate(s) showed p < 0.01 on the 50/50 balance test: **growthbook** (p = 0.0035).
