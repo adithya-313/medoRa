@@ -194,17 +194,7 @@ def evaluate_homemade(
     # H1: Free self-hosted (in-tree pure Python/Node hash assignment, no external license required)
     h1 = True
 
-    # H2: Offline evaluation (Pure deterministic hash calculation requires no server; 100% offline identical)
-    # Online vs offline assignments are identical by definition since no server state is involved.
-    online_variants = [assign_variant(experiment_key, sid, split_percent) for sid in shop_ids]
-    offline_variants = [assign_variant(experiment_key, sid, split_percent) for sid in shop_ids]
-    h2 = online_variants == offline_variants
-
-    # H3: Cross-language consistency between Python and Node
-    node_variants = run_node_homemade(experiment_key, split_percent)
-    h3 = online_variants == node_variants
-
-    # H4: Exposure hook (Wrap assignment with custom exposure recorder callback)
+    # Setup exposure tracking callback hook
     exposure_count = 0
 
     def record_exposure(sid: str, variant: str) -> None:
@@ -216,8 +206,22 @@ def evaluate_homemade(
         record_exposure(sid, var)
         return var
 
-    _ = [assign_with_hook(sid) for sid in shop_ids]
-    h4 = exposure_count == len(shop_ids)
+    # WHY: all candidates are measured over the same single 10,000-shop pass; later passes count differently per SDK (GrowthBook de-duplicates per shop).
+    exposure_count = 0
+    online_variants = [assign_with_hook(sid) for sid in shop_ids]
+    online_exposure_count = exposure_count
+
+    # H3: Cross-language consistency between Python and Node
+    node_variants = run_node_homemade(experiment_key, split_percent)
+    h3 = online_variants == node_variants
+
+    # H2: Offline evaluation (Pure deterministic hash calculation requires no server; 100% offline identical)
+    # Online vs offline assignments are identical by definition since no server state is involved.
+    offline_variants = [assign_with_hook(sid) for sid in shop_ids]
+    h2 = online_variants == offline_variants
+
+    # H4: Exposure hook
+    h4 = online_exposure_count == len(shop_ids)
 
     # H5: Self-contained (Runs in local environment with no SaaS dependency)
     h5 = True
@@ -232,7 +236,7 @@ def evaluate_homemade(
     timings: list[float] = []
     for _ in range(5):
         t0 = time.perf_counter()
-        _ = [assign_variant(experiment_key, sid, split_percent) for sid in shop_ids]
+        _ = [assign_with_hook(sid) for sid in shop_ids]
         t1 = time.perf_counter()
         timings.append((t1 - t0) * 1000.0)
 
@@ -246,6 +250,8 @@ def evaluate_homemade(
 
     # M5: Built-in statistics engine
     m5 = False
+
+    exposure_count_all_passes = exposure_count
 
     return {
         "H1": h1,
@@ -262,12 +268,32 @@ def evaluate_homemade(
             "https://github.com/adithya-313/medoRa/blob/main/bench/adr002/homemade.py",
         ],
         "details": {
-            "exposure_count": exposure_count,
+            "online_exposure_count": online_exposure_count,
+            "exposure_count_all_passes": exposure_count_all_passes,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
         },
     }
+
+
+def _wait_for_unleash_propagation(client: httpx.Client, experiment_key: str) -> None:
+    """Poll client API until Unleash server propagates feature toggle.
+
+    Args:
+        client: HTTPX client targeting Unleash server.
+        experiment_key: Feature flag key to verify.
+    """
+    for _ in range(20):
+        client_res = client.get(
+            "/api/client/features",
+            headers={"Authorization": "default:development.medora-client-token-secret"},
+        )
+        if client_res.status_code == 200:
+            feats = client_res.json().get("features", [])
+            if any(f.get("name") == experiment_key and f.get("enabled") for f in feats):
+                break
+        time.sleep(0.5)
 
 
 def setup_unleash(
@@ -345,6 +371,8 @@ def setup_unleash(
         if add_res.status_code not in (200, 201):
             raise ValueError(f"Failed to add Unleash strategy: {add_res.status_code} {add_res.text}")
 
+    _wait_for_unleash_propagation(client, experiment_key)
+
 
 def run_node_unleash() -> list[str]:
     """Execute Unleash Node.js SDK evaluation script via subprocess.
@@ -411,10 +439,13 @@ def evaluate_unleash(
     )
     client.initialize_client()
 
-    # Online evaluation
+    # WHY: all candidates are measured over the same single 10,000-shop pass; later passes count differently per SDK (GrowthBook de-duplicates per shop).
+    exposure_count = 0
     online_variants = [
         client.get_variant(experiment_key, context={"userId": sid})["name"] for sid in shop_ids
     ]
+    time.sleep(0.5)  # allow callback background worker thread to finish processing
+    online_exposure_count = exposure_count
 
     # H3: Cross-language consistency between Python SDK and Node SDK
     node_variants = run_node_unleash()
@@ -431,9 +462,8 @@ def evaluate_unleash(
     client.unleash_scheduler.resume()
     time.sleep(2.0)  # allow server health to recover
 
-    # H4: Exposure hook (verify impression callback registered exactly 10,000 exposures)
-    time.sleep(0.5)  # allow callback background worker thread to finish processing
-    h4 = exposure_count == len(shop_ids)
+    # H4: Exposure hook (verify impression callback registered exactly 10,000 exposures during online pass)
+    h4 = online_exposure_count == len(shop_ids)
 
     # H5: Self-contained (runs entirely in local docker containers without SaaS dependencies)
     h5 = True
@@ -457,6 +487,9 @@ def evaluate_unleash(
     # M5: Built-in statistics engine (Unleash OSS does not include experiment stats engine)
     m5 = False
 
+    time.sleep(0.5)  # allow callback background worker thread to finish processing
+    exposure_count_all_passes = exposure_count
+
     client.destroy()
 
     return {
@@ -476,7 +509,8 @@ def evaluate_unleash(
             "https://docs.getunleash.io/reference/architecture",
         ],
         "details": {
-            "exposure_count": exposure_count,
+            "online_exposure_count": online_exposure_count,
+            "exposure_count_all_passes": exposure_count_all_passes,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
@@ -748,11 +782,14 @@ def evaluate_growthbook(
         on_experiment_viewed=on_experiment_viewed,
     )
 
+    # WHY: all candidates are measured over the same single 10,000-shop pass; later passes count differently per SDK (GrowthBook de-duplicates per shop).
+    exposure_count = 0
     online_variants: list[str] = []
     for sid in shop_ids:
         gb.set_attributes({"id": sid})
         val = gb.get_feature_value(experiment_key, "B")
         online_variants.append(val)
+    online_exposure_count = exposure_count
 
     # H3: Cross-language consistency between Python SDK and Node SDK
     node_variants = run_node_growthbook(sdk_key)
@@ -770,8 +807,8 @@ def evaluate_growthbook(
     subprocess.run(["docker", "start", "medora-adr002-growthbook-1"], check=True)
     time.sleep(2.0)  # allow server health to recover
 
-    # H4: Exposure hook (verify callback was invoked for each evaluation)
-    h4 = exposure_count == len(shop_ids)
+    # H4: Exposure hook (verify callback was invoked for each evaluation during online pass)
+    h4 = online_exposure_count == len(shop_ids)
 
     # H5: Self-contained (runs entirely in local docker containers without SaaS dependencies)
     h5 = True
@@ -797,6 +834,8 @@ def evaluate_growthbook(
     # M5: Built-in statistics engine (GrowthBook includes built-in Bayesian and frequentist engine)
     m5 = True
 
+    exposure_count_all_passes = exposure_count
+
     return {
         "H1": h1,
         "H2": h2,
@@ -814,7 +853,8 @@ def evaluate_growthbook(
             "https://docs.growthbook.io/lib",
         ],
         "details": {
-            "exposure_count": exposure_count,
+            "online_exposure_count": online_exposure_count,
+            "exposure_count_all_passes": exposure_count_all_passes,
             "count_a": count_a,
             "count_b": count_b,
             "repetitions_ms": timings,
@@ -911,6 +951,13 @@ def generate_adr_markdown(results: dict[str, Any], output_path: Path) -> None:
             "  or saturation on remote endpoints.",
             "- **Offline Cache Scope**: offline was tested with the SDK process still alive (in-memory cache);",
             "  offline evaluation after an app restart (on-disk cache) was not tested.",
+            (
+                "- **Exposure Deduplication**: GrowthBook de-duplicates exposures per shop within one SDK instance "
+                "while Unleash and homemade report every evaluation, with exposure_count_all_passes per candidate: "
+                f"homemade={candidates['homemade']['details']['exposure_count_all_passes']}, "
+                f"unleash={candidates['unleash']['details']['exposure_count_all_passes']}, "
+                f"growthbook={candidates['growthbook']['details']['exposure_count_all_passes']}."
+            ),
         ]
     )
 
