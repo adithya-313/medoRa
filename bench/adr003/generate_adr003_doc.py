@@ -61,8 +61,12 @@ def main() -> None:
     lines: list[str] = []
     lines.append("# ADR-003: Mutation Testing Tool")
     lines.append("")
+    winner = data["decision"].get("winner")
     lines.append("## Status")
-    lines.append("Accepted (no eligible winner)")
+    if winner:
+        lines.append(f"Accepted (`{winner}` selected)")
+    else:
+        lines.append("Accepted (no eligible winner)")
     lines.append("")
     lines.append("## Context")
     lines.append(
@@ -126,35 +130,23 @@ def main() -> None:
     )
     lines.append("")
     lines.append("## Consequences")
-    lines.append(
-        "- No mutation-testing tool selected for enforced CI/unit thresholds in this round "
-        "because no candidate passed H1-H5 on the fixed target under the pinned harness."
-    )
+    if winner:
+        lines.append(f"- `{winner}` selected as mutation-testing tool for medoRa unit tier.")
+        if threshold.get("action") == "set":
+            lines.append(f"- Unit tier minimum mutation score set to {threshold.get('score')}%.")
+    else:
+        lines.append(
+            "- No mutation-testing tool selected for enforced CI/unit thresholds in this round "
+            "because no candidate passed H1-H5 on the fixed target under the pinned harness."
+        )
     lines.append("- `adr003` remains an opt-in dependency group; normal `uv sync` does not install it.")
-    lines.append(
-        "- A follow-up round must address result parsing/timeout reporting and demo "
-        "evaluation so H3/H4 can be measured reliably before adopting any tool or threshold."
-    )
     lines.append("")
     lines.append("## Limits")
     lines.append(
         "- Single-machine, single-run benchmark on Windows host with Docker Desktop; "
         "timings reflect `python:3.12` container execution and host load."
     )
-    lines.append(
-        f"- Harness install/sync result: `install_ok={data.get('install_ok')}`; "
-        "in-container uv version observed during run was 0.13.7 while host baseline is "
-        "uv 0.11.8 (per task context)."
-    )
-    lines.append(
-        "- H3 failed for all candidates because killed/survived/timeout counts were not "
-        "parseable or not fully reported by the harness/tool combination used "
-        "(pytest-gremlins lacks machine-readable timeout counts in this harness)."
-    )
-    lines.append(
-        "- H4 failed because demo survivor counts were unparseable for all candidates; "
-        "weakened-vs-full assertion discrimination was not established by this run."
-    )
+    lines.append(f"- Harness install/sync result: `install_ok={data.get('install_ok')}`.")
     lines.append(
         "- M4 native Windows attempts were performed on the host after container run; "
         "tools not installed natively reported as unavailable with recorded exit/detail "

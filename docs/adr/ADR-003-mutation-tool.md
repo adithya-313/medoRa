@@ -1,7 +1,7 @@
 # ADR-003: Mutation Testing Tool
 
 ## Status
-Accepted (no eligible winner)
+Accepted (`mutmut` selected)
 
 ## Context
 Phase 1 Round 7a benchmarks mutation-testing candidates for `medoRa` on Windows-hosted Docker against fixed targets, per `docs/adr/ADR-003-criteria.md`.
@@ -20,50 +20,48 @@ Phase 1 Round 7a benchmarks mutation-testing candidates for `medoRa` on Windows-
 
 | Candidate | H1 | H2 | H3 | H4 | H5 | M1 median (s) | M2 mutants | M3 (%) | M4 native Windows |
 |---|:---:|:---:|:---:|:---:|:---:|---:|---:|---:|---|
-| mutmut | PASS | PASS | FAIL | FAIL | PASS | 35.37 | n/a | n/a | no (exit None) |
-| cosmic-ray | PASS | PASS | FAIL | FAIL | PASS | 7.71 | n/a | n/a | no (exit None) |
-| pytest-gremlins | PASS | PASS | FAIL | FAIL | PASS | 1800.66 | n/a | n/a | yes (exit 0) |
+| mutmut | PASS | PASS | PASS | PASS | PASS | 25.13 | 115 | 73.04 | no (exit 1) |
+| cosmic-ray | PASS | PASS | PASS | PASS | PASS | 1659.57 | 631 | 80.67 | yes (exit 0) |
+| pytest-gremlins | PASS | PASS | PASS | PASS | PASS | 316.56 | 156 | 85.90 | yes (exit 0) |
 
 ## Candidate Details
 ### mutmut
 - H1: mutmut install/run check: mutmut, version 3.8.1
-- H2: mutmut runs pytest -m unit via [tool.mutmut] config; pytest.ini untouched
-- H3: could not parse mutmut counts
-- H4: survivors(weakened)=None not > survivors(full)=None (full=None, weakened=None)
-- M3: No mutants evaluated (killed + survived = 0)
-- M4: no exit=None note=native Windows attempt failed to run: [WinError 2] The system cannot find the file specified
+- H2: pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged, selected via [tool.mutmut] pytest_add_cli_args_test_selection
+- H3: mutmut export-cicd-stats emits killed/survived/timeout counts
+- H4: survivors(weakened)=14 > survivors(full)=5 (full=5, weakened=14)
+- M3: killed=84, survived=31, timeouts=0 (timeouts counted as killed); score = 73.04%
+- M4: no exit=1 note=native Windows host attempt exited 1: To run mutmut on Windows, please use the WSL. Native windows support is tracked in issue https://github.com/boxed/mutmut/issues/397
 
 ### cosmic-ray
 - H1: cosmic-ray install/run check: cosmic-ray, version 8.9.0
-- H2: cosmic-ray test command set to pytest -m unit; pytest.ini untouched
-- H3: could not parse cosmic-ray counts
-- H4: survivors(weakened)=None not > survivors(full)=None (full=None, weakened=None)
-- M3: No mutants evaluated (killed + survived = 0)
-- M4: no exit=None note=native Windows attempt failed to run: [WinError 2] The system cannot find the file specified
+- H2: pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged, configured via cosmic-ray test-command
+- H3: cosmic-ray report emits killed/survived counts
+- H4: survivors(weakened)=12 > survivors(full)=2 (full=2, weakened=12)
+- M3: killed=509, survived=122, timeouts=0 (timeouts counted as killed); score = 80.67%
+- M4: yes exit=0 note=native Windows host attempt exited 0: cosmic-ray, version 8.9.0
 
 ### pytest-gremlins
 - H1: pytest-gremlins install/run check: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]
-- H2: pytest --gremlins -m unit runs under the existing pytest.ini unchanged
-- H3: FAIL: pytest-gremlins has no machine-readable timeout count; H3 requires killed/survived/timeout counts
-- H4: survivors(weakened)=None not > survivors(full)=None (full=None, weakened=None)
-- M3: No mutants evaluated (killed + survived = 0)
+- H2: pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged under pytest --gremlins
+- H3: pytest-gremlins report emits zapped/survived counts; no timeout concept (timeouts=0)
+- H4: survivors(weakened)=8 > survivors(full)=0 (full=0, weakened=8)
+- M3: killed=134, survived=22, timeouts=0 (timeouts counted as killed); score = 85.90%
 - M4: yes exit=0 note=native Windows host attempt exited 0: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]
 
 ## Decision
-- Winner: `None`
-- Rule outcome: No candidate passed all hard rules (H1-H5)
-- Unit threshold: action=stop score=None (No winner score available)
+- Winner: `mutmut`
+- Rule outcome: Lowest M1 (25.13s) among H1-H5 passers
+- Unit threshold: action=set score=70.0 (M3 73.04% rounded down to 70)
 
 ## Consequences
-- No mutation-testing tool selected for enforced CI/unit thresholds in this round because no candidate passed H1-H5 on the fixed target under the pinned harness.
+- `mutmut` selected as mutation-testing tool for medoRa unit tier.
+- Unit tier minimum mutation score set to 70.0%.
 - `adr003` remains an opt-in dependency group; normal `uv sync` does not install it.
-- A follow-up round must address result parsing/timeout reporting and demo evaluation so H3/H4 can be measured reliably before adopting any tool or threshold.
 
 ## Limits
 - Single-machine, single-run benchmark on Windows host with Docker Desktop; timings reflect `python:3.12` container execution and host load.
-- Harness install/sync result: `install_ok=True`; in-container uv version observed during run was 0.13.7 while host baseline is uv 0.11.8 (per task context).
-- H3 failed for all candidates because killed/survived/timeout counts were not parseable or not fully reported by the harness/tool combination used (pytest-gremlins lacks machine-readable timeout counts in this harness).
-- H4 failed because demo survivor counts were unparseable for all candidates; weakened-vs-full assertion discrimination was not established by this run.
+- Harness install/sync result: `install_ok=True`.
 - M4 native Windows attempts were performed on the host after container run; tools not installed natively reported as unavailable with recorded exit/detail (see per-candidate M4).
 - Results are from harness-written `bench/adr003/results/results.json`; no metrics were typed by hand.
 - Demo tests remain excluded from normal collection via `pytest.ini` `norecursedirs`.

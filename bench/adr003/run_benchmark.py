@@ -459,7 +459,7 @@ def _mutmut_pyproject_inject() -> bytes | None:
     path = REPO_ROOT / "pyproject.toml"
     original = path.read_bytes()
     text = original.decode("utf-8")
-    if "pytest_add_cli_args" in text:
+    if "pytest_add_cli_args =" in text or "pytest_add_cli_args=" in text:
         return None
     if not text.endswith("\n"):
         text += "\n"
@@ -897,6 +897,7 @@ def _run_cosmic_ray_target(
     status = STATUS_OK
     reason: str | None = None
     for _ in range(3):
+        session_path.unlink(missing_ok=True)
         elapsed, code, out, err = run_cmd(
             ["cosmic-ray", "init", str(config_path), str(session_path)],
             cwd=REPO_ROOT,
@@ -987,13 +988,13 @@ def measure_cosmic_ray() -> dict[str, Any]:
     config_path = REPO_ROOT / "bench" / "adr003" / ".cosmic-ray.toml"
     session_path = REPO_ROOT / "bench" / "adr003" / ".cosmic-ray.session.sqlite"
     modules = ", ".join(f'"{m}"' for m in TARGET_FILES)
-    tests = " ".join(f'"{t}"' for t in UNIT_TESTS)
+    tests = " ".join(UNIT_TESTS)
     config_path.write_text(
         "[cosmic-ray]\n"
         f"module-path = [{modules}]\n"
         "timeout = 10.0\n"
         "excluded-modules = []\n"
-        f'test-command = "pytest -m unit {tests}"\n'
+        f'test-command = "python -m pytest -m unit {tests}"\n'
         "\n"
         "[cosmic-ray.distributor]\n"
         'name = "local"\n',
