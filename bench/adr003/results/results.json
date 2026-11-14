@@ -1,0 +1,140 @@
+{
+  "schema": "adr003-results-v1",
+  "date": "2026-11-14",
+  "image": "python:3.12",
+  "container": "medora-adr003-run",
+  "target_files": [
+    "cloud/experiments/assignment.py",
+    "cloud/experiments/analysis.py",
+    "tools/ci/test_change_gate.py"
+  ],
+  "unit_tests": [
+    "tests/cloud/test_experiment_assignment.py",
+    "tests/cloud/test_experiment_analysis.py",
+    "tests/ci/test_test_change_gate.py"
+  ],
+  "tool_versions": {
+    "mutmut": "3.8.1",
+    "cosmic-ray": "8.9.0",
+    "pytest-gremlins": "1.13.2"
+  },
+  "licence_urls": {
+    "mutmut": "https://github.com/boxed/mutmut/blob/main/LICENSE",
+    "cosmic-ray": "https://github.com/sixty-north/cosmic-ray/blob/main/LICENCE.txt",
+    "pytest-gremlins": "https://github.com/mikelane/pytest-gremlins/blob/main/LICENSE"
+  },
+  "install_ok": true,
+  "candidates": {
+    "mutmut": {
+      "version": "3.8.1",
+      "licence_url": "https://github.com/boxed/mutmut/blob/main/LICENSE",
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 25.13364670300507,
+      "M2": 115,
+      "M3": 73.04,
+      "M4": {
+        "native_windows": "no",
+        "exit_code": 1,
+        "note": "native Windows host attempt exited 1: To run mutmut on Windows, please use the WSL. Native windows support is tracked in issue https://github.com/boxed/mutmut/issues/397"
+      },
+      "status": "ok",
+      "harness_error_reason": null,
+      "H1_detail": "mutmut install/run check: mutmut, version 3.8.1",
+      "H2_detail": "pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged, selected via [tool.mutmut] pytest_add_cli_args_test_selection",
+      "timings": [
+        23.88632439999492,
+        25.13364670300507,
+        27.014404506000574
+      ],
+      "M3_detail": "killed=84, survived=31, timeouts=0 (timeouts counted as killed); score = 73.04%",
+      "H3_detail": "mutmut export-cicd-stats emits killed/survived/timeout counts",
+      "demo_full_survivors": 5,
+      "demo_weakened_survivors": 14,
+      "demo_full_detail": "killed=19 survived=5 exit=0",
+      "demo_weakened_detail": "killed=10 survived=14 exit=0",
+      "H4_detail": "survivors(weakened)=14 > survivors(full)=5"
+    },
+    "cosmic-ray": {
+      "version": "8.9.0",
+      "licence_url": "https://github.com/sixty-north/cosmic-ray/blob/main/LICENCE.txt",
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 1659.5728621710005,
+      "M2": 631,
+      "M3": 80.67,
+      "M4": {
+        "native_windows": "yes",
+        "exit_code": 0,
+        "note": "native Windows host attempt exited 0: cosmic-ray, version 8.9.0"
+      },
+      "status": "ok",
+      "harness_error_reason": null,
+      "H1_detail": "cosmic-ray install/run check: cosmic-ray, version 8.9.0",
+      "H2_detail": "pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged, configured via cosmic-ray test-command",
+      "timings": [
+        1672.472486123006,
+        1395.5485397110024,
+        1659.5728621710005
+      ],
+      "M3_detail": "killed=509, survived=122, timeouts=0 (timeouts counted as killed); score = 80.67%",
+      "H3_detail": "cosmic-ray report emits killed/survived counts",
+      "demo_full_survivors": 2,
+      "demo_weakened_survivors": 12,
+      "demo_full_detail": "killed=61 survived=2 exit=0",
+      "demo_weakened_detail": "killed=51 survived=12 exit=0",
+      "H4_detail": "survivors(weakened)=12 > survivors(full)=2"
+    },
+    "pytest-gremlins": {
+      "version": "1.13.2",
+      "licence_url": "https://github.com/mikelane/pytest-gremlins/blob/main/LICENSE",
+      "H1": true,
+      "H2": true,
+      "H3": true,
+      "H4": true,
+      "H5": true,
+      "M1": 316.5593125930027,
+      "M2": 156,
+      "M3": 85.9,
+      "M4": {
+        "native_windows": "yes",
+        "exit_code": 0,
+        "note": "native Windows host attempt exited 0: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]"
+      },
+      "status": "ok",
+      "harness_error_reason": null,
+      "H1_detail": "pytest-gremlins install/run check: usage: python -m pytest [options] [file_or_dir] [file_or_dir] [...]",
+      "H2_detail": "pytest.ini norecursedirs adds bench/adr003/demo to isolate demo tests from collection; target unit tests under tests/ still run via pytest -m unit unchanged under pytest --gremlins",
+      "timings": [
+        316.5593125930027,
+        299.7956040720019,
+        329.46937546299887
+      ],
+      "M3_detail": "killed=134, survived=22, timeouts=0 (timeouts counted as killed); score = 85.90%",
+      "H3_detail": "pytest-gremlins report emits zapped/survived counts; no timeout concept (timeouts=0)",
+      "demo_full_survivors": 0,
+      "demo_weakened_survivors": 8,
+      "demo_full_detail": "zapped=17 survived=0 exit=0",
+      "demo_weakened_detail": "zapped=9 survived=8 exit=0",
+      "H4_detail": "survivors(weakened)=8 > survivors(full)=0"
+    }
+  },
+  "decision": {
+    "winner": "mutmut",
+    "decision_detail": {
+      "reason": "Lowest M1 (25.13s) among H1-H5 passers",
+      "m1": 25.13364670300507
+    },
+    "unit_threshold": {
+      "action": "set",
+      "score": 70.0,
+      "detail": "M3 73.04% rounded down to 70"
+    }
+  }
+}

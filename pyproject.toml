@@ -22,6 +22,11 @@ adr002 = [
     "growthbook>=4.0.0",
     "unleashclient>=6.9.1",
 ]
+adr003 = [
+    "mutmut",
+    "cosmic-ray",
+    "pytest-gremlins",
+]
 
 [tool.ruff]
 line-length = 110
@@ -54,4 +59,18 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = ["UnleashClient.*", "growthbook.*"]
 ignore_missing_imports = true
+
+[tool.mutmut]
+source_paths = [
+    "cloud/experiments/assignment.py",
+    "cloud/experiments/analysis.py",
+    "tools/ci/test_change_gate.py",
+]
+pytest_add_cli_args_test_selection = [
+    "-m",
+    "unit",
+    "tests/cloud/test_experiment_assignment.py",
+    "tests/cloud/test_experiment_analysis.py",
+    "tests/ci/test_test_change_gate.py",
+]
 
