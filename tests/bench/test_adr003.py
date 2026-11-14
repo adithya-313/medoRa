@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from bench.adr003.run_benchmark import decide_winner, measurement_score, unit_threshold
+from bench.adr003.run_benchmark import (
+    classify_run,
+    decide_winner,
+    measurement_score,
+    unit_threshold,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -144,3 +149,37 @@ def test_measurement_score_no_mutants() -> None:
     score, detail = measurement_score(killed=0, survived=0, timeouts=0)
     assert score == 0.0
     assert "No mutants evaluated" in detail
+
+
+def test_classify_run_zero_mutants_is_harness_error() -> None:
+    """Zero mutants evaluated is a harness_error, not an H-rule FAIL."""
+    status, reason = classify_run(killed=0, survived=0, timeouts=0, returncode=0, output="")
+    assert status == "harness_error"
+    assert reason is not None and "0 mutants" in reason
+
+
+def test_classify_run_usage_text_is_harness_error() -> None:
+    """A usage/help message on output is a harness_error."""
+    status, reason = classify_run(
+        killed=0,
+        survived=0,
+        timeouts=0,
+        returncode=0,
+        output="usage: python -m pytest [options] [file_or_dir] [...]",
+    )
+    assert status == "harness_error"
+    assert reason is not None and "usage/help" in reason
+
+
+def test_classify_run_timeout_is_harness_error() -> None:
+    """A timeout is a harness_error."""
+    status, reason = classify_run(killed=0, survived=0, timeouts=0, returncode=-1, output="")
+    assert status == "harness_error"
+    assert reason is not None and "timed out" in reason
+
+
+def test_classify_run_ok_is_not_harness_error() -> None:
+    """A normal run with mutants evaluated is not a harness_error."""
+    status, reason = classify_run(killed=5, survived=3, timeouts=0, returncode=0, output="")
+    assert status == "ok"
+    assert reason is None
